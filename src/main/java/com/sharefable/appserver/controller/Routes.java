@@ -5,5 +5,7 @@ public interface Routes {
 
     String HEALTH = "/health";
 
-    String PROJECT_NEW = "/project/new";
+    String NEW_PROJECT = "/project/new";
+
+    String GET_ALL_PROJECTS = "/projects";
 }

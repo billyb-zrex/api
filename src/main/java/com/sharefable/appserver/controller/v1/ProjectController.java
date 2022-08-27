@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(Routes.API_V1)
 @Slf4j
@@ -25,11 +27,11 @@ public class ProjectController {
     }
 
     @RequestMapping(
-        value = Routes.PROJECT_NEW,
+        value = Routes.NEW_PROJECT,
         method = RequestMethod.POST,
         produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp createNewProject(@RequestBody NewProjectReqBody body) {
-        log.info("{} called with body {}", Routes.PROJECT_NEW, body);
+        log.info("{} called with body {}", Routes.NEW_PROJECT, body);
 
         String projectName = body.getName();
         if (projectName == null || projectName.trim().equals("")) {
@@ -44,6 +46,19 @@ public class ProjectController {
         return ApiResp.builder()
             .status(ApiResp.ResponseStatus.Success)
             .data(savedProject)
+            .build();
+    }
+
+    @RequestMapping(
+        value = Routes.GET_ALL_PROJECTS,
+        method = RequestMethod.GET,
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp getAllProjects() {
+        log.info("{} called", Routes.GET_ALL_PROJECTS);
+        List<Project> allProjects = projectAssetService.getAllProjects();
+        return ApiResp.builder()
+            .status(ApiResp.ResponseStatus.Success)
+            .data(allProjects)
             .build();
     }
 }
