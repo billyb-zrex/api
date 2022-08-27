@@ -32,7 +32,7 @@ public class ProjectController {
         log.info("{} called with body {}", Routes.PROJECT_NEW, body);
 
         String projectName = body.getName();
-        if (projectName.trim().equals("")) {
+        if (projectName == null || projectName.trim().equals("")) {
             return ApiResp.builder()
                 .status(ApiResp.ResponseStatus.Failure)
                 .errCode(ApiResp.ErrorCode.IllegalArgs)

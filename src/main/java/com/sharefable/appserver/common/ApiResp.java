@@ -1,6 +1,7 @@
 package com.sharefable.appserver.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,9 +13,13 @@ public class ApiResp {
     public enum ErrorCode {
         IllegalArgs(100);
 
-        public final Integer code;
-        ErrorCode(Integer code) {
+        public final int code;
+        ErrorCode(int code) {
             this.code = code;
+        }
+        @JsonValue
+        public int toValue() {
+            return this.code;
         }
     }
 
