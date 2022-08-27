@@ -6,7 +6,12 @@ include env.dev
 # Setup and teardown all  dependent services to run the server
 # --------------------------------------------------------------
 teardown:
-	docker-compose stop
+	@if [ -z "$(clean)" ]; then \
+  		docker-compose stop; \
+    else \
+        docker-compose stop; docker rm fable-db; \
+    fi
+
 
 setup: teardown
 	docker-compose up -d
