@@ -8,4 +8,6 @@ public interface Routes {
     String NEW_PROJECT = "/project/new";
 
     String GET_ALL_PROJECTS = "/projects";
+
+    String UPDATE_PROJECT = "/project/update/{id}";
 }
