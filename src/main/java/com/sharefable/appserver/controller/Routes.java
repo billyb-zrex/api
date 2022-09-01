@@ -10,4 +10,6 @@ public interface Routes {
     String GET_ALL_PROJECTS = "/projects";
 
     String UPDATE_PROJECT = "/project/update/{id}";
+
+    String NEW_ASSET = "/asset/new/{id}";
 }

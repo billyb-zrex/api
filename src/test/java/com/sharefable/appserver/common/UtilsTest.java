@@ -2,6 +2,7 @@ package com.sharefable.appserver.common;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 
 class UtilsTest {
 
@@ -10,5 +11,12 @@ class UtilsTest {
         String displayName = "Hello / world ___";
         String nName = Utils.normalizeProjectName(displayName);
         Assertions.assertEquals("hello_world____", nName);
+    }
+
+//    @Test
+    void mediaTypeTest() {
+        MediaType mediaType = MediaType.parseMediaType("nonenope;a=b");
+        System.out.println(mediaType.getType() + " :: " + mediaType.getSubtype() + " :: " + mediaType.getSubtypeSuffix());
+        System.out.println(mediaType.getParameter("a"));
     }
 }
