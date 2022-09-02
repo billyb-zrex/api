@@ -2,16 +2,19 @@ package com.sharefable.appserver.service;
 
 import com.sharefable.appserver.common.UpdateLog;
 import com.sharefable.appserver.common.Utils;
-import com.sharefable.appserver.common.content.BaseParser;
+import com.sharefable.appserver.common.content.BaseAssetBodyParser;
 import com.sharefable.appserver.common.content.ContentTypeParser;
 import com.sharefable.appserver.common.req.NewProxyAssetReqBodyParsed;
 import com.sharefable.appserver.common.req.ReqParamMissingException;
+import com.sharefable.appserver.entity.AssetMapping;
 import com.sharefable.appserver.entity.Project;
+import com.sharefable.appserver.repo.ProxyAssetRepo;
 import com.sharefable.appserver.repo.ProjectRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Streamable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +27,16 @@ import java.util.stream.Stream;
 public class ProjectAssetService {
     private final ProjectRepo projectRepo;
 
+    private final ProxyAssetRepo proxyAssetRepo;
+
     private final List<Project.FieldRef> updatableFields = Project.UPDATABLE_FIELDS;
 
     private final S3Service s3Service;
 
     @Autowired
-    public ProjectAssetService(ProjectRepo projectRepo, S3Service s3Service) {
+    public ProjectAssetService(ProjectRepo projectRepo, ProxyAssetRepo proxyAssetRepo, S3Service s3Service) {
         this.projectRepo = projectRepo;
+        this.proxyAssetRepo = proxyAssetRepo;
         this.s3Service = s3Service;
     }
 
@@ -95,7 +101,42 @@ public class ProjectAssetService {
     }
 
     @Transactional
-    public void createAssetMapping(Long projectId, NewProxyAssetReqBodyParsed body) throws ReqParamMissingException {
-        BaseParser parse = ContentTypeParser.parse(body);
+    public AssetMapping createAssetMapping(Long projectId, NewProxyAssetReqBodyParsed body) throws ReqParamMissingException {
+        List<AssetMapping> activeMappings = proxyAssetRepo.findAssetMappingByProjectIdAndIsActiveIsTrue(projectId);
+        for (AssetMapping asset : activeMappings) {
+            if (Utils.isSavedAssetIsSameWithNewAsset(asset, body)) {
+                // If there is a new asset incoming with same definition as of a one in storage, then we mark the prev
+                // one as inactive and then mark the incoming one as active
+                asset.setIsActive(false);
+                proxyAssetRepo.save(asset);
+                break;
+            }
+        }
+
+        AssetMapping.AssetMappingBuilder mappingBuilder = AssetMapping.builder();
+        mappingBuilder
+            .projectId(projectId)
+            .assetPath(body.getUrl().getPath())
+            .origin(body.getOrigin().getPath())
+            .status(body.getStatus())
+            .method(body.getMethod())
+            .reqHeaders(body.getReqHeaders())
+            .respHeaders(body.getRespHeaders())
+            .isActive(true)
+            .contentType(body.getContentType().toString())
+            .meta(body.getMeta());
+
+        // If status != 302 then there would always be response body
+        // If status == 302 there won't be any response body
+        if (body.getStatus() != HttpStatus.MOVED_PERMANENTLY){
+            BaseAssetBodyParser parser = ContentTypeParser.parse(body);
+            String fileName = parser.fileName();
+            String fullQualifiedFileName = "project/" + projectId + "/" + fileName;
+            s3Service.upload(fullQualifiedFileName, body.getContentType().getType(), parser.getContent());
+            mappingBuilder.location(fileName);
+        }
+
+        AssetMapping mapping = mappingBuilder.build();
+        return proxyAssetRepo.save(mapping);
     }
 }

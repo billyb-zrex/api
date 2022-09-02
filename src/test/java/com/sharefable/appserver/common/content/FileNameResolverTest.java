@@ -67,10 +67,6 @@ class FileNameResolverTest {
             resolver1.getFileName().matches("assets/app_home_main_[0-9a-zA-Z]+\\.js"),
             "filename: " + resolver1.getFileName()
         );
-        Assertions.assertEquals(3, resolver1.getQueryParams().size());
-        Assertions.assertEquals("some", resolver1.getQueryParams().get("fallback"));
-        Assertions.assertEquals("284", resolver1.getQueryParams().get("ts"));
-        Assertions.assertNull(resolver1.getQueryParams().get("empt"));
     }
 
 //    @Test

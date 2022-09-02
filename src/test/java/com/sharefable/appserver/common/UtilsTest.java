@@ -13,10 +13,11 @@ class UtilsTest {
         Assertions.assertEquals("hello_world____", nName);
     }
 
-//    @Test
+    @Test
     void mediaTypeTest() {
-        MediaType mediaType = MediaType.parseMediaType("nonenope;a=b");
+        MediaType mediaType = MediaType.parseMediaType("nonenope/hii;a=b");
         System.out.println(mediaType.getType() + " :: " + mediaType.getSubtype() + " :: " + mediaType.getSubtypeSuffix());
         System.out.println(mediaType.getParameter("a"));
+        System.out.println(mediaType);
     }
 }

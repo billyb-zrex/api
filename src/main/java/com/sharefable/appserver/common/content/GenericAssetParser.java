@@ -1,8 +1,6 @@
 package com.sharefable.appserver.common.content;
 
-import java.util.Map;
-
-public class GenericAssetParser extends BaseParser {
+public class GenericAssetParser extends BaseAssetBodyParser {
     protected final FileNameResolver fileNameResolver;
 
      public GenericAssetParser(FileNameResolver fileNameResolver, String assetStr, boolean isBase64Encoded) {
@@ -13,10 +11,5 @@ public class GenericAssetParser extends BaseParser {
     @Override
     public String fileName() {
         return fileNameResolver.getFileName();
-    }
-
-    @Override
-    Map<String, String> queryParams() {
-        return fileNameResolver.getQueryParams();
     }
 }

@@ -3,12 +3,8 @@ package com.sharefable.appserver.common.content;
 import com.sharefable.appserver.common.Utils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.StringJoiner;
 
 @Slf4j
@@ -17,8 +13,6 @@ public class FileNameResolver {
     private final URL url;
     @Getter
     private final String fileName;
-    @Getter
-    private final Map<String, String> queryParams;
 
     public static final String INDEX_FILE = "index";
 
@@ -26,16 +20,6 @@ public class FileNameResolver {
         this.origin = origin;
         this.url = url;
         fileName = genFileName();
-        queryParams = parseFileProperty();
-    }
-
-    private Map<String, String> parseFileProperty() {
-        try {
-            return UriComponentsBuilder.fromUri(url.toURI()).build().getQueryParams().toSingleValueMap();
-        } catch (URISyntaxException e) {
-            log.error("Error while extracting query parameters from proxy url link. Msg: {}", e.getMessage());
-            return new HashMap<>();
-        }
     }
 
     private String qualifiedFileName(String name) {

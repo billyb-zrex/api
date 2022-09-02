@@ -26,7 +26,7 @@ public class HtmlParser extends GenericAssetParser {
 
     @Override
     public String getContent() {
-        return (String) content;
+        return content;
     }
 
     /*

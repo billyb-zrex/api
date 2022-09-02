@@ -7,9 +7,13 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,6 +25,8 @@ public class NewProxyAssetReqBodyParsed extends NewProxyAssetReqBody {
     private HttpStatus status;
     private URL origin;
     private URL url;
+    private Map<String, String> queryParams;
+    private Map<String, Object> meta;
 
     public static final String FALLBACK_MEDIA_TYPE = "fable/fallback-mime";
 
@@ -45,6 +51,20 @@ public class NewProxyAssetReqBodyParsed extends NewProxyAssetReqBody {
             parsedMediaType = MediaType.parseMediaType(FALLBACK_MEDIA_TYPE);
         }
         parsedBody.setContentType(parsedMediaType);
+
+        try {
+            parsedBody.setQueryParams(
+                UriComponentsBuilder.fromUri(parsedBody.getUrl().toURI()).build().getQueryParams().toSingleValueMap()
+            );
+        } catch (URISyntaxException e) {
+            log.error("Error while extracting query parameters from proxy url link. Msg: {}", e.getMessage());
+            parsedBody.setQueryParams(new HashMap<>());
+        }
+
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("origUrl", rawBody.getUrlNotParsed());
+        meta.put("origOrigin", rawBody.getOriginNotParsed());
+        parsedBody.setMeta(meta);
 
         return parsedBody;
     }
