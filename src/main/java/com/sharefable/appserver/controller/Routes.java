@@ -12,4 +12,6 @@ public interface Routes {
     String UPDATE_PROJECT = "/project/update/{id}";
 
     String NEW_ASSET = "/asset/new/{id}";
+
+    String GET_ASSET = "/asset/get/{id}/{*proxy}";
 }

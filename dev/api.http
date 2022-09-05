@@ -64,3 +64,7 @@ Content-Type: application/json
     }
 }
 
+### get asset
+GET http://localhost:8080/api/v1/asset/get/1/app/hii
+Content-Type: application/json
+

@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ProxyAssetRepo extends PagingAndSortingRepository<AssetMapping, Long> {
     List<AssetMapping> findAssetMappingByProjectIdAndIsActiveIsTrue(Long projectId);
+
+    List<AssetMapping> findAssetMappingByProjectIdAndAssetNameAndIsActiveIsTrueOrderByUpdatedAtDesc(Long projectId, String assetName);
 }
