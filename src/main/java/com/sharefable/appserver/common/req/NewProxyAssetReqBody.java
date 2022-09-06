@@ -31,5 +31,5 @@ public class NewProxyAssetReqBody {
 
     private Map<String, String> respHeaders;
 
-    private ProxyAssetBody respBody;
+    private AssetContentBody respBody;
 }

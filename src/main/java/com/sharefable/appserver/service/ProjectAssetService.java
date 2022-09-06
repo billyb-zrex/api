@@ -4,7 +4,9 @@ import com.sharefable.appserver.common.UpdateLog;
 import com.sharefable.appserver.common.Utils;
 import com.sharefable.appserver.common.content.BaseAssetBodyParser;
 import com.sharefable.appserver.common.content.ContentTypeParser;
+import com.sharefable.appserver.common.content.FileNameResolver;
 import com.sharefable.appserver.common.req.NewProxyAssetReqBodyParsed;
+import com.sharefable.appserver.common.req.AssetContentBody;
 import com.sharefable.appserver.common.req.ReqParamMissingException;
 import com.sharefable.appserver.common.resp.ProxyAssetMappingResp;
 import com.sharefable.appserver.entity.AssetMapping;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Streamable;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -72,7 +75,13 @@ public class ProjectAssetService {
         for (UpdateLog<Project.FieldRef> log : updateLogImgProp) {
             String randomFileName = UUID.randomUUID().toString();
             String qualifiedFileName = "project/" + projectId + "/" + randomFileName;
-            s3Service.upload(qualifiedFileName, "img", (String) log.getValue());
+            BaseAssetBodyParser imgParser = ContentTypeParser.parse(new MediaType("image/webp"), new FileNameResolver() {
+                @Override
+                protected String generateFileName() {
+                    return qualifiedFileName;
+                }
+            }, new AssetContentBody(true, log.getValue()));
+            s3Service.upload(qualifiedFileName, "img", imgParser.getContent());
             updateLogsWithImgLoc.add(UpdateLog.clone(log, randomFileName));
         }
 
@@ -130,13 +139,14 @@ public class ProjectAssetService {
             .method(body.getMethod())
             .reqHeaders(body.getReqHeaders())
             .respHeaders(body.getRespHeaders())
+            .queryParams(body.getQueryParams())
             .isActive(true)
             .contentType(body.getContentType().toString())
             .meta(body.getMeta());
 
         // If status != 302 then there would always be response body
         // If status == 302 there won't be any response body
-        if (body.getStatus() != HttpStatus.MOVED_PERMANENTLY){
+        if (body.getStatus() != HttpStatus.FOUND){
             BaseAssetBodyParser parser = ContentTypeParser.parse(body);
             String fileName = parser.fileName();
             String fullQualifiedFileName = "project/" + projectId + "/" + fileName;

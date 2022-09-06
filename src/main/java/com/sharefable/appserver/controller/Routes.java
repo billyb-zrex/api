@@ -13,5 +13,7 @@ public interface Routes {
 
     String NEW_ASSET = "/asset/new/{id}";
 
-    String GET_ASSET = "/asset/get/{id}/{*proxy}";
+    String GET_PROXY_ASSET = "/asset/get/{id}/{*proxy}";
+
+    String GET_CMN_ASSET = "/asset/cmn/{type}/{name}";
 }

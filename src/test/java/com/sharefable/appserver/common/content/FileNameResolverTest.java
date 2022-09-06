@@ -13,35 +13,35 @@ import java.util.Map;
 class FileNameResolverTest {
     @Test
     void genFileName() throws MalformedURLException {
-        FileNameResolver resolver1 = new FileNameResolver(
+        ProxyAssetFileNameResolver resolver1 = new ProxyAssetFileNameResolver(
             new URL("https://cdn.letsflyby.com"),
             new URL("https://cdn.letsflyby.com")
         );
         Assertions.assertTrue(
-            resolver1.getFileName().matches("assets/" + FileNameResolver.INDEX_FILE + "_[0-9a-zA-Z]+"),
+            resolver1.getFileName().matches("assets/" + ProxyAssetFileNameResolver.INDEX_FILE + "_[0-9a-zA-Z]+"),
             "filename: " + resolver1.getFileName()
         );
 
-        resolver1 = new FileNameResolver(
+        resolver1 = new ProxyAssetFileNameResolver(
             new URL("https://cdn.letsflyby.com"),
             new URL("https://cdn.letsflyby.com/")
         );
         Assertions.assertTrue(
-            resolver1.getFileName().matches("assets/" + FileNameResolver.INDEX_FILE + "_[0-9a-zA-Z]+"),
+            resolver1.getFileName().matches("assets/" + ProxyAssetFileNameResolver.INDEX_FILE + "_[0-9a-zA-Z]+"),
             "filename: " + resolver1.getFileName()
         );
 
 
-        resolver1 = new FileNameResolver(
+        resolver1 = new ProxyAssetFileNameResolver(
             new URL("https://cdn.letsflyby.com/app"),
             new URL("https://cdn.letsflyby.com/app")
         );
         Assertions.assertTrue(
-            resolver1.getFileName().matches("assets/app_" + FileNameResolver.INDEX_FILE + "_[0-9a-zA-Z]+"),
+            resolver1.getFileName().matches("assets/app_" + ProxyAssetFileNameResolver.INDEX_FILE + "_[0-9a-zA-Z]+"),
             "filename: " + resolver1.getFileName()
         );
 
-        resolver1 = new FileNameResolver(
+        resolver1 = new ProxyAssetFileNameResolver(
             new URL("https://cdn.letsflyby.com/app"),
             new URL("https://cdn.letsflyby.com/app/home")
         );
@@ -50,7 +50,7 @@ class FileNameResolverTest {
             "filename: " + resolver1.getFileName()
         );
 
-        resolver1 = new FileNameResolver(
+        resolver1 = new ProxyAssetFileNameResolver(
             new URL("https://cdn.letsflyby.com/app"),
             new URL("https://cdn.letsflyby.com/app/home/main.js")
         );
@@ -59,7 +59,7 @@ class FileNameResolverTest {
             "filename: " + resolver1.getFileName()
         );
 
-        resolver1 = new FileNameResolver(
+        resolver1 = new ProxyAssetFileNameResolver(
             new URL("https://cdn.letsflyby.com/app"),
             new URL("https://cdn.letsflyby.com/app/home/main.js?fallback=some&ts=284&empt")
         );

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Service
 public class S3Service {
@@ -22,13 +21,13 @@ public class S3Service {
         this.config = config;
     }
 
-    public void upload(String fileName, String contentType, String content) {
+    public void upload(String fileName, String contentType, byte[] content) {
         ObjectMetadata meta = new ObjectMetadata();
         meta.addUserMetadata("Content-Type", contentType);
         PutObjectRequest req = new PutObjectRequest(
             config.getProxyAssetBucketName(),
             fileName,
-            new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)),
+            new ByteArrayInputStream(content),
             meta);
         client.putObject(req);
     }

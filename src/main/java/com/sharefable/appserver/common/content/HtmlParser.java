@@ -6,12 +6,15 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.nio.charset.StandardCharsets;
+
 @Slf4j
-public class HtmlParser extends GenericAssetParser {
+public class HtmlParser extends GenericTextAssetParser {
     public static final String PROXY_PREFIX_TAG_NAME = "fab-proxy-";
     private static final String[] PROXY_TAG_NAMES = new String[]{"script", "link"};
 
-    public static final String PROXY_SCRIPT_SRC = "https://cdn.sharefable.com/proxy_script.js";
+    // TODO based on env generate this script
+    public static final String PROXY_SCRIPT_SRC = "http://localhost:8080/api/v1/asset/cmn/js/sw_installer.js";
     private static final String PROXY_SCRIPT = "<script type=\"text/javascript\" src=\"" + PROXY_SCRIPT_SRC + "\"></script>";
 
     public HtmlParser(FileNameResolver fileNameResolver, String htmlStr, boolean isBase64Encoded) {
@@ -25,7 +28,7 @@ public class HtmlParser extends GenericAssetParser {
     }
 
     @Override
-    public String getContent() {
+    public byte[] getContent() {
         return content;
     }
 
@@ -36,8 +39,9 @@ public class HtmlParser extends GenericAssetParser {
      * <fab-proxy-link/> to <script/> tag
      */
     private void postProcess() {
+        String contentStr = new String(getContent(), StandardCharsets.UTF_8);
         // TODO check with documents that are not proper html, if required raise exception
-        Document doc = Jsoup.parse(getContent());
+        Document doc = Jsoup.parse(contentStr);
 
         boolean isTagReplaced = false;
         for (String proxyTagName : PROXY_TAG_NAMES) {
@@ -70,6 +74,6 @@ public class HtmlParser extends GenericAssetParser {
             }
         }
 
-        content = doc.html();
+        content = doc.html().getBytes(StandardCharsets.UTF_8);
     }
 }

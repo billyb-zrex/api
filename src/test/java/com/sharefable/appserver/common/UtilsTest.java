@@ -3,7 +3,9 @@ package com.sharefable.appserver.common;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.web.util.UriUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,5 +59,12 @@ class UtilsTest {
         matchWith.put("cb", "default");
         nearestMapIndex = Utils.getNearestMap(list, matchWith);
         Assertions.assertEquals(0, nearestMapIndex);
+    }
+
+    @Test
+    void test() {
+        String proxyPath = "/_next/static/chunks/pages/[[...params]].js";
+        String dec = UriUtils.encodePath(proxyPath, StandardCharsets.UTF_8);
+        System.out.println(dec);
     }
 }

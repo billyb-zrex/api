@@ -19,6 +19,11 @@ public interface Utils {
         return media.getSubtype().equalsIgnoreCase("html");
     }
 
+    static boolean isText(MediaType media) {
+        return media.getType().equalsIgnoreCase("text")
+            || media.getType().equalsIgnoreCase("application");
+    }
+
     // https://stackoverflow.com/a/17183247
     static String getShortUUID() {
         return Long
