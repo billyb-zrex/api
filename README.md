@@ -1,5 +1,7 @@
 # appserver
 
+[Common Project Information](https://github.com/sharefable/dev-docs/blob/master/README.md)
+
 - Checkout the _Makefile_ for detailed running instructions.
 - _dev/api.http_ file for http request response
 
