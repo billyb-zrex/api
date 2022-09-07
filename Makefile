@@ -14,7 +14,10 @@ teardown:
 
 
 setup: teardown
-	docker-compose up -d
+	docker-compose up -d db proxyserver
+
+fullsetup: teardown
+	docker-compose up
 
 
 # --------------------------------------------------------------
