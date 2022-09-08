@@ -41,6 +41,9 @@ public class AssetMapping {
     private Boolean isActive;
 
     @Column(nullable = false)
+    private String assetName;
+
+    @Column(nullable = false)
     private String assetPath;
 
     @Column(nullable = false)

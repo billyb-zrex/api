@@ -1,18 +1,63 @@
 package com.sharefable.appserver.common.content;
 
+import com.sharefable.appserver.common.Utils;
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-@Slf4j
-public class HtmlParser extends GenericAssetParser {
-    public static final String PROXY_PREFIX_TAG_NAME = "fab-proxy-";
-    private static final String[] PROXY_TAG_NAMES = new String[]{"script", "link"};
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
-    public static final String PROXY_SCRIPT_SRC = "https://cdn.sharefable.com/proxy_script.js";
-    private static final String PROXY_SCRIPT = "<script type=\"text/javascript\" src=\"" + PROXY_SCRIPT_SRC + "\"></script>";
+@Slf4j
+public class HtmlParser extends GenericTextAssetParser {
+
+    @Data
+    @Builder
+    private static class TagOpConfig {
+        enum OpType {Replace, ReplaceWhenEqual}
+
+        private String lhs;
+        private OpType op;
+        private String rhs;
+    }
+
+    public static final String PROXY_PREFIX_ATTR_NAME = "data-fl-pxy-";
+
+    private static final Map<String, TagOpConfig[]> PROXY_TAG_CONFIG;
+
+    static {
+        PROXY_TAG_CONFIG = new HashMap<>();
+
+        // For script tag we just change the src attr -> PROXY_PREFIX_ATTR_NAME + attr
+        TagOpConfig scriptTagConfig = TagOpConfig.builder()
+            .lhs("src")
+            .op(TagOpConfig.OpType.Replace)
+            .build();
+        PROXY_TAG_CONFIG.put("script", new TagOpConfig[]{scriptTagConfig});
+
+
+        // For script tag we change the href attr -> PROXY_PREFIX_ATTR_NAME + href
+        TagOpConfig linkTagConfigHref = TagOpConfig.builder()
+            .lhs("href")
+            .op(TagOpConfig.OpType.Replace)
+            .build();
+        // and we change the rel attr only when rel attr value is preload
+        TagOpConfig linkTagConfigRel = TagOpConfig.builder()
+            .lhs("rel")
+            .op(TagOpConfig.OpType.ReplaceWhenEqual)
+            .rhs("preload")
+            .build();
+        PROXY_TAG_CONFIG.put("link", new TagOpConfig[]{linkTagConfigHref, linkTagConfigRel});
+    }
+
+    // TODO based on env generate this script
+    public static final String PROXY_SCRIPT_SRC = "http://localhost:8080/api/v1/asset/cmn/js/sw_installer.js";
+     static final String PROXY_SCRIPT = "<script type=\"text/javascript\" src=\"" + PROXY_SCRIPT_SRC + "\"></script>";
 
     public HtmlParser(FileNameResolver fileNameResolver, String htmlStr, boolean isBase64Encoded) {
         super(fileNameResolver, htmlStr, isBase64Encoded);
@@ -25,7 +70,7 @@ public class HtmlParser extends GenericAssetParser {
     }
 
     @Override
-    public String getContent() {
+    public byte[] getContent() {
         return content;
     }
 
@@ -36,40 +81,44 @@ public class HtmlParser extends GenericAssetParser {
      * <fab-proxy-link/> to <script/> tag
      */
     private void postProcess() {
-        // TODO check with documents that are not proper html, if required raise exception
-        Document doc = Jsoup.parse(getContent());
+        String contentStr = new String(getContent(), StandardCharsets.UTF_8);
+        Document doc = Jsoup.parse(contentStr);
 
-        boolean isTagReplaced = false;
-        for (String proxyTagName : PROXY_TAG_NAMES) {
-            Elements els = doc.getElementsByTag(proxyTagName);
+        for (String proxyableTagName : PROXY_TAG_CONFIG.keySet()) {
+            Elements els = doc.getElementsByTag(proxyableTagName);
             for (Element el : els) {
-                isTagReplaced = true;
-                el.tagName(PROXY_PREFIX_TAG_NAME + proxyTagName);
-            }
-        }
-
-        if (isTagReplaced) {
-            Elements heads = doc.getElementsByTag("head");
-            if (heads.size() == 0) {
-                Elements html = doc.getElementsByTag("html");
-                if (html.size() != 0) {
-                    Elements children = html.get(0).children();
-                    if (children.size() != 0) {
-                        children.get(0).before("<head>" + PROXY_SCRIPT + "</head>");
+                TagOpConfig[] tagOpConfigs = PROXY_TAG_CONFIG.get(el.tagName());
+                for (TagOpConfig config : tagOpConfigs) {
+                    String attrVal = el.attr(config.lhs);
+                    if (!Utils.isStrEmpty(attrVal)) {
+                        switch (config.op) {
+                            case Replace:
+                                el.attr(PROXY_PREFIX_ATTR_NAME + config.lhs, attrVal);
+                                el.removeAttr(config.lhs);
+                                break;
+                            case ReplaceWhenEqual:
+                                if (attrVal.equals(config.rhs == null ? "" : config.rhs)) {
+                                    el.attr(PROXY_PREFIX_ATTR_NAME + config.lhs, attrVal);
+                                    el.removeAttr(config.lhs);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
                     }
-                    // Html tag must contain at least some other tag than head tag i.e. <body> tag
-                }
-                // If there is no html tag that means there is no content in html page
-            } else {
-                Elements children = heads.get(0).children();
-                if (children.size() == 0){
-                    heads.get(0).append(PROXY_SCRIPT);
-                } else {
-                    children.get(0).before(PROXY_SCRIPT);
                 }
             }
         }
 
-        content = doc.html();
+
+        Elements body = doc.getElementsByTag("body");
+        if (body.size() > 0){
+            body.append(PROXY_SCRIPT);
+        } else {
+            Elements html = doc.getElementsByTag("html");
+            html.append("<body>" + PROXY_SCRIPT + "</body>");
+        }
+
+        content = doc.html().getBytes(StandardCharsets.UTF_8);
     }
 }

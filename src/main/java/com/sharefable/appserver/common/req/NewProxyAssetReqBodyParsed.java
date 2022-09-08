@@ -40,7 +40,11 @@ public class NewProxyAssetReqBodyParsed extends NewProxyAssetReqBody {
         parsedBody.setReqHeaders(rawBody.getReqHeaders());
         parsedBody.setRespHeaders(rawBody.getRespHeaders());
 
-        HttpStatus status = HttpStatus.resolve(rawBody.getStatusNotParsed());
+        int statusRaw = rawBody.getStatusNotParsed();
+        // We would ideally not send 304 while serving a request
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/304
+        statusRaw = statusRaw == 304 ? 200 : statusRaw;
+        HttpStatus status = HttpStatus.resolve(statusRaw);
         parsedBody.setStatus(status);
 
         MediaType parsedMediaType;

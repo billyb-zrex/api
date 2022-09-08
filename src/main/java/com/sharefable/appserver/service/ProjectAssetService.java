@@ -4,8 +4,11 @@ import com.sharefable.appserver.common.UpdateLog;
 import com.sharefable.appserver.common.Utils;
 import com.sharefable.appserver.common.content.BaseAssetBodyParser;
 import com.sharefable.appserver.common.content.ContentTypeParser;
+import com.sharefable.appserver.common.content.FileNameResolver;
 import com.sharefable.appserver.common.req.NewProxyAssetReqBodyParsed;
+import com.sharefable.appserver.common.req.AssetContentBody;
 import com.sharefable.appserver.common.req.ReqParamMissingException;
+import com.sharefable.appserver.common.resp.ProxyAssetMappingResp;
 import com.sharefable.appserver.entity.AssetMapping;
 import com.sharefable.appserver.entity.Project;
 import com.sharefable.appserver.repo.ProxyAssetRepo;
@@ -14,10 +17,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Streamable;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,7 +75,13 @@ public class ProjectAssetService {
         for (UpdateLog<Project.FieldRef> log : updateLogImgProp) {
             String randomFileName = UUID.randomUUID().toString();
             String qualifiedFileName = "project/" + projectId + "/" + randomFileName;
-            s3Service.upload(qualifiedFileName, "img", (String) log.getValue());
+            BaseAssetBodyParser imgParser = ContentTypeParser.parse(new MediaType("image/webp"), new FileNameResolver() {
+                @Override
+                protected String generateFileName() {
+                    return qualifiedFileName;
+                }
+            }, new AssetContentBody(true, log.getValue()));
+            s3Service.upload(qualifiedFileName, "img", imgParser.getContent());
             updateLogsWithImgLoc.add(UpdateLog.clone(log, randomFileName));
         }
 
@@ -113,22 +128,25 @@ public class ProjectAssetService {
             }
         }
 
+        String assetPath = body.getUrl().getPath();
         AssetMapping.AssetMappingBuilder mappingBuilder = AssetMapping.builder();
         mappingBuilder
             .projectId(projectId)
-            .assetPath(body.getUrl().getPath())
+            .assetPath(assetPath)
+            .assetName(Utils.getAssetNameFromAssetPath(assetPath))
             .origin(body.getOrigin().getPath())
             .status(body.getStatus())
             .method(body.getMethod())
             .reqHeaders(body.getReqHeaders())
             .respHeaders(body.getRespHeaders())
+            .queryParams(body.getQueryParams())
             .isActive(true)
             .contentType(body.getContentType().toString())
             .meta(body.getMeta());
 
         // If status != 302 then there would always be response body
         // If status == 302 there won't be any response body
-        if (body.getStatus() != HttpStatus.MOVED_PERMANENTLY){
+        if (body.getStatus() != HttpStatus.FOUND){
             BaseAssetBodyParser parser = ContentTypeParser.parse(body);
             String fileName = parser.fileName();
             String fullQualifiedFileName = "project/" + projectId + "/" + fileName;
@@ -138,5 +156,70 @@ public class ProjectAssetService {
 
         AssetMapping mapping = mappingBuilder.build();
         return proxyAssetRepo.save(mapping);
+    }
+
+    @Transactional(readOnly = true)
+    public ProxyAssetMappingResp getAssetByName(Long projectId, String assetPath, HttpMethod method, String queryString) {
+        String assetName = Utils.getAssetNameFromAssetPath(assetPath);
+        List<AssetMapping> assets =
+            proxyAssetRepo.findAssetMappingByProjectIdAndAssetNameAndIsActiveIsTrueOrderByUpdatedAtDesc(
+                projectId,
+                assetName
+            );
+        assets = assets.stream()
+            .filter(asset -> asset.getMethod() == method)
+            .filter(asset -> asset.getAssetPath().equals(assetPath))
+            .collect(Collectors.toList());
+
+        ProxyAssetMappingResp.ProxyAssetMappingRespBuilder proxyBuilder = ProxyAssetMappingResp.builder();
+        if (assets.size() == 0)  {
+            proxyBuilder.isFound(false);
+            return proxyBuilder.build();
+        } else {
+            proxyBuilder.isFound(true);
+        }
+
+        Map<String, String> queryParams = new HashMap<>();
+        if (queryString != null && !queryString.trim().equals("")) {
+            try {
+                queryParams = UriComponentsBuilder
+                    .fromUri(new URI("https://stash.sharefable.com?" + queryString))
+                    .build()
+                    .getQueryParams()
+                    .toSingleValueMap();
+            } catch (URISyntaxException e) {
+                log.warn("Can't extract query string for request matching. Error: {}", e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        AssetMapping matchedAsset;
+        if (queryParams.size() == 0) {
+            // If no query parameter is passed then return the latest asset
+            matchedAsset = assets.get(0);
+        } else {
+            List<Map<String, String>> allQueryParams =
+                assets.stream().map(AssetMapping::getQueryParams).collect(Collectors.toList());
+
+            int nearestMapIndex = Utils.getNearestMap(allQueryParams, queryParams);
+            matchedAsset = assets.get(nearestMapIndex);
+        }
+        proxyBuilder.proxy(matchedAsset);
+
+        String respLocation = matchedAsset.getLocation();
+        byte[] bodyContent;
+        if (!(respLocation == null || respLocation.equals(""))) {
+            String fullQualifiedFileName = "project/" + projectId + "/" + respLocation;
+            try {
+                bodyContent = s3Service.getObjectContent(fullQualifiedFileName);
+                proxyBuilder.body(bodyContent);
+            } catch (IOException e) {
+                log.error("Error while reading file from s3. Error: {}", e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        }
+
+        return proxyBuilder.build();
     }
 }

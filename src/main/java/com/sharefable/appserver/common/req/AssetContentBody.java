@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class ProxyAssetBody {
+public class AssetContentBody {
     private boolean base64Encoded;
     private Object body;
 }
