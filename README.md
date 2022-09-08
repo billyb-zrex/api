@@ -7,8 +7,21 @@
 
 ## General 
 
-- The _entity_ classes use mysql `auto increment` for id. [Ref](
-https://stackoverflow.com/a/4103347).
+- The _entity_ classes use mysql `auto increment` for id. [Ref](https://stackoverflow.com/a/4103347).
+
+## Env variables
+
+This project requires couple of env variable to be present before we fire the makefile commands.
+Save these variables in a file called `env.dev` and then run `make envgen` to generate env files for intellij
+```
+export DB_USER=<>
+export DB_PWD=<>
+export DB_HOST=jdbc:mysql://localhost:3306
+export ASSET_BUCKET_NAME=proxy-asset-2
+export AWS_ACCESS_KEY_ID=<>
+export AWS_SECRET_ACCESS_KEY=<>
+export AWS_S3_REGION=ap-south-1
+```
 
 # IDE setup
 
