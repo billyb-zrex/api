@@ -72,4 +72,8 @@ public interface Utils {
     static String getAssetNameFromAssetPath(String assetPath) {
         return assetPath.substring(0, Math.min(255, assetPath.length()));
     }
+
+    static boolean isStrEmpty(String str) {
+        return str == null || str.trim().equals("");
+    }
 }
