@@ -11,6 +11,7 @@ import com.sharefable.api.common.req.ReqParamMissingException;
 import com.sharefable.api.common.resp.ProxyAssetMappingResp;
 import com.sharefable.api.entity.AssetMapping;
 import com.sharefable.api.entity.Project;
+import com.sharefable.api.repo.AssetContentRepo;
 import com.sharefable.api.repo.ProxyAssetRepo;
 import com.sharefable.api.repo.ProjectRepo;
 import lombok.extern.slf4j.Slf4j;
@@ -38,15 +39,18 @@ public class ProjectAssetService {
 
     private final ProxyAssetRepo proxyAssetRepo;
 
+    private final AssetContentRepo assetContentRepo;
+
     private final List<Project.FieldRef> updatableFields = Project.UPDATABLE_FIELDS;
 
     private final S3Service s3Service;
 
     @Autowired
-    public ProjectAssetService(ProjectRepo projectRepo, ProxyAssetRepo proxyAssetRepo, S3Service s3Service) {
+    public ProjectAssetService(ProjectRepo projectRepo, ProxyAssetRepo proxyAssetRepo, AssetContentRepo assetContentRepo, S3Service s3Service) {
         this.projectRepo = projectRepo;
         this.proxyAssetRepo = proxyAssetRepo;
         this.s3Service = s3Service;
+        this.assetContentRepo = assetContentRepo;
     }
 
     @Transactional

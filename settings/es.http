@@ -1,0 +1,57 @@
+# Index creation. Directly create in elastic search
+
+PUT asset-content
+
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "assetId": {
+        "type": "keyword"
+      },
+      "assetPath": {
+        "type": "keyword"
+      },
+      "method": {
+        "type": "keyword"
+      },
+      "version": {
+        "type": "keyword"
+      },
+      "reqParams": {
+        "type": "flattened"
+      },
+      "reqBody": {
+        "type": "flattened"
+      },
+      "reqBodyStr": {
+        "type": "text"
+      },
+      "reqHeaders": {
+        "type": "object",
+        "enabled": false
+      },
+      "respHeaders": {
+        "type": "object",
+        "enabled": false
+      },
+      "respData": {
+        "type": "object",
+        "enabled": false
+      }
+    }
+  },
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_custom_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["classic"]
+        }
+      }
+    }
+  }
+}

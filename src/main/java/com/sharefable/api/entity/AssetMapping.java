@@ -38,7 +38,7 @@ public class AssetMapping {
     private Long projectId;
 
     @Column(nullable = false)
-    private Boolean isActive;
+    private Integer version;
 
     @Column(nullable = false)
     private String assetName;
@@ -52,24 +52,10 @@ public class AssetMapping {
     @Column(name = "http_status", nullable = false)
     private HttpStatus status;
 
-    private String location;
-
     @Column(nullable = false)
     private HttpMethod method;
 
     private String contentType;
-
-    @Column(columnDefinition = "json")
-    @Type(type = "json")
-    private Map<String, String> queryParams;
-
-    @Column(columnDefinition = "json")
-    @Type(type = "json")
-    private Map<String, String> reqHeaders;
-
-    @Column(columnDefinition = "json")
-    @Type(type = "json")
-    private Map<String, String> respHeaders;
 
     @Column(columnDefinition = "json")
     @Type(type = "json")

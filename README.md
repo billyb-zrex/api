@@ -8,6 +8,7 @@
 ## General 
 
 - The _entity_ classes use mysql `auto increment` for id. [Ref](https://stackoverflow.com/a/4103347).
+- Can't use elasticsearch 8.* cluster as `RestHighLevelClient` is deprecated and has issues. [Read more about it here.](https://github.com/spring-projects/spring-data-elasticsearch#about-elasticsearch-versions-and-clients)
 
 ## Env variables
 
