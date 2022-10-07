@@ -50,9 +50,6 @@ public class Project {
     private String thumbnail;
 
     @Column(nullable = false)
-    private Integer latestVersion;
-
-    @Column(nullable = false)
     private String origin;
 
     @Column(nullable = false)

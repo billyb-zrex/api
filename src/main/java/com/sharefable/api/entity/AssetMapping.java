@@ -38,9 +38,6 @@ public class AssetMapping {
     private Long projectId;
 
     @Column(nullable = false)
-    private Integer version;
-
-    @Column(nullable = false)
     private String assetName;
 
     @Column(nullable = false)

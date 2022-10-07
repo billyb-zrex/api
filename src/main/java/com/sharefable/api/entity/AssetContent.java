@@ -2,6 +2,7 @@ package com.sharefable.api.entity;
 
 import com.sharefable.api.common.ESIndices;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -20,22 +21,20 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Builder
 public class AssetContent {
     @Id
     @Field(type= FieldType.Keyword)
-    private String id;
+    private Long id;
 
     @Field(type= FieldType.Keyword)
-    private String assetId;
+    private Long assetId;
 
     @Field(type = FieldType.Keyword)
     private String assetPath;
 
     @Field(type = FieldType.Keyword)
     private String method;
-
-    @Field(type = FieldType.Keyword)
-    private String version;
 
     @Field(type=FieldType.Flattened)
     private Map<String, String> reqParams;
@@ -53,5 +52,5 @@ public class AssetContent {
     private Map<String, String> respHeaders;
 
     @Field(index = false)
-    private Object respData;
+    private String respDataURI;
 }
