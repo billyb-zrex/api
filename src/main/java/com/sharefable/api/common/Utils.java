@@ -31,16 +31,6 @@ public interface Utils {
             .replaceAll("-", "");
     }
 
-    // In order to check the new asset with the saved one currently we check if the asset url, http status, http method
-    // and query parameters are same
-    // Two assets /app/home?a=1&ts=45903485 and /app/home?a=1&ts=435490438 are different even if `ts` is ignored in the
-    // logic.
-    static boolean isSavedAssetIsSameWithNewAsset(AssetMapping savedAsset, NewProxyAssetReqBodyParsed inAsset) {
-        return savedAsset.getAssetPath().equals(inAsset.getUrl().getPath())
-            && savedAsset.getStatus() == inAsset.getStatus()
-            && savedAsset.getMethod() == inAsset.getMethod()
-            && savedAsset.getQueryParams().equals(inAsset.getQueryParams());
-    }
 
     // Nearest map is the map from the list of maps, which is most similar with the matchWith map
     // Similarity is figured out by checking if the key is present in both the map and the value is same or not

@@ -9,6 +9,7 @@ import com.sharefable.api.common.req.NewProxyAssetReqBodyParsed;
 import com.sharefable.api.common.req.AssetContentBody;
 import com.sharefable.api.common.req.ReqParamMissingException;
 import com.sharefable.api.common.resp.ProxyAssetMappingResp;
+import com.sharefable.api.entity.AssetContent;
 import com.sharefable.api.entity.AssetMapping;
 import com.sharefable.api.entity.Project;
 import com.sharefable.api.repo.AssetContentRepo;
@@ -121,46 +122,80 @@ public class ProjectAssetService {
 
     @Transactional
     public AssetMapping createAssetMapping(Long projectId, NewProxyAssetReqBodyParsed body) throws ReqParamMissingException {
-        List<AssetMapping> activeMappings = proxyAssetRepo.findAssetMappingByProjectIdAndIsActiveIsTrue(projectId);
-        for (AssetMapping asset : activeMappings) {
-            if (Utils.isSavedAssetIsSameWithNewAsset(asset, body)) {
-                // If there is a new asset incoming with same definition as of a one in storage, then we mark the prev
-                // one as inactive and then mark the incoming one as active
-                asset.setIsActive(false);
-                proxyAssetRepo.save(asset);
+        String assetPath = body.getUrl().getPath(); // TODO path should only return url path not query params
+        String assetName = Utils.getAssetNameFromAssetPath(assetPath);
+        List<AssetMapping> mappings = proxyAssetRepo.findAssetMappingByProjectIdAndAssetName(projectId, assetName);
+        AssetMapping matchedMapping = null;
+        for (AssetMapping mapping : mappings) {
+            if (mapping.getAssetPath().equals(assetPath)) {
+                matchedMapping = mapping;
                 break;
             }
         }
 
-        String assetPath = body.getUrl().getPath();
-        AssetMapping.AssetMappingBuilder mappingBuilder = AssetMapping.builder();
-        mappingBuilder
-            .projectId(projectId)
-            .assetPath(assetPath)
-            .assetName(Utils.getAssetNameFromAssetPath(assetPath))
-            .origin(body.getOrigin().getPath())
-            .status(body.getStatus())
-            .method(body.getMethod())
-            .reqHeaders(body.getReqHeaders())
-            .respHeaders(body.getRespHeaders())
-            .queryParams(body.getQueryParams())
-            .isActive(true)
-            .contentType(body.getContentType().toString())
-            .meta(body.getMeta());
+        boolean newMappingCreated = false;
+        if (matchedMapping == null) {
+            // If a mapping is not found in db, then create a new mapping
+            newMappingCreated = true;
+            matchedMapping = AssetMapping.builder()
+                .projectId(projectId)
+                .assetPath(assetPath)
+                .assetName(assetName)
+                .origin(body.getOrigin().getPath())
+                .status(body.getStatus())
+                .method(body.getMethod())
+                .contentType(body.getContentType().toString())
+                .meta(body.getMeta())
+                .build();
 
-        // If status != 302 then there would always be response body
-        // If status == 302 there won't be any response body
-        if (body.getStatus() != HttpStatus.FOUND){
-            BaseAssetBodyParser parser = ContentTypeParser.parse(body);
-            String fileName = parser.fileName();
-            String fullQualifiedFileName = "project/" + projectId + "/" + fileName;
-            s3Service.upload(fullQualifiedFileName, body.getContentType().getType(), parser.getContent());
-            mappingBuilder.location(fileName);
+            proxyAssetRepo.save(matchedMapping);
         }
 
-        AssetMapping mapping = mappingBuilder.build();
-        return proxyAssetRepo.save(mapping);
+
+        boolean shouldCreateAssetContent = true;
+        if (!newMappingCreated) {
+            // If a mapping already exists in db, then there might be associated content in elastic search
+            // TODO here the searching has to be strict not fuzzy
+            List<AssetContent> assets = assetContentRepo.findAllByAssetIdAndAssetPathAndMethodAndReqParamsAndReqBody(
+                matchedMapping.getId(),
+                assetPath,
+                body.getMethod().toString(),
+                body.getQueryParams(),
+                body.getReqBody()
+            );
+            if (assets.size() > 0) {
+                shouldCreateAssetContent = false;
+            }
+        }
+
+        if (shouldCreateAssetContent) {
+            // If status != 302 then there would always be response body
+            // If status == 302 there won't be any response body
+            if (body.getStatus() != HttpStatus.FOUND){
+                BaseAssetBodyParser parser = ContentTypeParser.parse(body);
+                String fileName = parser.fileName();
+                String fullQualifiedFileName = "project/" + projectId + "/" + fileName;
+                s3Service.upload(fullQualifiedFileName, body.getContentType().getType(), parser.getContent());
+
+                AssetContent assetContent = AssetContent.builder()
+//                    .id() todo
+                    .assetId(matchedMapping.getId())
+                    .assetPath(assetPath)
+                    .reqBody(body.getReqBody())
+//                    .reqBodyStr() todo
+                    .reqParams(body.getQueryParams())
+                    .reqHeaders(body.getReqHeaders())
+                    .respHeaders(body.getRespHeaders())
+                    .respDataURI(fileName)
+                    .build();
+
+                assetContentRepo.save(assetContent);
+            }
+        }
+        return matchedMapping;
     }
+
+    /*
 
     @Transactional(readOnly = true)
     public ProxyAssetMappingResp getAssetByName(Long projectId, String assetPath, HttpMethod method, String queryString) {
@@ -226,4 +261,5 @@ public class ProjectAssetService {
 
         return proxyBuilder.build();
     }
+     */
 }

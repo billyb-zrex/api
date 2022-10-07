@@ -8,7 +8,9 @@ import java.util.List;
 
 @Repository
 public interface ProxyAssetRepo extends PagingAndSortingRepository<AssetMapping, Long> {
-    List<AssetMapping> findAssetMappingByProjectIdAndIsActiveIsTrue(Long projectId);
+    List<AssetMapping> findAssetMappingByProjectIdAndAssetName(Long projectId, String assetName);
 
-    List<AssetMapping> findAssetMappingByProjectIdAndAssetNameAndIsActiveIsTrueOrderByUpdatedAtDesc(Long projectId, String assetName);
+//    List<AssetMapping> findAssetMappingByProjectId(Long projectId);
+
+//    List<AssetMapping> findAssetMappingByProjectIdAndAssetNameOrderByUpdatedAtDesc(Long projectId, String assetName);
 }

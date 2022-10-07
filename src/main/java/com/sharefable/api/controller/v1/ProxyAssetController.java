@@ -41,10 +41,17 @@ public class ProxyAssetController {
         log.info("{} is called with projectId {} and body {}", Routes.NEW_ASSET, projectId, body);
 
         NewProxyAssetReqBodyParsed parsedBody = NewProxyAssetReqBodyParsed.from(body);
-        projectAssetService.createAssetMapping(projectId, parsedBody);
+        AssetMapping assetMapping = projectAssetService.createAssetMapping(projectId, parsedBody);
+        if (assetMapping == null) {
+            return ApiResp.builder()
+                .status(ApiResp.ResponseStatus.Failure)
+                .errStr("Can't create mapping")
+                .errCode(ApiResp.ErrorCode.NotFound).build();
+        }
         return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
     }
 
+    /*
     @RequestMapping(
         value = Routes.GET_PROXY_ASSET,
         method = { RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT, RequestMethod.PATCH }
@@ -90,4 +97,5 @@ public class ProxyAssetController {
             .body(mapping.getBody());
     }
 
+     */
 }
