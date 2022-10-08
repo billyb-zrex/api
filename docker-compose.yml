@@ -1,4 +1,5 @@
 version: '3'
+
 services:
     flyway:
         image: flyway/flyway
@@ -8,6 +9,7 @@ services:
             - ./schema:/flyway/sql
         depends_on:
             - db
+
     db:
         image: mysql/mysql-server
         container_name: fable-db
@@ -17,3 +19,38 @@ services:
             - MYSQL_ROOT_HOST=%
         ports:
             - "3306:3306"
+
+    es:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+        container_name: es
+        environment:
+            - xpack.security.enabled=false
+            - discovery.type=single-node
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+            nofile:
+                soft: 65536
+                hard: 65536
+        cap_add:
+            - IPC_LOCK
+        volumes:
+            - elasticsearch-data:/usr/share/elasticsearch/data
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+
+    kibana:
+        container_name: kibana
+        image: docker.elastic.co/kibana/kibana:8.4.3
+        environment:
+            - ELASTICSEARCH_HOSTS=http://es:9200
+        ports:
+            - "5601:5601"
+        depends_on:
+            - es
+
+volumes:
+    elasticsearch-data:
+        driver: local
