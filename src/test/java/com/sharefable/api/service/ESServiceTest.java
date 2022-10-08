@@ -1,6 +1,5 @@
 package com.sharefable.api.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.entity.AssetContent;
 import org.junit.jupiter.api.Assertions;
@@ -30,14 +29,13 @@ class ESServiceTest {
         Thread.sleep(3000);
     }
 
-    private AssetContent getData(Map<String, String> params, String reqBodyStr) throws JsonProcessingException {
+    private AssetContent getData(Map<String, String> params, String reqBodyStr) {
         return AssetContent.builder()
             .assetId(1L)
             .assetPath("/api/acme")
             .method("GET")
             .reqParams(mapper.valueToTree(params))
             .reqParamsStr(mapper.valueToTree(params).toString())
-            .reqBody(mapper.readTree(reqBodyStr))
             .reqBodyStr(reqBodyStr)
             .reqHeaders(mapper.valueToTree(params).toString())
             .respHeaders(mapper.valueToTree(params).toString())
@@ -45,7 +43,7 @@ class ESServiceTest {
             .build();
     }
 
-    private AssetContent getDefaultData() throws JsonProcessingException {
+    private AssetContent getDefaultData() {
         Map<String, String> params = new HashMap<>();
         params.put("from", "hn");
 
@@ -54,7 +52,7 @@ class ESServiceTest {
     }
 
     @Test
-    void shouldBeAbleToIndexAndMatchASimpleDocument() throws JsonProcessingException, InterruptedException {
+    void shouldBeAbleToIndexAndMatchASimpleDocument() throws InterruptedException {
         AssetContent data = getDefaultData();
 
         Assertions.assertNull(data.getId());
@@ -79,7 +77,7 @@ class ESServiceTest {
     }
 
     @Test
-    void shouldBeAbleToMatchWithOptionalParameter() throws JsonProcessingException, InterruptedException {
+    void shouldBeAbleToMatchWithOptionalParameter() throws InterruptedException {
         AssetContent data = getDefaultData();
 
         data.setReqParams(null);
@@ -97,7 +95,7 @@ class ESServiceTest {
     }
 
     @Test
-    void shouldBeAbleToFindMatchesForADocument() throws JsonProcessingException, InterruptedException {
+    void shouldBeAbleToFindMatchesForADocument() throws InterruptedException {
         Map<String, String> params = new HashMap<>();
         params.put("from", "gog");
         String reqBodyStr = "{ \"key1\": \"value1\" }";

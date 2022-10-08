@@ -169,20 +169,13 @@ public class ProjectAssetService {
             queryParamsStr = mapper.valueToTree(queryParams).toString();
         }
 
-        Object reqBody = body.getReqBody();
-        String reqBodyStr = null;
-        if (reqBody != null) {
-            reqBodyStr = mapper.valueToTree(reqBody).toString();
-        }
-
         AssetContent asset = AssetContent.builder()
             .assetId(matchedMapping.getId())
             .assetPath(assetPath)
             .method(body.getMethod().toString())
             .reqParams(queryParams)
             .reqParamsStr(queryParamsStr)
-            .reqBody(reqBody)
-            .reqBodyStr(reqBodyStr)
+            .reqBodyStr(body.getReqBody())
             .reqHeaders(mapper.valueToTree(body.getReqHeaders()).toString())
             .respHeaders(mapper.valueToTree(body.getRespHeaders()).toString())
             .respDataUri(fileName)

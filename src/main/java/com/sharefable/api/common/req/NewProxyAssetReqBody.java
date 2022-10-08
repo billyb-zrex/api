@@ -33,7 +33,7 @@ public class NewProxyAssetReqBody {
 
     private Map<String, String> respHeaders;
 
-    private Object reqBody;
+    private String reqBody;
 
     private AssetContentBody respBody;
 }

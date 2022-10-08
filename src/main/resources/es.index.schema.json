@@ -25,9 +25,6 @@
           }
         }
       },
-      "reqBody": {
-        "type": "flattened"
-      },
       "reqBodyStr": {
         "type": "text",
         "fields": {

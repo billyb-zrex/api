@@ -38,13 +38,6 @@ public class AssetContent {
     @ESQueryable(isAlsoKeyword = true)
     private String reqParamsStr;
 
-    // Earlier the plan was to run flattened query to the reqBody field. This would require constructing JSON path
-    // to each leaf node and run match queries. Also, simultaneously fire query in reqBodyStr.
-    // Currently, we would just fire query with reqBodyStr.
-    // TODO if the match quality is not high, then implement this as well. This field is indexed but not queried
-    @ESQueryable(exclude = true)
-    private Object reqBody;
-
     @ESQueryable(isAlsoKeyword = true)
     private String reqBodyStr;
 
