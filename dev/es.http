@@ -5,8 +5,10 @@ content-type: application/json
 < ../src/main/resources/es.index.schema.json
 
 ### Delete data from index. ONLY FOR LOCAL INSTANCE.
-DELETE http://localhost:9200/asset-content/
+DELETE http://localhost:9200/asset-content
 
+### Delete a doc
+DELETE http://localhost:9200/asset-content/_doc/TEl6uIMBbHh_dWAY_kyG
 
 ### query index that was already created
 GET {{host}}/asset-content?pretty
