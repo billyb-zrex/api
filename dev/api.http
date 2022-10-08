@@ -3,25 +3,27 @@ GET http://localhost:8080/api/v1/health
 Accept: application/json
 
 
-### project/new with success
+### project: create new with success
 POST http://localhost:8080/api/v1/project/new
 Content-Type: application/json
 
 {
-  "name": "Test Project"
+  "name": "Test Project",
+  "origin": "https://home.acme.com",
+  "title": "Acme - Home"
 }
 
-### project/new with failure
+### project: create new with failure
 POST http://localhost:8080/api/v1/project/new
 Content-Type: application/json
 
 {}
 
-### projects get
+### projects: get
 GET http://localhost:8080/api/v1/projects
 Accept: application/json
 
-### project update
+### project: update
 POST http://localhost:8080/api/v1/project/update/5
 Content-Type: application/json
 
@@ -40,7 +42,7 @@ Content-Type: application/json
   ]
 }
 
-### proxy mapping
+### asset: html file
 POST http://localhost:8080/api/v1/asset/new/1
 Content-Type: application/json
 

@@ -1,0 +1,13 @@
+### Index creation. Directly create in elastic search
+PUT {{host}}/asset-content
+content-type: application/json
+
+< ../src/main/resources/es.index.schema.json
+
+### Delete data from index. ONLY FOR LOCAL INSTANCE.
+DELETE http://localhost:9200/asset-content/
+
+
+### query index that was already created
+GET {{host}}/asset-content?pretty
+
