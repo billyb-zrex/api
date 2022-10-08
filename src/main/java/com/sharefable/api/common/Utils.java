@@ -1,7 +1,5 @@
 package com.sharefable.api.common;
 
-import com.sharefable.api.common.req.NewProxyAssetReqBodyParsed;
-import com.sharefable.api.entity.AssetMapping;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -60,6 +58,8 @@ public interface Utils {
     }
 
     static String getAssetNameFromAssetPath(String assetPath) {
+        // In db the asset path is trimmed to 255 char so that it can't be indexed for a faster lookup.
+        // check asset_mapping table in sql ddl file
         return assetPath.substring(0, Math.min(255, assetPath.length()));
     }
 
