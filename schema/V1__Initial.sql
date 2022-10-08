@@ -14,7 +14,7 @@ CREATE TABLE project
     thumbnail      TEXT,
     origin         TEXT NOT NULL,
     title          TEXT NOT NULL,
-    proxyOrigin    TEXT NOT NULL
+    proxy_origin    TEXT NOT NULL
 );
 
 -- ----------------------------------------------------------------------------
