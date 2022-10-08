@@ -73,7 +73,7 @@ class UtilsTest {
     @Test
     @SneakyThrows
     void test2() {
-        URL url = new URL("https://api.acme.com#part?key=value");
+        URL url = new URL("https://api.acme.com/home#part?key=value");
         System.out.println(url.getPath());
     }
 }

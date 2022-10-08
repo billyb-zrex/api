@@ -1,56 +1,59 @@
 package com.sharefable.api.entity;
 
-import com.sharefable.api.common.ESIndices;
+import com.sharefable.api.annotations.ESDocument;
+import com.sharefable.api.annotations.ESQueryable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-
-import java.util.Map;
 
 /*
  * Any changes to this requires changes to the index creation process
  * Index creation details -> settings/es.http
+ *
+ * The fields names are case-sensitive.
  */
 
-@Document(indexName = ESIndices.AssetContent, createIndex = false)
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
+@ESDocument(schema = "es.index.schema.json")
 public class AssetContent {
-    @Id
-    @Field(type= FieldType.Keyword)
-    private Long id;
+    @ESQueryable(exclude = true)
+    private String id;
 
-    @Field(type= FieldType.Keyword)
+    @ESQueryable(type = ESQueryable.SearchType.Term)
     private Long assetId;
 
-    @Field(type = FieldType.Keyword)
+    @ESQueryable(type = ESQueryable.SearchType.Term)
     private String assetPath;
 
-    @Field(type = FieldType.Keyword)
+    @ESQueryable(type = ESQueryable.SearchType.Term)
     private String method;
 
-    @Field(type=FieldType.Flattened)
-    private Map<String, String> reqParams;
+    @ESQueryable(exclude = true)
+    private Object reqParams;
 
-    @Field(type=FieldType.Flattened)
+    @ESQueryable(isAlsoKeyword = true)
+    private String reqParamsStr;
+
+    // Earlier the plan was to run flattened query to the reqBody field. This would require constructing JSON path
+    // to each leaf node and run match queries. Also, simultaneously fire query in reqBodyStr.
+    // Currently, we would just fire query with reqBodyStr.
+    // TODO if the match quality is not high, then implement this as well. This field is indexed but not queried
+    @ESQueryable(exclude = true)
     private Object reqBody;
 
-    @Field(type = FieldType.Text)
-    String reqBodyStr;
+    @ESQueryable(isAlsoKeyword = true)
+    private String reqBodyStr;
 
-    @Field(index = false)
-    private Map<String, String> reqHeaders;
+    @ESQueryable(exclude = true)
+    private String reqHeaders;
 
-    @Field(index = false)
-    private Map<String, String> respHeaders;
+    @ESQueryable(exclude = true)
+    private String respHeaders;
 
-    @Field(index = false)
-    private String respDataURI;
+    @ESQueryable(exclude = true)
+    private String respDataUri;
 }

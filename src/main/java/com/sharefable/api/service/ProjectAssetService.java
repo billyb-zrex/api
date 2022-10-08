@@ -1,5 +1,6 @@
 package com.sharefable.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.UpdateLog;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.common.content.BaseAssetBodyParser;
@@ -8,27 +9,20 @@ import com.sharefable.api.common.content.FileNameResolver;
 import com.sharefable.api.common.req.NewProxyAssetReqBodyParsed;
 import com.sharefable.api.common.req.AssetContentBody;
 import com.sharefable.api.common.req.ReqParamMissingException;
-import com.sharefable.api.common.resp.ProxyAssetMappingResp;
 import com.sharefable.api.entity.AssetContent;
 import com.sharefable.api.entity.AssetMapping;
 import com.sharefable.api.entity.Project;
-import com.sharefable.api.repo.AssetContentRepo;
 import com.sharefable.api.repo.ProxyAssetRepo;
 import com.sharefable.api.repo.ProjectRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.util.Streamable;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,38 +30,44 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 public class ProjectAssetService {
+    ObjectMapper mapper = new ObjectMapper();
+
     private final ProjectRepo projectRepo;
 
     private final ProxyAssetRepo proxyAssetRepo;
 
-    private final AssetContentRepo assetContentRepo;
 
     private final List<Project.FieldRef> updatableFields = Project.UPDATABLE_FIELDS;
 
     private final S3Service s3Service;
 
+    private final ESService esService;
+
     @Autowired
-    public ProjectAssetService(ProjectRepo projectRepo, ProxyAssetRepo proxyAssetRepo, AssetContentRepo assetContentRepo, S3Service s3Service) {
+    public ProjectAssetService(ProjectRepo projectRepo, ProxyAssetRepo proxyAssetRepo, S3Service s3Service, ESService esService) {
         this.projectRepo = projectRepo;
         this.proxyAssetRepo = proxyAssetRepo;
         this.s3Service = s3Service;
-        this.assetContentRepo = assetContentRepo;
+        this.esService = esService;
     }
 
     @Transactional
-    public Project newProject(String displayName) {
+    public Project newProject(String displayName, String origin, String title) {
         String name = Utils.normalizeProjectName(displayName);
 
         Project project = Project.builder()
             .name(name)
             .displayName(displayName)
+            .origin(origin)
+            .title(title)
+            .proxyOrigin("") // todo fix this
             .build();
 
         return projectRepo.save(project);
     }
 
     @Transactional(readOnly = true)
-    public List<Project> getAllProjects(){
+    public List<Project> getAllProjects() {
         return Streamable.of(projectRepo.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"))).toList();
     }
 
@@ -99,16 +99,16 @@ public class ProjectAssetService {
         // WARN Extra db call to find the entity. Fix this later. Make the update work with partially constructed
         //  entity i.e. null values for non-updatable field
         Optional<Project> projectWrap = projectRepo.findById(projectId);
-        if (projectWrap.isPresent()){
+        if (projectWrap.isPresent()) {
             Project project = projectWrap.get();
             for (UpdateLog<Project.FieldRef> log : collection) {
                 switch (log.getField()) {
                     case DisplayName:
-                        project.setDisplayName((String)log.getValue());
+                        project.setDisplayName((String) log.getValue());
                         break;
 
                     case Thumbnail:
-                        project.setThumbnail((String)log.getValue());
+                        project.setThumbnail((String) log.getValue());
                         break;
 
                     default:
@@ -122,11 +122,12 @@ public class ProjectAssetService {
 
     @Transactional
     public AssetMapping createAssetMapping(Long projectId, NewProxyAssetReqBodyParsed body) throws ReqParamMissingException {
-        String assetPath = body.getUrl().getPath(); // TODO path should only return url path not query params
+        String assetPath = body.getUrl().getPath();
         String assetName = Utils.getAssetNameFromAssetPath(assetPath);
         List<AssetMapping> mappings = proxyAssetRepo.findAssetMappingByProjectIdAndAssetName(projectId, assetName);
         AssetMapping matchedMapping = null;
         for (AssetMapping mapping : mappings) {
+            // For long assetPath (more than 255 chars) the assetName might be same
             if (mapping.getAssetPath().equals(assetPath)) {
                 matchedMapping = mapping;
                 break;
@@ -136,6 +137,7 @@ public class ProjectAssetService {
         boolean newMappingCreated = false;
         if (matchedMapping == null) {
             // If a mapping is not found in db, then create a new mapping
+
             newMappingCreated = true;
             matchedMapping = AssetMapping.builder()
                 .projectId(projectId)
@@ -148,55 +150,67 @@ public class ProjectAssetService {
                 .meta(body.getMeta())
                 .build();
 
-            proxyAssetRepo.save(matchedMapping);
+            matchedMapping = proxyAssetRepo.save(matchedMapping);
         }
 
-
-        boolean shouldCreateAssetContent = true;
-        if (!newMappingCreated) {
-            // If a mapping already exists in db, then there might be associated content in elastic search
-            // TODO here the searching has to be strict not fuzzy
-            List<AssetContent> assets = assetContentRepo.findAllByAssetIdAndAssetPathAndMethodAndReqParamsAndReqBody(
-                matchedMapping.getId(),
-                assetPath,
-                body.getMethod().toString(),
-                body.getQueryParams(),
-                body.getReqBody()
-            );
-            if (assets.size() > 0) {
-                shouldCreateAssetContent = false;
-            }
+        // If status != 302 then there would always be response body
+        // If status == 302 there won't be any response body
+        String fileName = null;
+        if (body.getStatus() != HttpStatus.FOUND) {
+            BaseAssetBodyParser parser = ContentTypeParser.parse(body);
+            fileName = parser.fileName();
+            String fullQualifiedFileName = "project/" + projectId + "/" + fileName;
+            s3Service.upload(fullQualifiedFileName, body.getContentType().getType(), parser.getContent());
         }
 
-        if (shouldCreateAssetContent) {
-            // If status != 302 then there would always be response body
-            // If status == 302 there won't be any response body
-            if (body.getStatus() != HttpStatus.FOUND){
-                BaseAssetBodyParser parser = ContentTypeParser.parse(body);
-                String fileName = parser.fileName();
-                String fullQualifiedFileName = "project/" + projectId + "/" + fileName;
-                s3Service.upload(fullQualifiedFileName, body.getContentType().getType(), parser.getContent());
+        Map<String, String> queryParams = body.getQueryParams();
+        String queryParamsStr = null;
+        if (queryParams != null) {
+            queryParamsStr = mapper.valueToTree(queryParams).toString();
+        }
 
-                AssetContent assetContent = AssetContent.builder()
-//                    .id() todo
-                    .assetId(matchedMapping.getId())
-                    .assetPath(assetPath)
-                    .reqBody(body.getReqBody())
-//                    .reqBodyStr() todo
-                    .reqParams(body.getQueryParams())
-                    .reqHeaders(body.getReqHeaders())
-                    .respHeaders(body.getRespHeaders())
-                    .respDataURI(fileName)
+        Object reqBody = body.getReqBody();
+        String reqBodyStr = null;
+        if (reqBody != null) {
+            reqBodyStr = mapper.valueToTree(reqBody).toString();
+        }
+
+        AssetContent asset = AssetContent.builder()
+            .assetId(matchedMapping.getId())
+            .assetPath(assetPath)
+            .method(body.getMethod().toString())
+            .reqParams(queryParams)
+            .reqParamsStr(queryParamsStr)
+            .reqBody(reqBody)
+            .reqBodyStr(reqBodyStr)
+            .reqHeaders(mapper.valueToTree(body.getReqHeaders()).toString())
+            .respHeaders(mapper.valueToTree(body.getRespHeaders()).toString())
+            .respDataUri(fileName)
+            .build();
+
+        if (newMappingCreated) {
+            // If mapping is not found in db, means there won't be an entry in elasticsearch,
+            // so we directly insert the document in elasticsearch
+            esService.insertDocument(asset);
+        } else {
+            // Check if the document in elasticsearch, if not then insert a new document, if exists then update
+            // the response file uri
+            AssetContent exactDocument = esService.getExactDocument(asset);
+            if (exactDocument == null) {
+                esService.insertDocument(asset);
+            } else {
+                AssetContent updateDoc = AssetContent.builder()
+                    .id(exactDocument.getId())
+                    .respDataUri(fileName)
                     .build();
-
-                assetContentRepo.save(assetContent);
+                esService.updateDocument(updateDoc);
             }
         }
+
         return matchedMapping;
     }
 
     /*
-
     @Transactional(readOnly = true)
     public ProxyAssetMappingResp getAssetByName(Long projectId, String assetPath, HttpMethod method, String queryString) {
         String assetName = Utils.getAssetNameFromAssetPath(assetPath);
