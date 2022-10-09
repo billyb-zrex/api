@@ -89,7 +89,7 @@ public class ProxyAssetController {
             QueryProxyAssetReqBody body = QueryProxyAssetReqBody.builder()
                 .method(HttpMethod.resolve(req.getMethod()))
                 .queryParams(reqParams)
-                .reqBody(reqBody)
+                .reqBody(reqBody.trim().equalsIgnoreCase("") ? null : reqBody)
                 .build();
 
             ProxyAssetMappingResp mapping = projectAssetService.getAssetByName(asset, body);
