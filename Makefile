@@ -11,17 +11,14 @@ include env.dev
 # -----------------------------------------------------------------
 teardown:
 	@if [ -z "$(clean)" ]; then \
-  		docker-compose stop; \
+  		docker-compose down; \
     else \
-        docker-compose stop; docker rm fable-db; \
+        docker-compose down; docker rm fable-db; \
     fi
 
 
 setup: teardown
-	docker-compose up -d db proxyserver
-
-fullsetup: teardown
-	docker-compose up
+	docker-compose up -d
 
 
 # --------------------------------------------------------------

@@ -27,9 +27,13 @@ public class NewProxyAssetReqBody {
     @JsonProperty("url")
     private String urlNotParsed;
 
+    private boolean isNewVersion = false;
+
     private Map<String, String> reqHeaders;
 
     private Map<String, String> respHeaders;
+
+    private String reqBody;
 
     private AssetContentBody respBody;
 }

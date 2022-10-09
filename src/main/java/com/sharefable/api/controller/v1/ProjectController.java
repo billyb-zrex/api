@@ -44,7 +44,7 @@ public class ProjectController {
                 .build();
         }
 
-        Project savedProject = projectAssetService.newProject(projectName);
+        Project savedProject = projectAssetService.newProject(projectName, body.getOrigin(), body.getTitle());
         return ApiResp.builder()
             .status(ApiResp.ResponseStatus.Success)
             .data(savedProject)

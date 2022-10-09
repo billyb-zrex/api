@@ -34,6 +34,7 @@ public class NewProxyAssetReqBodyParsed extends NewProxyAssetReqBody {
         NewProxyAssetReqBodyParsed parsedBody = new NewProxyAssetReqBodyParsed();
 
         parsedBody.setMethod(rawBody.getMethod());
+        parsedBody.setReqBody(rawBody.getReqBody());
         parsedBody.setRespBody(rawBody.getRespBody());
         parsedBody.setOrigin(new URL(rawBody.getOriginNotParsed()));
         parsedBody.setUrl(new URL(rawBody.getUrlNotParsed()));

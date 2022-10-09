@@ -1,7 +1,5 @@
 package com.sharefable.api.common;
 
-import com.sharefable.api.common.req.NewProxyAssetReqBodyParsed;
-import com.sharefable.api.entity.AssetMapping;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -31,16 +29,6 @@ public interface Utils {
             .replaceAll("-", "");
     }
 
-    // In order to check the new asset with the saved one currently we check if the asset url, http status, http method
-    // and query parameters are same
-    // Two assets /app/home?a=1&ts=45903485 and /app/home?a=1&ts=435490438 are different even if `ts` is ignored in the
-    // logic.
-    static boolean isSavedAssetIsSameWithNewAsset(AssetMapping savedAsset, NewProxyAssetReqBodyParsed inAsset) {
-        return savedAsset.getAssetPath().equals(inAsset.getUrl().getPath())
-            && savedAsset.getStatus() == inAsset.getStatus()
-            && savedAsset.getMethod() == inAsset.getMethod()
-            && savedAsset.getQueryParams().equals(inAsset.getQueryParams());
-    }
 
     // Nearest map is the map from the list of maps, which is most similar with the matchWith map
     // Similarity is figured out by checking if the key is present in both the map and the value is same or not
@@ -70,6 +58,8 @@ public interface Utils {
     }
 
     static String getAssetNameFromAssetPath(String assetPath) {
+        // In db the asset path is trimmed to 255 char so that it can't be indexed for a faster lookup.
+        // check asset_mapping table in sql ddl file
         return assetPath.substring(0, Math.min(255, assetPath.length()));
     }
 

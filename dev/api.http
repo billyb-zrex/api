@@ -3,25 +3,27 @@ GET http://localhost:8080/api/v1/health
 Accept: application/json
 
 
-### project/new with success
+### project: create new with success
 POST http://localhost:8080/api/v1/project/new
 Content-Type: application/json
 
 {
-  "name": "Test Project"
+  "name": "Test Project",
+  "origin": "https://home.acme.com",
+  "title": "Acme - Home"
 }
 
-### project/new with failure
+### project: create new with failure
 POST http://localhost:8080/api/v1/project/new
 Content-Type: application/json
 
 {}
 
-### projects get
+### projects: get
 GET http://localhost:8080/api/v1/projects
 Accept: application/json
 
-### project update
+### project: update
 POST http://localhost:8080/api/v1/project/update/5
 Content-Type: application/json
 
@@ -40,7 +42,7 @@ Content-Type: application/json
   ]
 }
 
-### proxy mapping
+### asset: html file
 POST http://localhost:8080/api/v1/asset/new/1
 Content-Type: application/json
 
@@ -64,7 +66,7 @@ Content-Type: application/json
     }
 }
 
-### redirct
+### asset: redirct
 POST http://localhost:8080/api/v1/asset/new/1
 Content-Type: application/json
 
@@ -90,7 +92,7 @@ Content-Type: application/json
     "url": "http://localhost:3123/api/getloggedinuser"
 }
 
-### image
+### asset : image
 POST http://localhost:8080/api/v1/asset/new/1
 Content-Type: application/json
 
@@ -120,4 +122,170 @@ Content-Type: application/json
         "base64Encoded": true,
         "body": "UklGRtgCAABXRUJQVlA4WAoAAAAQAAAAHwAAKgAAQUxQSD0BAAABkKNt27FHd+zURpXKRvm3McbmIowFZBNjb8Fqbc8GrPd53qv4cXxvOV1ETEC51JvLtSi/vn9269bZvjrlt+RyvVK5um/8ha/rqtl19YMBhPeXtlZp/Sv8vdEtPYQY4d4rgOgeAZ7fhRjhocaxCDFAMKeghwAhQjTGN+Lkm1OyG/nOxi1FMnY290WSxj5dIGQXuCDVPsKzch7VSlUvUzyvlLYTyDywTbqOZWdcVdMXYnaRz43DTlIbXMBTROa2pnG2bkm1eWuqjck2/f/akmrj1lSbNmEpjJWu3/wrxUPwUv7yo1UHwYs5gBdz2KNyTZ/D3ByzwJPTp58QzHBz4+yEylUhvaD4tDRD8edShaQq9Ty9ueEDh05936Xqau3/eeIwHzfcfNKtKuWXq7JCrVNSk8qkMjVLk22qqFC5JABWUDggdAEAABAJAJ0BKiAAKwA+kTaXSCWioiEwFV1QsBIJbACdOUFSHd9mBkZrFU7Ks4Dlniw3xbKTf5TIfbwFA/5YPGP2KRHnCmc7NbHLwCV/xLgKzrrXgAD+9OM8uMtNQUU93LMWoq0UY0nzySjGD6O+f+SUG5BoGwnvNXfPV9t6oIU4BwARaCJt6jlUQ2ZIgWQijn8OQTYuF3sj6r21YjtGbgJpa4Ub+4OVRIJNpwQrpbv51+raWfeE8ZPyvwbrUZwd4dQxpjhjGAYkdzUBmkwxTnJQojVje4i/Zj+Jf1zkG/vwp4WdxGt39FxzjFB+5GVi9YPLH66PYhFbW8XjGuUlMpX3xRBvevX1C90jnuxXCdB2B/mo6MkVH+p2FYmePLVvsTln1l/9Ss4M/sjmP5aZBUyosXZwA3y6DJ1TzsjwQ+4XHzFI0mM5/Fn34sZVfnK5ey6g89PFDL2c0GPLOzIJ06HWpneBBOeRDS/5b5bzklcHzhAtS1mAAA=="
     }
+}
+
+
+
+
+### asset : segment graphql
+POST http://localhost:8080/api/v1/asset/new/1
+Content-Type: application/json
+
+{
+  "contentType": "application/json",
+  "method": "POST",
+  "origin": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
+  "reqBody": "{\"operationname\":\"getuserinfo\",\"variables\":{},\"query\":\"query getuserinfo {\\n  me {\\n    id\\n    email\\n    name\\n    isadmin\\n    isoperator\\n    isinternal\\n    isautoprovisionedforsso\\n    verification\\n    pendingemail\\n    organizationid\\n    organization {\\n      id\\n      slug\\n      name\\n      __typename\\n    }\\n    __typename\\n  }\\n  intercomid\\n  isauthorizedviasso\\n  ssoauthorizedworkspace {\\n    id\\n    slug\\n    name\\n    __typename\\n  }\\n}\\n\"}",
+  "reqHeaders": {
+    "Referer": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+    "accept": "*/*, application/json",
+    "content-type": "application/json",
+    "sec-ch-ua": "\"Google Chrome\";v=\"105\", \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"105\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "x-requested-with": "fetch",
+    "x-timezone": "Asia/Calcutta"
+  },
+  "respHeaders": {
+    "access-control-allow-credentials": "true",
+    "access-control-allow-origin": "https://app.segment.com",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';base-uri 'self';block-all-mixed-content;font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-embedder-policy": "require-corp",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
+    "date": "Sat, 08 Oct 2022 16:32:58 GMT",
+    "etag": "W/\"1b8-49RUIAaxBOPXd26bZqo4O1obfuQ\"",
+    "expect-ct": "max-age=0",
+    "origin-agent-cluster": "?1",
+    "referrer-policy": "no-referrer",
+    "server": "nginx",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "vary": "Accept-Encoding, Origin",
+    "x-content-type-options": "nosniff",
+    "x-download-options": "noopen",
+    "x-frame-options": "SAMEORIGIN",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+  },
+  "status": 200,
+  "url": "https://app.segment.com/gateway-api/graphql",
+  "respBody": {
+    "base64Encoded": false,
+    "body": "{\"data\":{\"me\":{\"id\":\"qFwMR6333VppnK8HohsaSJ\",\"email\":\"akash.goswami@unacademy.com\",\"name\":\"Akash Goswami\",\"isAdmin\":false,\"isOperator\":false,\"isInternal\":false,\"isAutoprovisionedForSSO\":false,\"verification\":\"VERIFIED\",\"pendingEmail\":null,\"organizationId\":null,\"organization\":null,\"__typename\":\"User\"},\"intercomId\":\"0d36930ba86995f1505fd53bdb886afd728df3318398eca1363f263040e775f5\",\"isAuthorizedViaSSO\":false,\"ssoAuthorizedWorkspace\":null}}\n"
+  }
+}
+
+### asset : segment graphql
+POST http://localhost:8080/api/v1/asset/new/1
+Content-Type: application/json
+
+{
+    "contentType": "application/json",
+    "method": "POST",
+    "origin": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
+    "reqBody": "{\"operationName\":\"app__useFlagon\",\"variables\":{\"family\":\"reverse-etl\",\"name\":\"beta\",\"workspaceSlug\":\"unacademy\"},\"query\":\"query app__useFlagon($family: String!, $name: String!, $workspaceSlug: Slug!) {\\n  workspace(slug: $workspaceSlug) {\\n    id\\n    enabled: gateOpen(family: $family, name: $name)\\n    __typename\\n  }\\n}\\n\"}",
+    "reqHeaders": {
+        "Referer": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+        "accept": "*/*, application/json",
+        "content-type": "application/json",
+        "sec-ch-ua": "\"Google Chrome\";v=\"105\", \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"105\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\"",
+        "x-requested-with": "fetch",
+        "x-timezone": "Asia/Calcutta"
+    },
+    "respHeaders": {
+        "access-control-allow-credentials": "true",
+        "access-control-allow-origin": "https://app.segment.com",
+        "content-encoding": "gzip",
+        "content-security-policy": "default-src 'self';base-uri 'self';block-all-mixed-content;font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 08 Oct 2022 16:32:59 GMT",
+        "etag": "W/\"54-nylNle/Li2vcelubznSsKnQyWu8\"",
+        "expect-ct": "max-age=0",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "vary": "Accept-Encoding, Origin",
+        "x-content-type-options": "nosniff",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0"
+    },
+    "status": 200,
+    "url": "https://app.segment.com/gateway-api/graphql",
+    "respBody": {
+        "base64Encoded": false,
+        "body": "{\"data\":{\"workspace\":{\"id\":\"TO0b46FCTf\",\"enabled\":false,\"__typename\":\"Workspace\"}}}\n"
+    }
+}
+
+### asset : segment graphql
+POST http://localhost:8080/api/v1/asset/new/1
+Content-Type: application/json
+
+{
+    "contentType": "application/json",
+    "method": "POST",
+    "origin": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
+    "reqBody": "{\"operationName\":\"app__useFlagon\",\"variables\":{\"family\":\"personas-features\",\"name\":\"personas-rebranding-gate\",\"workspaceSlug\":\"unacademy\"},\"query\":\"query app__useFlagon($family: String!, $name: String!, $workspaceSlug: Slug!) {\\n  workspace(slug: $workspaceSlug) {\\n    id\\n    enabled: gateOpen(family: $family, name: $name)\\n    __typename\\n  }\\n}\\n\"}",
+    "reqHeaders": {
+        "Referer": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
+        "accept": "*/*, application/json",
+        "content-type": "application/json",
+        "sec-ch-ua": "\"Google Chrome\";v=\"105\", \"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"105\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"macOS\"",
+        "x-requested-with": "fetch",
+        "x-timezone": "Asia/Calcutta"
+    },
+    "respHeaders": {
+        "access-control-allow-credentials": "true",
+        "access-control-allow-origin": "https://app.segment.com",
+        "content-encoding": "gzip",
+        "content-security-policy": "default-src 'self';base-uri 'self';block-all-mixed-content;font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+        "content-type": "application/json; charset=utf-8",
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "date": "Sat, 08 Oct 2022 16:33:00 GMT",
+        "etag": "W/\"53-x+qJ4lqC5utYbZEp1+Sei173to4\"",
+        "expect-ct": "max-age=0",
+        "origin-agent-cluster": "?1",
+        "referrer-policy": "no-referrer",
+        "server": "nginx",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "vary": "Accept-Encoding, Origin",
+        "x-content-type-options": "nosniff",
+        "x-download-options": "noopen",
+        "x-frame-options": "SAMEORIGIN",
+        "x-permitted-cross-domain-policies": "none",
+        "x-xss-protection": "0"
+    },
+    "status": 200,
+    "url": "https://app.segment.com/gateway-api/graphql",
+    "respBody": {
+        "base64Encoded": false,
+        "body": "{\"data\":{\"workspace\":{\"id\":\"TO0b46FCTf\",\"enabled\":true,\"__typename\":\"Workspace\"}}}\n"
+    }
+}
+
+### Get
+POST http://localhost:8080/api/v1/asset/get/1/gateway-api/graphql
+Content-Type: application/json
+
+{
+  "operationName": "getUserInfo",
+  "variables": {},
+  "query": "query getUserInfo {\n  me {\n    id\n    email\n    name\n    isAdmin\n    isOperator\n    isInternal\n    isAutoprovisionedForSSO\n    verification\n    pendingEmail\n    organizationId\n    organization {\n      id\n      slug\n      name\n      __typename\n    }\n    __typename\n  }\n  intercomId\n  isAuthorizedViaSSO\n  ssoAuthorizedWorkspace {\n    id\n    slug\n    name\n    __typename\n  }\n}\n"
 }

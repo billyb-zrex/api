@@ -1,10 +1,12 @@
 package com.sharefable.api.common;
 
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.web.util.UriUtils;
 
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,5 +68,12 @@ class UtilsTest {
         String proxyPath = "/_next/static/chunks/pages/[[...params]].js";
         String dec = UriUtils.encodePath(proxyPath, StandardCharsets.UTF_8);
         System.out.println(dec);
+    }
+
+    @Test
+    @SneakyThrows
+    void test2() {
+        URL url = new URL("https://api.acme.com/home#part?key=value");
+        System.out.println(url.getPath());
     }
 }

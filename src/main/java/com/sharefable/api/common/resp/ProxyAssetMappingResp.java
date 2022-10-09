@@ -1,6 +1,7 @@
 package com.sharefable.api.common.resp;
 
 
+import com.sharefable.api.entity.AssetContent;
 import com.sharefable.api.entity.AssetMapping;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,5 +15,6 @@ import lombok.NoArgsConstructor;
 public class ProxyAssetMappingResp {
     private byte[] body;
     private AssetMapping proxy;
+    private AssetContent content;
     private boolean isFound;
 }

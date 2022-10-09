@@ -11,7 +11,8 @@ import lombok.Data;
 public class ApiResp {
     public enum ResponseStatus { Success, Failure }
     public enum ErrorCode {
-        IllegalArgs(100);
+        IllegalArgs(100),
+        NotFound(101);
 
         public final int code;
         ErrorCode(int code) {

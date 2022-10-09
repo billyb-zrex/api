@@ -9,4 +9,8 @@ import lombok.ToString;
 @ToString
 public class NewProjectReqBody {
     private String name;
+
+    private String origin;
+
+    private String title;
 }

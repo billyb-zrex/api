@@ -35,7 +35,6 @@ public class Project {
     @Column(updatable = false, nullable = false)
     private Long id;
 
-
     @CreationTimestamp
     private Timestamp createdAt;
 
@@ -49,6 +48,15 @@ public class Project {
     private String displayName;
 
     private String thumbnail;
+
+    @Column(nullable = false)
+    private String origin;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    private String proxyOrigin;
 
     @Override
     public boolean equals(Object o) {
