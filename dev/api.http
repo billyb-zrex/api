@@ -135,7 +135,7 @@ Content-Type: application/json
   "contentType": "application/json",
   "method": "POST",
   "origin": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
-  "reqBody": "{\"operationName\":\"getUserInfo\",\"variables\":{},\"query\":\"query getUserInfo {\\n  me {\\n    id\\n    email\\n    name\\n    isAdmin\\n    isOperator\\n    isInternal\\n    isAutoprovisionedForSSO\\n    verification\\n    pendingEmail\\n    organizationId\\n    organization {\\n      id\\n      slug\\n      name\\n      __typename\\n    }\\n    __typename\\n  }\\n  intercomId\\n  isAuthorizedViaSSO\\n  ssoAuthorizedWorkspace {\\n    id\\n    slug\\n    name\\n    __typename\\n  }\\n}\\n\"}",
+  "reqBody": "{\"operationname\":\"getuserinfo\",\"variables\":{},\"query\":\"query getuserinfo {\\n  me {\\n    id\\n    email\\n    name\\n    isadmin\\n    isoperator\\n    isinternal\\n    isautoprovisionedforsso\\n    verification\\n    pendingemail\\n    organizationid\\n    organization {\\n      id\\n      slug\\n      name\\n      __typename\\n    }\\n    __typename\\n  }\\n  intercomid\\n  isauthorizedviasso\\n  ssoauthorizedworkspace {\\n    id\\n    slug\\n    name\\n    __typename\\n  }\\n}\\n\"}",
   "reqHeaders": {
     "Referer": "https://app.segment.com/unacademy/sources/website_prod/schema/events",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36",
@@ -177,7 +177,6 @@ Content-Type: application/json
     "body": "{\"data\":{\"me\":{\"id\":\"qFwMR6333VppnK8HohsaSJ\",\"email\":\"akash.goswami@unacademy.com\",\"name\":\"Akash Goswami\",\"isAdmin\":false,\"isOperator\":false,\"isInternal\":false,\"isAutoprovisionedForSSO\":false,\"verification\":\"VERIFIED\",\"pendingEmail\":null,\"organizationId\":null,\"organization\":null,\"__typename\":\"User\"},\"intercomId\":\"0d36930ba86995f1505fd53bdb886afd728df3318398eca1363f263040e775f5\",\"isAuthorizedViaSSO\":false,\"ssoAuthorizedWorkspace\":null}}\n"
   }
 }
-
 
 ### asset : segment graphql
 POST http://localhost:8080/api/v1/asset/new/1
@@ -279,4 +278,14 @@ Content-Type: application/json
         "base64Encoded": false,
         "body": "{\"data\":{\"workspace\":{\"id\":\"TO0b46FCTf\",\"enabled\":true,\"__typename\":\"Workspace\"}}}\n"
     }
+}
+
+### Get
+POST http://localhost:8080/api/v1/asset/get/1/gateway-api/graphql
+Content-Type: application/json
+
+{
+  "operationName": "getUserInfo",
+  "variables": {},
+  "query": "query getUserInfo {\n  me {\n    id\n    email\n    name\n    isAdmin\n    isOperator\n    isInternal\n    isAutoprovisionedForSSO\n    verification\n    pendingEmail\n    organizationId\n    organization {\n      id\n      slug\n      name\n      __typename\n    }\n    __typename\n  }\n  intercomId\n  isAuthorizedViaSSO\n  ssoAuthorizedWorkspace {\n    id\n    slug\n    name\n    __typename\n  }\n}\n"
 }

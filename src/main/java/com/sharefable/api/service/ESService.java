@@ -168,7 +168,7 @@ public class ESService {
 
         try {
             SearchResponse<AssetContent> resp = client.search(t -> t.index(ESIndices.AssetContent)
-                    .query(q -> q.bool(b -> b.filter(filterQueries).should(matchQueries))),
+                    .query(q -> q.bool(b -> b.filter(filterQueries).must(matchQueries))),
                 AssetContent.class);
             List<Hit<AssetContent>> hits = resp.hits().hits();
             List<Pair<Double, AssetContent>> pairs = new ArrayList<>();

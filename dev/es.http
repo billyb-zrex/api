@@ -8,7 +8,7 @@ content-type: application/json
 DELETE http://localhost:9200/asset-content
 
 ### Delete a doc
-DELETE http://localhost:9200/asset-content/_doc/TEl6uIMBbHh_dWAY_kyG
+DELETE http://localhost:9200/asset-content/_doc/VEm2vIMBbHh_dWAYXUx-
 
 ### query index that was already created
 GET {{host}}/asset-content?pretty
