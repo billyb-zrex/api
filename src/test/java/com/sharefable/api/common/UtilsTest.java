@@ -64,13 +64,31 @@ class UtilsTest {
     }
 
     @Test
+    void removeTrailingPathSeparatorTest() {
+        String path = Utils.removeTrailingPathSeparator("/new/project");
+        Assertions.assertEquals(path, "/new/project");
+
+        path = Utils.removeTrailingPathSeparator("/new/project/");
+        Assertions.assertEquals(path, "/new/project");
+
+        path = Utils.removeTrailingPathSeparator("/new/project///");
+        Assertions.assertEquals(path, "/new/project");
+
+        path = Utils.removeTrailingPathSeparator("/");
+        Assertions.assertEquals(path, "");
+
+        path = Utils.removeTrailingPathSeparator("");
+        Assertions.assertEquals(path, "");
+    }
+
+    //    @Test
     void test() {
         String proxyPath = "/_next/static/chunks/pages/[[...params]].js";
         String dec = UriUtils.encodePath(proxyPath, StandardCharsets.UTF_8);
         System.out.println(dec);
     }
 
-    @Test
+    //    @Test
     @SneakyThrows
     void test2() {
         URL url = new URL("https://api.acme.com/home#part?key=value");

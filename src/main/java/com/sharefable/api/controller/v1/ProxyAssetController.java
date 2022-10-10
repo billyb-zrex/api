@@ -2,6 +2,7 @@ package com.sharefable.api.controller.v1;
 
 
 import com.sharefable.api.common.ApiResp;
+import com.sharefable.api.common.Utils;
 import com.sharefable.api.common.req.NewProxyAssetReqBody;
 import com.sharefable.api.common.req.NewProxyAssetReqBodyParsed;
 import com.sharefable.api.common.req.QueryProxyAssetReqBody;
@@ -67,7 +68,8 @@ public class ProxyAssetController {
         HttpServletRequest req) {
         log.info("Asset request uri: {}, method: {}", req.getRequestURI(), req.getMethod());
 
-        proxyPath = UriUtils.encodePath(proxyPath, StandardCharsets.UTF_8);
+        proxyPath = Utils.removeTrailingPathSeparator(UriUtils.encodePath(proxyPath, StandardCharsets.UTF_8));
+        // Delete trailing / (slash) characters
 
         AssetMapping asset = AssetMapping.builder()
             .assetPath(proxyPath)

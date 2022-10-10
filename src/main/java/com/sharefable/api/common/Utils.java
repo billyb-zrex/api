@@ -66,4 +66,20 @@ public interface Utils {
     static boolean isStrEmpty(String str) {
         return str == null || str.trim().equals("");
     }
+
+    static String removeTrailingPathSeparator(String path) {
+        int len = path.length();
+        int i = len - 1;
+        for (; i >= 0; i--) {
+            if (path.charAt(i) != '/') {
+                break;
+            }
+        }
+
+        if (i < len - 1) {
+            path = path.substring(0, i + 1);
+        }
+
+        return path;
+    }
 }

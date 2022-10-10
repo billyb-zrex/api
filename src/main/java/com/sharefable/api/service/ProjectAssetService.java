@@ -138,7 +138,7 @@ public class ProjectAssetService {
 
     @Transactional
     public AssetMapping createAssetMapping(Long projectId, NewProxyAssetReqBodyParsed body) throws ReqParamMissingException {
-        String assetPath = body.getUrl().getPath();
+        String assetPath = Utils.removeTrailingPathSeparator(body.getUrl().getPath());
         String assetName = Utils.getAssetNameFromAssetPath(assetPath);
         AssetMapping matchedMapping = findAssetMapping(projectId, assetName, assetPath);
 
