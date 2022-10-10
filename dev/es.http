@@ -10,6 +10,17 @@ DELETE http://localhost:9200/asset-content
 ### Delete a doc
 DELETE http://localhost:9200/asset-content/_doc/VEm2vIMBbHh_dWAYXUx-
 
+### Delete by query
+POST http://localhost:9200/asset-content/_delete_by_query
+
+{
+  "query": {
+    "match": {
+      "assetId": -1
+    }
+  }
+}
+
 ### query index that was already created
 GET {{host}}/asset-content?pretty
 
