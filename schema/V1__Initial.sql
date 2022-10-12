@@ -6,15 +6,15 @@ USE fable_app;
 
 CREATE TABLE project
 (
-    id             BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    created_at     TIMESTAMP    NOT NULL,
-    updated_at     TIMESTAMP    NOT NULL,
-    name           VARCHAR(255) NOT NULL,
-    display_name   TEXT         NOT NULL,
-    thumbnail      TEXT,
-    origin         TEXT NOT NULL,
-    title          TEXT NOT NULL,
-    proxy_origin    TEXT NOT NULL
+    id           BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    created_at   TIMESTAMP    NOT NULL,
+    updated_at   TIMESTAMP    NOT NULL,
+    name         VARCHAR(255) NOT NULL,
+    display_name TEXT         NOT NULL,
+    thumbnail    TEXT,
+    origin       TEXT         NOT NULL,
+    title        TEXT         NOT NULL,
+    proxy_origin TEXT         NOT NULL
 );
 
 -- ----------------------------------------------------------------------------
