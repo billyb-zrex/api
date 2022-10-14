@@ -1,33 +1,41 @@
 .PHONY: teardown setup
 
-include env.dev
+include env.now
 
-# -----------------------------------------------------------------
-# Setup and teardown all  dependent services to run the server
-# While teardown use use `make teardown clean=1` to delete db data
-#
-# `make setup` keeps db data across service restarts
-# `make fullsetup` resets db data acorss service restarts
-# -----------------------------------------------------------------
 teardown:
-	@if [ -z "$(clean)" ]; then \
-  		docker-compose down; \
-    else \
-        docker-compose down; docker rm fable-db; \
-    fi
+	docker-compose down;
 
+setup:
+	docker-compose --profile ${APP_ENV} up -d
 
-setup: teardown
-	docker-compose up -d
+db-schema-migrate:
+	docker-compose up schema;
 
 
 # --------------------------------------------------------------
 # Different env file is required for different tool. Like idea
 # needs env file in a different format which could be loaded via
-# envfile plugin. This commands generate those file format
+# env plugin. This commands generate those file format.
+# This is the first command that needs to be ran
 # --------------------------------------------------------------
-envgen:
-	sed -r 's/^export[[:space:]]+//' env.dev > env.idea
+env:
+	@echo "Generating env file"
+	@echo "docker-compose version must be >= 1.28.0. docker-compose version found (see below)"
+	@docker-compose --version
+
+	@if [ "$(staging)" ]; then \
+        cp env.staging env.now; \
+        echo "[staging]"; \
+    elif [ "$(dev)" ]; then \
+        sed -r 's/^export[[:space:]]+//' env.dev > env.idea; \
+        cp env.dev env.now; \
+        echo "[dev]"; \
+    elif [ "$(prod)" ]; then \
+        cp env.prod env.now; \
+        echo "[PROD]"; \
+    else \
+        echo "Not known. Allowed [ide, staging, dev, prod]"; \
+    fi
 
 
 # --------------------------------------------------------------
