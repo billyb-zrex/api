@@ -24,6 +24,7 @@ rm apache-maven-3.6.3-bin.tar.gz
 sudo ln -s /opt/apache-maven-3.6.3/bin/mvn /usr/local/bin/
 
 # github deploy token
+# https://docs.github.com/en/developers/overview/managing-deploy-keys#deploy-keys
 cd ~/.ssh && ssh-keygen -t ed25519 -C "akash@sharefable.com"
 # NAME THE FILE AS github
 eval "$(ssh-agent -s)"

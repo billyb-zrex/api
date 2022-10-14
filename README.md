@@ -3,30 +3,91 @@
 [Common Project Information](https://github.com/sharefable/dev-docs/blob/master/README.md)
 
 - Checkout the _Makefile_ for detailed running instructions.
-- _dev/api.http_ file for http request response
+- _dev/*.http_ file for http request response
+- Service dependencies _docker-compose.yml_
 
 ## General 
 
 - The _entity_ classes use mysql `auto increment` for id. [Ref](https://stackoverflow.com/a/4103347).
-- Can't use elasticsearch 8.* cluster as `RestHighLevelClient` is deprecated and has issues. [Read more about it here.](https://github.com/spring-projects/spring-data-elasticsearch#about-elasticsearch-versions-and-clients)
+- ~~Can't use elasticsearch 8.* cluster as `RestHighLevelClient` is deprecated and has issues. [Read more about it here.](https://github.com/spring-projects/spring-data-elasticsearch#about-elasticsearch-versions-and-clients)~~. We use ElasticSearch native client for compatibility & flexibility.
 
-## Env variables
+## Project startup
 
 This project requires couple of env variable to be present before we fire the makefile commands.
-Save these variables in a file called `env.dev` and then run `make envgen` to generate env files for intellij
+
+Each env requires it's own _env.{{env_name}}_ file. For the following environment the following files should be
+present. These files are not checked in anywhere.
+```text
+dev -> env.dev
+staging -> env.staging
+prod -> env.prod
 ```
+
+Each file contains same set of variables to be exported to the service.
+
+```
+export APP_ENV=dev | staging | prod
 export DB_USER=<>
 export DB_PWD=<>
-export DB_HOST=jdbc:mysql://localhost:3306
-export ASSET_BUCKET_NAME=proxy-asset-2
+export DB_CONN_URL=<>
+export ASSET_BUCKET_NAME=<>
 export AWS_ACCESS_KEY_ID=<>
 export AWS_SECRET_ACCESS_KEY=<>
 export AWS_S3_REGION=ap-south-1
+export AWS_S3_ENDPOINT=https://s3.ap-south-1.amazonaws.com
+export ES_ENDPOINT=<>
+export ES_PORT=<>
 ```
+
+`APP_ENV` is mandatory and needs to be present for all env files. The values are predefined `dev | staging | prod`
+based on the environment. These values are in turned used to activate profiles from _docker-compose.yml_ file. (Check out
+the profile property)
+
+### Commands
+
+Set up env (`dev` / `staging` / `prod`)
+```bash
+make env dev=1
+```
+
+Set up the dependent services
+```bash
+make setup
+```
+
+Run the project
+```bash
+make run
+```
+
+Check out _Makefile_ for more detailed capabilities.
 
 # IDE setup
 
 - Use IntelliJ
 - Install java 8 and maven 3.6.*
-- Use plugin EnvFile. An _env.idea_ file with all the secrets can be generated from `make envgen` command
+- Use plugin EnvFile. An _env.idea_ file with all the secrets can be generated from `make env dev=1` command
 - `spring-boot-devtools` is already added as dependency. [Set up the IDE properly](https://www.youtube.com/watch?v=uv-Mku3l0ls) to make auto reloading works. [See this](https://youtrack.jetbrains.com/issue/IDEA-274903/In-IntelliJ-20212-compilerautomakeallowwhenapprunning-disappear-Unable-to-enable-live-reload-under-Spring-boot) for Intellij 2022.
+
+# Manual deployment in staging server
+
+- Create a box in aws and configure your ssh client for fast & easy access to the box. You can do `ssh fab-api` post this settings
+```text
+...
+
+Host fab-api
+  HostName <elastic ip>
+  User ubuntu
+  IdentityFile ~/.ssh/fab.pem
+  
+...
+
+```
+
+- All the required files are in _aws/_ dir
+- Run a tmux session to run the servers. We should ideally run it via `systemctl` services, but we currently use tmux so that we get hold of the logs easily as `journalctl` truncates logs. This is a temporary step. Upload the tmux file for easier navigation
+```bash
+scp aws/.tmux.conf fab-api:~/.
+```
+- Use the commands in _aws/bootstrap.sh_ file to set up env + install toolchains
+- Once done you can start running the _Makefile_ scripts
