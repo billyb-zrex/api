@@ -6,11 +6,10 @@ teardown:
 	docker-compose down;
 
 setup:
-	docker-compose --profile ${APP_ENV} up
+	docker-compose --profile ${APP_ENV} up -d
 
 db-schema-migrate:
-	echo ${DB_PWD}
-	#docker-compose up schema;
+	docker-compose up schema;
 
 
 # --------------------------------------------------------------
