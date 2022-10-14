@@ -1,10 +1,10 @@
 ### health
-GET http://localhost:8080/api/v1/health
+GET {{api-host}}/api/v1/health
 Accept: application/json
 
 
 ### project: create new with success
-POST http://localhost:8080/api/v1/project/new
+POST {{api-host}}/api/v1/project/new
 Content-Type: application/json
 
 {
@@ -14,17 +14,17 @@ Content-Type: application/json
 }
 
 ### project: create new with failure
-POST http://localhost:8080/api/v1/project/new
+POST {{api-host}}/api/v1/project/new
 Content-Type: application/json
 
 {}
 
 ### projects: get
-GET http://localhost:8080/api/v1/projects
+GET {{api-host}}/api/v1/projects
 Accept: application/json
 
 ### project: update
-POST http://localhost:8080/api/v1/project/update/5
+POST {{api-host}}/api/v1/project/update/5
 Content-Type: application/json
 
 {
@@ -43,7 +43,7 @@ Content-Type: application/json
 }
 
 ### asset: html file
-POST http://localhost:8080/api/v1/asset/new/1
+POST {{api-host}}/api/v1/asset/new/1
 Content-Type: application/json
 
 {
@@ -67,7 +67,7 @@ Content-Type: application/json
 }
 
 ### asset: redirct
-POST http://localhost:8080/api/v1/asset/new/1
+POST {{api-host}}/api/v1/asset/new/1
 Content-Type: application/json
 
 {
@@ -93,7 +93,7 @@ Content-Type: application/json
 }
 
 ### asset : image
-POST http://localhost:8080/api/v1/asset/new/1
+POST {{api-host}}/api/v1/asset/new/1
 Content-Type: application/json
 
 {
@@ -128,7 +128,7 @@ Content-Type: application/json
 
 
 ### asset : segment graphql
-POST http://localhost:8080/api/v1/asset/new/1
+POST {{api-host}}/api/v1/asset/new/1
 Content-Type: application/json
 
 {
@@ -179,7 +179,7 @@ Content-Type: application/json
 }
 
 ### asset : segment graphql
-POST http://localhost:8080/api/v1/asset/new/1
+POST {{api-host}}/api/v1/asset/new/1
 Content-Type: application/json
 
 {
@@ -230,7 +230,7 @@ Content-Type: application/json
 }
 
 ### asset : segment graphql
-POST http://localhost:8080/api/v1/asset/new/1
+POST {{api-host}}/api/v1/asset/new/1
 Content-Type: application/json
 
 {
@@ -281,7 +281,7 @@ Content-Type: application/json
 }
 
 ### Get
-POST http://localhost:8080/api/v1/asset/get/1/gateway-api/graphql
+POST {{api-host}}/api/v1/asset/get/1/gateway-api/graphql
 Content-Type: application/json
 
 {
@@ -292,7 +292,7 @@ Content-Type: application/json
 
 
 ### amplitude
-POST http://localhost:8080/api/v1/asset/new/2
+POST {{api-host}}/api/v1/asset/new/2
 Content-Type: application/json
 
 {
