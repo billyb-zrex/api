@@ -17,10 +17,12 @@ services:
         environment:
             - MYSQL_ROOT_PASSWORD=${DB_PWD}
             - MYSQL_ROOT_HOST=%
-        profiles:
-            - dev
+        volumes:
+            - /usr/local/etc/mysql_data:/var/lib/mysql
         ports:
             - "3306:3306"
+        profiles:
+            - dev
 
     es:
         image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
