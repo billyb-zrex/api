@@ -55,9 +55,30 @@ public class HtmlParser extends GenericTextAssetParser {
         PROXY_TAG_CONFIG.put("link", new TagOpConfig[]{linkTagConfigHref, linkTagConfigRel});
     }
 
-    // TODO based on env generate this script
-    public static final String PROXY_SCRIPT_SRC = "http://localhost:8080/api/v1/asset/cmn/js/sw_installer.js";
-     static final String PROXY_SCRIPT = "<script type=\"text/javascript\" src=\"" + PROXY_SCRIPT_SRC + "\"></script>";
+    public static final String DOMAIN;
+
+    static {
+        String env = System.getenv("APP_ENV");
+        if (env == null || env.trim().equalsIgnoreCase("")) {
+            throw new RuntimeException("APP_ENV must be set and have a valid value [dev, staging, prod]");
+        }
+
+        switch (env.toLowerCase()) {
+            case "staging":
+                DOMAIN = "https://api-staging1.sharefable.com";
+                break;
+            case "prod":
+                throw new RuntimeException("TODO: not yet implemented");
+            case "dev":
+            default:
+                DOMAIN = "http://localhost:8080";
+        }
+    }
+
+    public static final String PROXY_SCRIPT_SRC = DOMAIN + "/api/v1/asset/cmn/js/sw_installer.js";
+
+
+    static final String PROXY_SCRIPT = "<script type=\"text/javascript\" src=\"" + PROXY_SCRIPT_SRC + "\"></script>";
 
     public HtmlParser(FileNameResolver fileNameResolver, String htmlStr, boolean isBase64Encoded) {
         super(fileNameResolver, htmlStr, isBase64Encoded);
@@ -112,7 +133,7 @@ public class HtmlParser extends GenericTextAssetParser {
 
 
         Elements body = doc.getElementsByTag("body");
-        if (body.size() > 0){
+        if (body.size() > 0) {
             body.append(PROXY_SCRIPT);
         } else {
             Elements html = doc.getElementsByTag("html");

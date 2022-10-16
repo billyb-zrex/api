@@ -10,7 +10,13 @@ public class CorsConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // allow cors for all path for localhost and staging at this point in time
         registry.addMapping("/**")
-            .allowedOrigins("http://localhost:3000", "https://app-staging.sharefable.com", "https://app.sharefable.com")
+//            .allowedOrigins(
+//                "http://localhost:3000",
+//                "https://app-staging.sharefable.com",
+//                "https://app.sharefable.com",
+//                "chrome-extension://**"
+//            )
+            .allowedOrigins("*")
             .allowedMethods("GET", "POST")
             .allowCredentials(false)
             .maxAge(3600);

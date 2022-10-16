@@ -64,6 +64,20 @@ public class ProjectController {
             .build();
     }
 
+    @RequestMapping(
+        value = Routes.GET_PROJECT,
+        method = RequestMethod.GET,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ApiResp getProject(@PathVariable("id") Long projectId) {
+        log.info("{} called with id={}", Routes.GET_PROJECT, projectId);
+        Project project = projectAssetService.getProjectById(projectId);
+        return ApiResp.builder()
+            .status(ApiResp.ResponseStatus.Success)
+            .data(project)
+            .build();
+    }
+
 
     @RequestMapping(
         value = Routes.UPDATE_PROJECT,

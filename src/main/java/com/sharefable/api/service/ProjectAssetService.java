@@ -74,6 +74,10 @@ public class ProjectAssetService {
         return Streamable.of(projectRepo.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"))).toList();
     }
 
+    public Project getProjectById(Long projectId) {
+        return projectRepo.findById(projectId).orElse(null);
+    }
+
     @Transactional
     public Optional<Project> updateProject(Long projectId,
                                            Map<UpdateLog.UpdateType, List<UpdateLog<Project.FieldRef>>> updateLogCollection) {

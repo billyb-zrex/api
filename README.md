@@ -91,3 +91,4 @@ scp aws/.tmux.conf fab-api:~/.
 ```
 - Use the commands in _aws/bootstrap.sh_ file to set up env + install toolchains
 - Once done you can start running the _Makefile_ scripts
+- Create elastic search indexes from _es.api_ file
