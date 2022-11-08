@@ -1,17 +1,16 @@
 # api
 
-[Common Project Information](https://github.com/sharefable/dev-docs/blob/master/README.md)
-
-- Checkout the _Makefile_ for detailed running instructions.
-- _dev/*.http_ file for http request response
-- Service dependencies _docker-compose.yml_
+### Checkout [High Level Design](https://www.notion.so/sharefable/High-Level-Design-32386c475c0748a5ba784d19b9a94499)
+### Checkout [Common Project Information](https://github.com/sharefable/dev-docs/blob/master/README.md)
 
 ## General 
-
+- Checkout the _Makefile_ for detailed running instructions. [Read more about why we use Makefile](https://www.notion.so/sharefable/Why-use-Makefile-24c83d9f6f5d4187b2734626beb01fe1)
+- _dev/*.http_ files for http request response from IntelliJ IDEA (We don't need a different UI tool like postman)
+- Service dependencies _docker-compose.yml_
 - The _entity_ classes use mysql `auto increment` for id. [Ref](https://stackoverflow.com/a/4103347).
 - ~~Can't use elasticsearch 8.* cluster as `RestHighLevelClient` is deprecated and has issues. [Read more about it here.](https://github.com/spring-projects/spring-data-elasticsearch#about-elasticsearch-versions-and-clients)~~. We use ElasticSearch native client for compatibility & flexibility.
 
-## Project startup
+## Environment Variables
 
 This project requires couple of env variable to be present before we fire the makefile commands.
 
@@ -21,15 +20,19 @@ present. These files are not checked in anywhere.
 dev -> env.dev
 staging -> env.staging
 prod -> env.prod
+idea -> env.idea  # For running from Intellij IDEA
 ```
 
 Each file contains same set of variables to be exported to the service.
 
-```
+```bash
 export APP_ENV=dev | staging | prod
 export DB_USER=<>
 export DB_PWD=<>
-export DB_CONN_URL=<>
+# Example value for local
+export DB_CONN_URL_DOCKER_COMPOSE=jdbc:mysql://host.docker.internal:3306
+# Example value for local
+export DB_CONN_URL=jdbc:mysql://localhost:3306
 export ASSET_BUCKET_NAME=<>
 export AWS_ACCESS_KEY_ID=<>
 export AWS_SECRET_ACCESS_KEY=<>
@@ -44,21 +47,6 @@ based on the environment. These values are in turned used to activate profiles f
 the profile property)
 
 ### Commands
-
-Set up env (`dev` / `staging` / `prod`)
-```bash
-make env dev=1
-```
-
-Set up the dependent services
-```bash
-make setup
-```
-
-Run the project
-```bash
-make run
-```
 
 Check out _Makefile_ for more detailed capabilities.
 
@@ -85,10 +73,10 @@ Host fab-api
 ```
 
 - All the required files are in _aws/_ dir
-- Run a tmux session to run the servers. We should ideally run it via `systemctl` services, but we currently use tmux so that we get hold of the logs easily as `journalctl` truncates logs. This is a temporary step. Upload the tmux file for easier navigation
+- Run a tmux session to run the servers. We should ideally run it via `systemctl` services, but we currently use tmux so that we get hold of the logs easily as `journalctl` truncates logs. **This is a temporary step.** Upload the tmux file for easier navigation
 ```bash
 scp aws/.tmux.conf fab-api:~/.
 ```
 - Use the commands in _aws/bootstrap.sh_ file to set up env + install toolchains
 - Once done you can start running the _Makefile_ scripts
-- Create elastic search indexes from _es.api_ file
+- Create elastic search indexes from _dev/es.http_ file
