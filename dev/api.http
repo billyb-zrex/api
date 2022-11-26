@@ -1,3 +1,17 @@
 ### health
 # @name=health
 GET {{api-host}}/health
+
+### create org
+# @name=new_org
+POST {{api-host}}/v1/neworg
+Content-Type: application/json
+
+{
+  "displayName": "Acme"
+}
+
+### get org
+# @name=get_org
+GET {{api-host}}/v1/org?id=2
+Accept: application/json

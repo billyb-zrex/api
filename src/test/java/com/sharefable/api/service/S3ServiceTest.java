@@ -11,9 +11,4 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 class S3ServiceTest {
     @Autowired
     private S3Service service;
-
-    @Test
-    void upload() {
-        service.upload("/dir/test", "text", "hello".getBytes());
-    }
 }

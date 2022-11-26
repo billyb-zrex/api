@@ -39,7 +39,7 @@ public class Project {
     private Long createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "belongs_to_org")
     private Org belongsToOrg;
 
     private Integer noOfScreens;
