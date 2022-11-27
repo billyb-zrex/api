@@ -38,6 +38,6 @@ public class User {
     private String avatar;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "belongs_to_org")
     private Org belongsToOrg;
 }
