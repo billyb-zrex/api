@@ -15,3 +15,14 @@ Content-Type: application/json
 # @name=get_org
 GET {{api-host}}/v1/org?id=2
 Accept: application/json
+
+### create user
+POST {{api-host}}/v1/newuser
+Content-Type: application/json
+
+{
+  "firstName": "root",
+  "lastName": "root",
+  "email": "root@root.com",
+  "belongsToOrg": 2
+}

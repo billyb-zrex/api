@@ -7,5 +7,7 @@ public interface Routes {
 
     String GET_ORG = "/org";
 
+    String NEW_USER = "/newuser";
+
     String HEALTH = "/health";
 }
