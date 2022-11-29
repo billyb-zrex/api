@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +21,11 @@ public interface Utils {
 
     static String createReadableId(String name) {
         String uuid = getShortRandomId();
-        return name.toLowerCase() + "-" + uuid;
+        return name.toLowerCase().replaceAll("\\s+", "-") + "-" + uuid;
+    }
+
+    static String createUuidWord() {
+        return UUID.randomUUID().toString().replaceAll("-", "");
     }
 
     static Pair<byte[], ImageType> getImageDataFromBase64Str(String base64Data) {

@@ -3,6 +3,7 @@ package com.sharefable.api.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
+import com.sharefable.api.common.Consts;
 import com.sharefable.api.config.S3Config;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +12,20 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+/*
+ * Location details
+ *  /app/gen <- All general assets (images per entity like org or user etc)
+ *      ...
+ *  /app/project_data
+ *      /{id}
+ *          /proxy_asset
+ *          /data_files
+ *          ...
+ */
+
 @Service
 public class S3Service {
-    private static final String PATH_APP_GENERIC_ASSET = "/app/gen";
+
     private final AmazonS3 client;
     private final S3Config config;
 
@@ -26,30 +38,30 @@ public class S3Service {
     public String getCanonicalFilePath(String filePath, AssetType type) {
         String prefixPath = "";
         if (type == AssetType.AppGeneric) {
-            prefixPath = PATH_APP_GENERIC_ASSET;
+            prefixPath = Consts.PATH_APP_GENERIC_ASSET;
+        } else if (type == AssetType.Project) {
+            prefixPath = Consts.PATH_PROJECT_SPECIFIC_ASSET;
         }
 
-        return prefixPath + StringUtils.prependIfMissing(filePath, "/");
+        return "lin_" + config.getFilePathQualifier() + prefixPath + StringUtils.prependIfMissing(filePath, "/");
     }
 
-    public void upload(String filePath, AssetType type, byte[] content) {
+    public String upload(String filePath, AssetType type, byte[] content) {
+        String fullQualifiedFilePath = getCanonicalFilePath(filePath, type);
         ObjectMetadata meta = new ObjectMetadata();
-        if (type != AssetType.AppGeneric) {
-            meta.addUserMetadata("Content-Type", type.value);
-        }
-
         PutObjectRequest req = new PutObjectRequest(
             config.getAppBucketName(),
-            getCanonicalFilePath(filePath, type),
+            fullQualifiedFilePath,
             new ByteArrayInputStream(content),
             meta);
         client.putObject(req);
+        return fullQualifiedFilePath;
     }
 
-    public byte[] getObjectContent(String fileName) throws IOException {
+    public byte[] getObjectContent(String filePath, AssetType type) throws IOException {
         GetObjectRequest req = new GetObjectRequest(
             config.getAppBucketName(),
-            fileName
+            getCanonicalFilePath(filePath, type)
         );
         S3Object object = client.getObject(req);
         S3ObjectInputStream content = object.getObjectContent();
@@ -59,14 +71,7 @@ public class S3Service {
     }
 
     enum AssetType {
-        Asset("project_asset"),
-        AppGeneric("generic_app_assets");
-
-        public final String value;
-
-        AssetType(String value) {
-            this.value = value;
-        }
+        Project, AppGeneric
     }
 }
 

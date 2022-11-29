@@ -1,6 +1,8 @@
 package com.sharefable.api.controller;
 
 public interface Routes {
+    String HEALTH = "/health";
+
     String API_V1 = "/v1";
 
     String NEW_ORG = "/neworg";
@@ -9,5 +11,7 @@ public interface Routes {
 
     String NEW_USER = "/newuser";
 
-    String HEALTH = "/health";
+    String NEW_PROJECT = "/newproject";
+
+    String PROXY_ASSET = "/proxyasset";
 }
