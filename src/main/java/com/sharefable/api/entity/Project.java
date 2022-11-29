@@ -35,8 +35,9 @@ public class Project {
 
     private String thumbnail;
 
-    @Column(nullable = false)
-    private Long createdBy;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false, name = "created_by")
+    private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(nullable = false, name = "belongs_to_org")
