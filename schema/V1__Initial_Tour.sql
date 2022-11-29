@@ -26,12 +26,13 @@ CREATE TABLE user
     email          varchar(255) NOT NULL,
     created_at     TIMESTAMP    NOT NULL,
     updated_at     TIMESTAMP    NOT NULL,
-    dp             VARCHAR(255) NULL,
+    avatar         VARCHAR(255) NULL,
     belongs_to_org BIGINT UNSIGNED,
 
     UNIQUE KEY UK_user_per_org (belongs_to_org, email),
     CONSTRAINT FK_user_belongs_to_org FOREIGN KEY (belongs_to_org) REFERENCES org (id),
-    INDEX IDX_org (belongs_to_org)
+    INDEX IDX_org (belongs_to_org),
+    INDEX IDX_email (email)
 );
 
 -- ----------------------------------------------------------------------------
@@ -47,7 +48,7 @@ CREATE TABLE project
     thumbnail      VARCHAR(200),
     created_by     BIGINT UNSIGNED,
     belongs_to_org BIGINT UNSIGNED,
-    no_of_screens  INT,
+    no_of_screens  INT DEFAULT 0,
 
     CONSTRAINT FK_project_created_by_user FOREIGN KEY (created_by) REFERENCES user (id),
     CONSTRAINT FK_project_belongs_to_org FOREIGN KEY (belongs_to_org) REFERENCES org (id),

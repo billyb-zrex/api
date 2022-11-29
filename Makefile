@@ -5,6 +5,11 @@ include env.now
 teardown:
 	docker-compose down;
 
+clean-data:
+	docker rm fable-db
+	docker rm fable-db-flyway
+	docker volume rm mysql-data
+
 setup:
 	docker-compose --profile ${APP_ENV} up -d
 

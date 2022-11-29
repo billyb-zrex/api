@@ -17,11 +17,11 @@ import org.springframework.context.annotation.Configuration;
 @AllArgsConstructor
 @Data
 public class S3Config {
-    private String proxyAssetBucketName;
+    private String appBucketName;
+    private String filePathQualifier;
     private String accessKeyId;
     private  String accessKeySecret;
     private String region;
-
 
     @Bean
     public AmazonS3 s3Client() {

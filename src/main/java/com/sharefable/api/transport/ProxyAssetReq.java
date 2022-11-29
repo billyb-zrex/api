@@ -1,0 +1,15 @@
+package com.sharefable.api.transport;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProxyAssetReq {
+    private String origin;
+    private Long projectId;
+    private String clientInfo;
+    private String assumedFileExt;
+}

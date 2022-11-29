@@ -1,3 +1,60 @@
 ### health
 # @name=health
 GET {{api-host}}/health
+
+### create org
+# @name=new_org
+POST {{api-host}}/v1/neworg
+Content-Type: application/json
+
+{
+  "displayName": "Acme"
+}
+
+### get org
+# @name=get_org
+GET {{api-host}}/v1/org?id=2
+Accept: application/json
+
+### create user
+POST {{api-host}}/v1/newuser
+Content-Type: application/json
+
+{
+  "firstName": "root",
+  "lastName": "root",
+  "email": "root@root.com",
+  "belongsToOrg": 2
+}
+
+### create project
+POST {{api-host}}/v1/newproject
+Content-Type: application/json
+
+{
+  "displayName": "My first project",
+  "createdBy": 1
+}
+
+
+### proxy asset
+POST {{api-host}}/v1/proxyasset
+Content-Type: application/json
+
+{
+  "origin": "https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,800,900|Product+Sans:100,300,400,500,700",
+  "projectId": 1,
+  "clientInfo": "eyJraWUiOiJHQV9YU1JGX1RPS0VOPUFPNlk3bThLeXh4b0xSdUlPU1Vud2ZoQ3haRGZveGVzUnc6MTY2OTY1NjU4Mjg0NjsgU0lEPVF3anlOeHpIZHRLT3Fmam5oSklncGlVUHo1NEpZNTNySmlEOGJhTldBSExFWjZ1dGUtejZIUGduV3ZsS21FZVpxcG53bFEuOyBBUElTSUQ9bXBHS1lSLXFKUkxxYjRKLS9Bbi00TG9MSE8xYVJwZUlJQTsgU0FQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBfX1NlY3VyZS0xUEFQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBfX1NlY3VyZS0zUEFQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBTPWFuYWx5dGljcy1yZWFsdGltZS1mcm9udGVuZD1IaWx5aHh3WlpjWWg5THZSS1g4MTRrRk03bnhPSGZ0QzsgMVBfSkFSPTIwMjItMTEtMjgtMTg7IFNJRENDPUFJS2tJczNjS3Vvb3Y4RUVhMjV4QmcxZjZBdVRKX08zNDB4eER0RlZTMEUzZ1EyODBsX2tTSjNReWc2Wl9sQU5wZnpoYm5ZWnhCQSIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEwNy4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
+}
+
+
+### proxy asset
+POST {{api-host}}/v1/proxyasset
+Content-Type: application/json
+
+{
+  "origin": "https://files.slack.com/files-tmb/T03PH3T7Y3U-F04BT6WCSBC-a3845ac1a1/mad_pig_960.png",
+  "projectId": 1,
+  "assumedFileExt": ".png",
+  "clientInfo": "eyJraWUiOiJiPS4xN3Nld3M4dHdkazh0N2ZxeWs1dGNja3B4OyBzaG93bl9kb3dubG9hZF9zc2JfbW9kYWw9MTsgc2hvd19kb3dubG9hZF9zc2JfYmFubmVyPTE7IG5vX2Rvd25sb2FkX3NzYl9iYW5uZXI9MTsgc2hvd25fc3NiX3JlZGlyZWN0X3BhZ2U9MTsgc3NiX2luc3RhbmNlX2lkPWEzMTUzMDlkLWU0ZjItNTQwYi1hODFhLTJhZmEyZGMwYzg1MjsgZD14b3hkLUMwaDl2REk1MFl5QUZDWUo1JTJGRXhNTkdYZXAlMkJSSURoJTJCQWdISFpWRmxyMnduNEdFRSUyRmZmeVB4Q3lwaGVVd3MlMkYyZXVJanJqSmFKcEQ1bDVFYWd6dHR6bGdWQ3clMkYlMkJGR1BJRjBzMTMlMkJJazU5REN0WDZIUFdBcExWc1pUamdGJTJCUUY3Zk1WbzhZSkdDTllnZHo4SHVnN3FQJTJGbUZQMVFmazFlcnlNakROTElXV2R6NU9SYWhiRWJEVmpUWlpRJTNEJTNEOyBkLXM9MTY2OTY2NDMxNDsgeD0xN3Nld3M4dHdkazh0N2ZxeWs1dGNja3B4LjE2Njk2NjQzMTQ7IE9wdGFub25Db25zZW50PWlzR3BjRW5hYmxlZD0wJmRhdGVzdGFtcD1UdWUrTm92KzI5KzIwMjIrMDElM0EyMiUzQTIyK0dNVCUyQjA1MzArKEluZGlhK1N0YW5kYXJkK1RpbWUpJnZlcnNpb249Ni4yMi4wJmlzSUFCR2xvYmFsPWZhbHNlJmhvc3RzPSZjb25zZW50SWQ9MjE3MTNiNGItY2Y2NC00Mzk0LWExZWQtZDk4YTk1YmVhOTU2JmludGVyYWN0aW9uQ291bnQ9MSZsYW5kaW5nUGF0aD1Ob3RMYW5kaW5nUGFnZSZncm91cHM9QzAwMDQlM0ExJTJDQzAwMDIlM0ExJTJDQzAwMDMlM0ExJTJDQzAwMDElM0ExJkF3YWl0aW5nUmVjb25zZW50PWZhbHNlOyBsYz0xNjY5NjY1MTU3IiwidWEiOiJNb3ppbGxhLzUuMCAoTWFjaW50b3NoOyBJbnRlbCBNYWMgT1MgWCAxMF8xNV83KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvMTA3LjAuMC4wIFNhZmFyaS81MzcuMzYifQ=="
+}

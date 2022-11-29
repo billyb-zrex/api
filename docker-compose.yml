@@ -4,7 +4,7 @@ services:
     schema:
         image: flyway/flyway
         container_name: fable-db-flyway
-        command: -url=${DB_CONN_URL} -schemas=migration -user=${DB_USER} -password=${DB_PWD} -connectRetries=60 migrate
+        command: -url=${DB_CONN_URL_DOCKER} -schemas=migration -user=${DB_USER} -password=${DB_PWD} -connectRetries=60 migrate
         volumes:
             - ./schema:/flyway/sql
         profiles:
