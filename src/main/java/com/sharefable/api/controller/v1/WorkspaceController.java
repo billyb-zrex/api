@@ -27,7 +27,7 @@ public class WorkspaceController {
     }
 
     @RequestMapping(value = Routes.NEW_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp createNewProject(@RequestBody NewOrgReq body) {
+    public ApiResp createNewOrg(@RequestBody NewOrgReq body) {
         String name = body.getDisplayName();
         if (StringUtils.isBlank(name)) {
             log.error("Org name should not be blank");
@@ -40,7 +40,7 @@ public class WorkspaceController {
     }
 
     @RequestMapping(value = Routes.GET_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp getProject(@RequestParam("id") Optional<Long> id) {
+    public ApiResp getOrg(@RequestParam("id") Optional<Long> id) {
         if (!id.isPresent()) {
             return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
                 .errStr("Missing parameter").build();

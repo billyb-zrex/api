@@ -20,6 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
+/*
+ * TODO upon implementation of authentication check if the users have access to certain entity
+ */
+
 @Service
 @Slf4j
 public class WorkspaceService {
@@ -58,7 +62,6 @@ public class WorkspaceService {
 
     @Transactional(readOnly = true)
     public OrgResp getOrgById(Long id) {
-        // TODO check if user has access to get the org
         Optional<Org> org = orgRepo.findById(id);
         return org.map(OrgResp::from).orElse(OrgResp.Empty());
     }
@@ -75,5 +78,10 @@ public class WorkspaceService {
 
         User savedUser = userRepo.save(user);
         return UserResp.from(savedUser);
+    }
+
+    @Transactional
+    Optional<User> getUserEntity(Long id) {
+        return userRepo.findById(id);
     }
 }
