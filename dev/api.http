@@ -24,18 +24,8 @@ Content-Type: application/json
   "firstName": "root",
   "lastName": "root",
   "email": "root@root.com",
-  "belongsToOrg": 2
+  "belongsToOrg": 1
 }
-
-### create project
-POST {{api-host}}/v1/newproject
-Content-Type: application/json
-
-{
-  "displayName": "My first project",
-  "createdBy": 1
-}
-
 
 ### proxy asset
 POST {{api-host}}/v1/proxyasset
