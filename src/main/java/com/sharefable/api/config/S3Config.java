@@ -12,15 +12,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="com.sharefable.api.s3")
+@ConfigurationProperties(prefix = "com.sharefable.api.s3")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 public class S3Config {
-    private String appBucketName;
-    private String filePathQualifier;
     private String accessKeyId;
-    private  String accessKeySecret;
+    private String accessKeySecret;
     private String region;
 
     @Bean

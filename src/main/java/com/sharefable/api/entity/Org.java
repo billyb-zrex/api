@@ -6,7 +6,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.List;
 
 @Entity
 @Table(name = "org")
@@ -35,7 +34,4 @@ public class Org {
     private String displayName;
 
     private String thumbnail;
-
-    @OneToMany(mappedBy = "belongsToOrg", fetch = FetchType.LAZY)
-    private List<Project> projects;
 }

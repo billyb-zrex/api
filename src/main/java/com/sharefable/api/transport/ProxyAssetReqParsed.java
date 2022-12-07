@@ -29,7 +29,6 @@ public class ProxyAssetReqParsed extends ProxyAssetReq {
     public static Optional<ProxyAssetReqParsed> from(ProxyAssetReq req) {
         ProxyAssetReqParsed parsedReq = new ProxyAssetReqParsed();
         parsedReq.setOrigin(req.getOrigin());
-        parsedReq.setProjectId(req.getProjectId());
         parsedReq.setClientInfo(req.getClientInfo());
         parsedReq.setAssumedFileExt(req.getAssumedFileExt());
         try {

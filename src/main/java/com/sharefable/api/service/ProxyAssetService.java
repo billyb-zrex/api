@@ -1,7 +1,8 @@
 package com.sharefable.api.service;
 
-import com.sharefable.api.common.Consts;
+import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.config.AssetPathConfig;
 import com.sharefable.api.entity.ProxyAsset;
 import com.sharefable.api.repo.ProxyAssetRepo;
 import com.sharefable.api.transport.ProxyAssetReqParsed;
@@ -27,21 +28,23 @@ public class ProxyAssetService {
     private final ProxyAssetRepo proxyAssetRepo;
     private final RestTemplate restClient;
     private final S3Service s3Service;
+    private final AssetPathConfig pathConfig;
 
     @Autowired
-    public ProxyAssetService(ProxyAssetRepo proxyAssetRepo, RestTemplate restClient, S3Service s3Service) {
+    public ProxyAssetService(ProxyAssetRepo proxyAssetRepo, RestTemplate restClient, S3Service s3Service, AssetPathConfig pathConfig) {
         this.proxyAssetRepo = proxyAssetRepo;
         this.restClient = restClient;
         this.s3Service = s3Service;
+        this.pathConfig = pathConfig;
     }
 
     @Transactional
     public ProxyAssetResp createProxyAsset(ProxyAssetReqParsed body) {
         String origin = body.getOrigin();
         String hashedOrigin = DigestUtils.sha1Hex(origin);
-        Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByBelongsToProjAndRid(body.getProjectId(), hashedOrigin);
+        Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
         if (proxyAsset.isPresent()) {
-            return ProxyAssetResp.from(proxyAsset.get());
+            return ProxyAssetResp.from(proxyAsset.get(), pathConfig);
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -55,25 +58,27 @@ public class ProxyAssetService {
 
         try {
             ResponseEntity<byte[]> resp = this.restClient.exchange(origin, HttpMethod.GET, entity, byte[].class);
-            if (resp.getBody() != null) {
+            int status = resp.getStatusCodeValue();
+            boolean isValidResponse = status >= 200 && status < 300;
+            if (resp.getBody() != null && isValidResponse) {
                 String fileName = Utils.createUuidWord();
                 if (!StringUtils.isBlank(body.getAssumedFileExt())) {
                     fileName += body.getAssumedFileExt();
                 }
-                String filePath = body.getProjectId() + Consts.PATH_FOR_COMMON_ASSET + "/" + fileName;
-                String fullQualifiedFilePath = this.s3Service.upload(filePath, S3Service.AssetType.Project, resp.getBody());
+                AssetFilePath assetFilePath = pathConfig.getQualifiedPathFor(AssetPathConfig.AssetType.ProxyAsset, fileName);
+                assetFilePath = s3Service.upload(assetFilePath, resp.getBody());
 
                 ProxyAsset asset = ProxyAsset.builder()
                     .rid(hashedOrigin)
                     .fullOriginUrl(origin)
-                    .proxyUri(fullQualifiedFilePath)
-                    .belongsToProj(body.getProjectId())
+                    .proxyUri(assetFilePath.getFilePath())
+                    .httpStatus(status)
                     .build();
 
                 ProxyAsset savedAsset = proxyAssetRepo.save(asset);
-                return ProxyAssetResp.from(savedAsset);
+                return ProxyAssetResp.from(savedAsset, pathConfig);
             } else {
-                log.error("Cannot get asset {} . Empty body", origin);
+                log.error("Cannot get asset {} . Empty body or not okay status. Status = {}", origin, status);
                 return ProxyAssetResp.Empty();
             }
         } catch (HttpStatusCodeException ex) {
