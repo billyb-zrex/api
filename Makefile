@@ -6,9 +6,7 @@ teardown:
 	docker-compose down;
 
 clean-data:
-	docker rm fable-db
-	docker rm fable-db-flyway
-	docker volume rm mysql-data
+	docker rm fable-db; docker rm fable-db-flyway; docker volume rm api_mysql-data
 
 setup:
 	docker-compose --profile ${APP_ENV} up -d
