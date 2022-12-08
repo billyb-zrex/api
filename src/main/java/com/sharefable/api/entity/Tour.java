@@ -6,16 +6,17 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
-@Table(name = "project")
+@Table(name = "tour")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @Builder
-public class Project {
+public class Tour {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
@@ -28,20 +29,27 @@ public class Project {
     private Timestamp updatedAt;
 
     @Column(nullable = false)
-    private String rid;
+    private String rId;
+
+    @Column(nullable = false)
+    private String assetPrefixHash;
 
     @Column(nullable = false)
     private String displayName;
 
-    private String thumbnail;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(nullable = false, name = "created_by")
     private User createdBy;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false, name = "belongs_to_org")
-    private Org belongsToOrg;
+    private String thumbnail;
 
-    private Integer noOfScreens;
+    @Column(nullable = false)
+    private Long belongToOrg;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "screens_tours_join",
+        joinColumns = @JoinColumn(name = "tour_id"),
+        inverseJoinColumns = @JoinColumn(name = "screen_id"))
+    private Set<Screen> tours;
 }

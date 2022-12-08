@@ -13,7 +13,6 @@ class ProxyAssetReqParsedTest {
     void validProxyAssetReqParsing() {
         ProxyAssetReq req = new ProxyAssetReq();
         req.setOrigin("https://fonts.googleapis.com/css?family=Google+Sans:300,400,500,700,800,900");
-        req.setProjectId(1L);
 
         String clientInfo = "{ \"kie\": \"\", \"ua\": \"moz\" }";
         String encodedInfo = Base64Utils.encodeToString(clientInfo.getBytes(StandardCharsets.UTF_8));

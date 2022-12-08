@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface ProxyAssetRepo extends PagingAndSortingRepository<ProxyAsset, Long> {
-    Optional<ProxyAsset> findProxyAssetByBelongsToProjAndRid(Long projectId, String rid);
+    Optional<ProxyAsset> findProxyAssetByRid(String rid);
 }

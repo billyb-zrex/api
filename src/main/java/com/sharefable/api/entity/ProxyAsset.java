@@ -2,12 +2,10 @@ package com.sharefable.api.entity;
 
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.util.Map;
 
 @Entity
 @Table(name = "asset_proxy")
@@ -35,13 +33,8 @@ public class ProxyAsset {
     @Column(nullable = false)
     private String fullOriginUrl;
 
-    @Column(nullable = false)
     private String proxyUri;
 
-    @Column(nullable = false, name = "belongs_to_proj")
-    private Long belongsToProj;
-
-    @Column(columnDefinition = "json")
-    @Type(type = "json")
-    private Map<String, String> meta;
+    @Column(nullable = false)
+    private Integer httpStatus;
 }

@@ -1,6 +1,8 @@
 package com.sharefable.api.transport;
 
+import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.ProxyAsset;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,9 +21,11 @@ import java.util.List;
 public class ProxyAssetResp {
     private String proxyUri;
 
-    public static ProxyAssetResp from(ProxyAsset asset) {
+    public static ProxyAssetResp from(ProxyAsset asset, S3Config pathConfig) {
         try {
             return Utils.fromEntityToTransportObject(asset, ProxyAssetResp.class, (ProxyAsset entity, ProxyAssetResp transportObj, List<Field> failedFields) -> {
+                AssetFilePath filePath = pathConfig.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, asset.getProxyUri());
+                transportObj.setProxyUri(filePath.getS3UriToFile());
             });
         } catch (InstantiationException | IllegalAccessException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());

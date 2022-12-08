@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProxyAssetReq {
     private String origin;
-    private Long projectId;
     private String clientInfo;
     private String assumedFileExt;
 }
