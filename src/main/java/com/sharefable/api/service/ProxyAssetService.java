@@ -2,7 +2,7 @@ package com.sharefable.api.service;
 
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
-import com.sharefable.api.config.AssetPathConfig;
+import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.ProxyAsset;
 import com.sharefable.api.repo.ProxyAssetRepo;
 import com.sharefable.api.transport.ProxyAssetReqParsed;
@@ -28,14 +28,14 @@ public class ProxyAssetService {
     private final ProxyAssetRepo proxyAssetRepo;
     private final RestTemplate restClient;
     private final S3Service s3Service;
-    private final AssetPathConfig pathConfig;
+    private final S3Config s3Config;
 
     @Autowired
-    public ProxyAssetService(ProxyAssetRepo proxyAssetRepo, RestTemplate restClient, S3Service s3Service, AssetPathConfig pathConfig) {
+    public ProxyAssetService(ProxyAssetRepo proxyAssetRepo, RestTemplate restClient, S3Service s3Service, S3Config s3Config) {
         this.proxyAssetRepo = proxyAssetRepo;
         this.restClient = restClient;
         this.s3Service = s3Service;
-        this.pathConfig = pathConfig;
+        this.s3Config = s3Config;
     }
 
     @Transactional
@@ -44,7 +44,7 @@ public class ProxyAssetService {
         String hashedOrigin = DigestUtils.sha1Hex(origin);
         Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
         if (proxyAsset.isPresent()) {
-            return ProxyAssetResp.from(proxyAsset.get(), pathConfig);
+            return ProxyAssetResp.from(proxyAsset.get(), s3Config);
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -65,7 +65,7 @@ public class ProxyAssetService {
                 if (!StringUtils.isBlank(body.getAssumedFileExt())) {
                     fileName += body.getAssumedFileExt();
                 }
-                AssetFilePath assetFilePath = pathConfig.getQualifiedPathFor(AssetPathConfig.AssetType.ProxyAsset, fileName);
+                AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, fileName);
                 assetFilePath = s3Service.upload(assetFilePath, resp.getBody());
 
                 ProxyAsset asset = ProxyAsset.builder()
@@ -76,7 +76,7 @@ public class ProxyAssetService {
                     .build();
 
                 ProxyAsset savedAsset = proxyAssetRepo.save(asset);
-                return ProxyAssetResp.from(savedAsset, pathConfig);
+                return ProxyAssetResp.from(savedAsset, s3Config);
             } else {
                 log.error("Cannot get asset {} . Empty body or not okay status. Status = {}", origin, status);
                 return ProxyAssetResp.Empty();

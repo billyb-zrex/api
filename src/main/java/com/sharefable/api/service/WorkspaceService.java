@@ -3,7 +3,7 @@ package com.sharefable.api.service;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.ImageType;
 import com.sharefable.api.common.Utils;
-import com.sharefable.api.config.AssetPathConfig;
+import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.OrgRepo;
@@ -33,14 +33,14 @@ public class WorkspaceService {
     private final S3Service s3Service;
     private final UserRepo userRepo;
 
-    private final AssetPathConfig pathConfig;
+    private final S3Config s3Config;
 
     @Autowired
-    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, AssetPathConfig pathConfig) {
+    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config) {
         this.orgRepo = orgRepo;
         this.s3Service = s3Service;
         this.userRepo = userRepo;
-        this.pathConfig = pathConfig;
+        this.s3Config = s3Config;
     }
 
     @Transactional
@@ -56,7 +56,7 @@ public class WorkspaceService {
                 log.error("Can't find type from image data. Only allowed type is png. Skipping saving of image.");
             } else {
                 String filePath = UUID.randomUUID() + "." + imgDataAndType.getValue1().type;
-                AssetFilePath assetFilePath = pathConfig.getQualifiedPathFor(AssetPathConfig.AssetType.Common, filePath);
+                AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.Common, filePath);
                 s3Service.upload(assetFilePath, imgDataAndType.getValue0());
                 orgBuilder.thumbnail(assetFilePath.getFilePath());
             }

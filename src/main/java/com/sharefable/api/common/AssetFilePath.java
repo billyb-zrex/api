@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssetFilePath {
+    String regionName;
     String bucketName;
     // Full path to the file without the bucket name; like root/srn/0/data/index.json
     String fullQualifiedPath;
@@ -19,6 +20,6 @@ public class AssetFilePath {
     String filePath;
 
     public String getS3UriToFile() {
-        return "s3://" + bucketName + "/" + fullQualifiedPath;
+        return "https://" + bucketName + ".s3." + regionName + ".amazonaws.com/" + fullQualifiedPath;
     }
 }
