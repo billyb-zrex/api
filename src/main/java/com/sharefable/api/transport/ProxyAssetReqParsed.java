@@ -30,7 +30,6 @@ public class ProxyAssetReqParsed extends ProxyAssetReq {
         ProxyAssetReqParsed parsedReq = new ProxyAssetReqParsed();
         parsedReq.setOrigin(req.getOrigin());
         parsedReq.setClientInfo(req.getClientInfo());
-        parsedReq.setAssumedFileExt(req.getAssumedFileExt());
         try {
             URL originParsed = new URL(req.getOrigin());
             parsedReq.setOriginParsed(originParsed);

@@ -20,6 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -49,10 +52,10 @@ public class ProxyAssetService {
 
         HttpHeaders headers = new HttpHeaders();
         if (!StringUtils.isBlank(body.getCookie())) {
-            headers.add("Cookie", body.getCookie());
+            headers.add(HttpHeaders.COOKIE, body.getCookie());
         }
         if (!StringUtils.isBlank(body.getUserAgent())) {
-            headers.add("User-Agent", body.getUserAgent());
+            headers.add(HttpHeaders.USER_AGENT, body.getUserAgent());
         }
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
@@ -62,11 +65,26 @@ public class ProxyAssetService {
             boolean isValidResponse = status >= 200 && status < 300;
             if (resp.getBody() != null && isValidResponse) {
                 String fileName = Utils.createUuidWord();
-                if (!StringUtils.isBlank(body.getAssumedFileExt())) {
-                    fileName += body.getAssumedFileExt();
+                HttpHeaders respHeaders = resp.getHeaders();
+                String contentType = null;
+                // Get the Content-Type information from response and set it directly into the s3 bucket
+                for (Map.Entry<String, List<String>> h : respHeaders.entrySet()) {
+                    String headerName = h.getKey();
+                    if (StringUtils.equalsIgnoreCase(headerName, HttpHeaders.CONTENT_TYPE)) {
+                        // https://stackoverflow.com/a/50405667
+                        contentType = String.join(",", h.getValue());
+                    }
                 }
+
+                Map<String, String> userDefinedMetadata = new HashMap<>(1);
+                if (contentType == null) {
+                    log.warn("Content-Type header is not passed for resource {}. Client might not behave properly", origin);
+                } else {
+                    userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, contentType);
+                }
+
                 AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, fileName);
-                assetFilePath = s3Service.upload(assetFilePath, resp.getBody());
+                assetFilePath = s3Service.upload(assetFilePath, resp.getBody(), userDefinedMetadata);
 
                 ProxyAsset asset = ProxyAsset.builder()
                     .rid(hashedOrigin)

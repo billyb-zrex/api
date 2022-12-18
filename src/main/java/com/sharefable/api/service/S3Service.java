@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class S3Service {
@@ -21,7 +23,15 @@ public class S3Service {
     }
 
     public AssetFilePath upload(AssetFilePath filePath, byte[] content) {
+        return upload(filePath, content, new HashMap<>());
+    }
+
+    public AssetFilePath upload(AssetFilePath filePath, byte[] content, Map<String, String> assetMetadata) {
         ObjectMetadata meta = new ObjectMetadata();
+        for (Map.Entry<String, String> metadata : assetMetadata.entrySet()) {
+            meta.addUserMetadata(metadata.getKey(), metadata.getValue());
+        }
+
         PutObjectRequest req = new PutObjectRequest(
             filePath.getBucketName(),
             filePath.getFullQualifiedPath(),

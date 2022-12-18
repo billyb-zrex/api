@@ -10,5 +10,4 @@ import lombok.NoArgsConstructor;
 public class ProxyAssetReq {
     private String origin;
     private String clientInfo;
-    private String assumedFileExt;
 }
