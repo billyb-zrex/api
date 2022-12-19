@@ -82,6 +82,7 @@ public class ProxyAssetService {
                 } else {
                     userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, contentType);
                 }
+                userDefinedMetadata.put("Orig-Url", origin);
 
                 AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, fileName);
                 assetFilePath = s3Service.upload(assetFilePath, resp.getBody(), userDefinedMetadata);
