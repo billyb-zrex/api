@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import com.sharefable.api.common.AssetFilePath;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -28,6 +29,12 @@ public class S3Service {
 
     public AssetFilePath upload(AssetFilePath filePath, byte[] content, Map<String, String> assetMetadata) {
         ObjectMetadata meta = new ObjectMetadata();
+        String contentType;
+        if ((contentType = assetMetadata.get(HttpHeaders.CONTENT_TYPE)) != null) {
+            meta.setContentType(contentType);
+            assetMetadata.remove(HttpHeaders.CONTENT_TYPE);
+        }
+
         for (Map.Entry<String, String> metadata : assetMetadata.entrySet()) {
             meta.addUserMetadata(metadata.getKey(), metadata.getValue());
         }
