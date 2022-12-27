@@ -30,25 +30,12 @@ public class S3Config {
     private String assetBucketName;
 
     private String getPathForAssetType(AssetType type) {
-        String path;
-        switch (type) {
-            case ProxyAsset:
-                path = PATH_FOR_PROXY_ASSET;
-                break;
-            case Flow:
-                path = PATH_FOR_FLOW_ASSET;
-                break;
-            case Screen:
-                path = PATH_FOR_SCREEN_ASSET;
-                break;
-            case Common:
-                path = PATH_FOR_COMMON_ASSET;
-                break;
-            default:
-                path = "";
-                break;
-        }
-        return path;
+        return switch (type) {
+            case ProxyAsset -> PATH_FOR_PROXY_ASSET;
+            case Flow -> PATH_FOR_FLOW_ASSET;
+            case Screen -> PATH_FOR_SCREEN_ASSET;
+            case Common -> PATH_FOR_COMMON_ASSET;
+        };
     }
 
     public AssetFilePath getQualifiedPathFor(AssetType type, String filePath) {

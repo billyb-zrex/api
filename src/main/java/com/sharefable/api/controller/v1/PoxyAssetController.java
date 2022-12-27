@@ -31,7 +31,7 @@ public class PoxyAssetController {
     @RequestMapping(value = Routes.PROXY_ASSET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp createNewOrg(@RequestBody ProxyAssetReq body) {
         Optional<ProxyAssetReqParsed> parsedBody = ProxyAssetReqParsed.from(body);
-        if (!parsedBody.isPresent()) {
+        if (parsedBody.isEmpty()) {
             return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
                 .errStr("Could not create proxy asset").build();
         }

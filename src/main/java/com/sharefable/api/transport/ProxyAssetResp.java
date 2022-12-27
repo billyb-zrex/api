@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 @Data
@@ -27,7 +28,8 @@ public class ProxyAssetResp {
                 AssetFilePath filePath = pathConfig.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, asset.getProxyUri());
                 transportObj.setProxyUri(filePath.getS3UriToFile());
             });
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
             e.printStackTrace();
             return Empty();

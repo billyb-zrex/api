@@ -8,7 +8,7 @@ POST {{api-host}}/v1/neworg
 Content-Type: application/json
 
 {
-  "displayName": "Acme"
+  "displayName": "Acme2"
 }
 
 ### get org

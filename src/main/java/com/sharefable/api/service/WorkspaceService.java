@@ -45,13 +45,13 @@ public class WorkspaceService {
 
     @Transactional
     public OrgResp newOrg(NewOrgReq body) {
-        String displayName = body.getDisplayName();
+        String displayName = body.displayName();
         String rid = Utils.createReadableId(displayName);
 
         Org.OrgBuilder orgBuilder = Org.builder().displayName(displayName).rid(rid);
 
-        if (StringUtils.isNotBlank(body.getThumbnail())) {
-            Pair<byte[], ImageType> imgDataAndType = Utils.getImageDataFromBase64Str(body.getThumbnail());
+        if (StringUtils.isNotBlank(body.thumbnail())) {
+            Pair<byte[], ImageType> imgDataAndType = Utils.getImageDataFromBase64Str(body.thumbnail());
             if (imgDataAndType.getValue1() == ImageType.Unknown) {
                 log.error("Can't find type from image data. Only allowed type is png. Skipping saving of image.");
             } else {
@@ -75,11 +75,11 @@ public class WorkspaceService {
     @Transactional
     public UserResp newUser(NewUserReq body) {
         User user = User.builder()
-            .firstName(body.getFirstName())
-            .lastName(body.getLastName())
-            .email(body.getEmail())
-            .avatar(body.getAvatar())
-            .belongsToOrg(Org.builder().id(body.getBelongsToOrg()).build())
+            .firstName(body.firstName())
+            .lastName(body.lastName())
+            .email(body.email())
+            .avatar(body.avatar())
+            .belongsToOrg(Org.builder().id(body.belongsToOrg()).build())
             .build();
 
         User savedUser = userRepo.save(user);

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -30,7 +31,8 @@ public class OrgResp {
             return Utils.fromEntityToTransportObject(org, OrgResp.class, (Org entity, OrgResp transportObj, List<Field> failedFields) -> {
                 /* noop */
             });
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
             e.printStackTrace();
             return Empty();
