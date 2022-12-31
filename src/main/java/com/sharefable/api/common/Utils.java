@@ -1,10 +1,10 @@
 package com.sharefable.api.common;
 
+import jakarta.xml.bind.DatatypeConverter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
 
-import javax.xml.bind.DatatypeConverter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
