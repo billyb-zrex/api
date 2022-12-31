@@ -48,8 +48,8 @@ public interface Utils {
     }
 
     static <K, T> T fromEntityToTransportObject(K entity, Class<T> clz, EntityTransportConversionDelegate<K, T> delegate)
-        throws InstantiationException, IllegalAccessException {
-        T transportObject = clz.newInstance();
+        throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        T transportObject = clz.getDeclaredConstructor().newInstance();
         Field[] fields = clz.getDeclaredFields();
         List<Field> notConvertedFields = new ArrayList<>(fields.length);
         for (Field field : fields) {

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -31,7 +32,8 @@ class UtilsTest {
             Assertions.assertEquals(entity.getId(), testTransport1.getId());
             Assertions.assertEquals(entity.getFirstName(), testTransport1.getFirstName());
             Assertions.assertEquals(entity.getCreatedAt(), testTransport1.getCreatedAt());
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException e) {
             e.printStackTrace();
             Assertions.fail("Exception: " + e.getMessage());
         }
@@ -59,7 +61,8 @@ class UtilsTest {
             Assertions.assertEquals(entity.getId(), testTransport2.getId());
             Assertions.assertEquals(entity.getFirstName(), testTransport2.getName());
             Assertions.assertEquals(entity.getCreatedAt().toString(), testTransport2.getTime());
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException e) {
             e.printStackTrace();
             Assertions.fail("Exception: " + e.getMessage());
         }

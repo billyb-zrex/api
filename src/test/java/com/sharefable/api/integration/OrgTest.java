@@ -16,8 +16,7 @@ public class OrgTest extends TestWithRunnerAndSetup {
     @SneakyThrows
     @Test
     void testNewOrgCreationWithoutThumbnail() {
-        NewOrgReq newOrgReq = new NewOrgReq();
-        newOrgReq.setDisplayName("Acme");
+        NewOrgReq newOrgReq = new NewOrgReq("Acme", null);
 
         String str = mapToJson(newOrgReq);
         ApiResp newOrgResp = sendRequest(

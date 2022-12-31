@@ -3,12 +3,8 @@ package com.sharefable.api.controller.v1;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.WorkspaceService;
-import com.sharefable.api.transport.NewOrgReq;
-import com.sharefable.api.transport.NewUserReq;
-import com.sharefable.api.transport.OrgResp;
-import com.sharefable.api.transport.UserResp;
+import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -28,20 +24,19 @@ public class WorkspaceController {
 
     @RequestMapping(value = Routes.NEW_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp createNewOrg(@RequestBody NewOrgReq body) {
-        String name = body.getDisplayName();
-        if (StringUtils.isBlank(name)) {
-            log.error("Org name should not be blank");
+        ObjectValidationResult validation = body.validate();
+        if (!validation.isValid()) {
             return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
-                .errStr("Org name should not be blank").build();
+                .errStr(String.join("; ", validation.validationMsg())).build();
         }
-        body.setDisplayName(body.getDisplayName().trim());
+        body = body.normalizeDisplayName();
         OrgResp org = wsService.newOrg(body);
         return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(org).build();
     }
 
     @RequestMapping(value = Routes.GET_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp getOrg(@RequestParam("id") Optional<Long> id) {
-        if (!id.isPresent()) {
+        if (id.isEmpty()) {
             return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
                 .errStr("Missing parameter").build();
         }
