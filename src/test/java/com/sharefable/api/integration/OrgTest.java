@@ -2,8 +2,8 @@ package com.sharefable.api.integration;
 
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
-import com.sharefable.api.transport.NewOrgReq;
-import com.sharefable.api.transport.OrgResp;
+import com.sharefable.api.transport.ReqNewOrg;
+import com.sharefable.api.transport.RespOrg;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
@@ -16,7 +16,7 @@ public class OrgTest extends TestWithRunnerAndSetup {
     @SneakyThrows
     @Test
     void testNewOrgCreationWithoutThumbnail() {
-        NewOrgReq newOrgReq = new NewOrgReq("Acme", null);
+        ReqNewOrg newOrgReq = new ReqNewOrg("Acme", null);
 
         String str = mapToJson(newOrgReq);
         ApiResp newOrgResp = sendRequest(
@@ -26,14 +26,14 @@ public class OrgTest extends TestWithRunnerAndSetup {
         );
 
         Assertions.assertEquals(ApiResp.ResponseStatus.Success, newOrgResp.getStatus());
-        OrgResp org = mapFromMap((Map<String, Object>) newOrgResp.getData(), OrgResp.class);
+        RespOrg org = mapFromMap((Map<String, Object>) newOrgResp.getData(), RespOrg.class);
 
         Assertions.assertEquals("Acme", org.getDisplayName());
         Assertions.assertTrue(StringUtils.startsWith(org.getRid(), "acme-"), "Received rid=" + org.getRid());
 
-        ApiResp getOrgResp = sendRequest(Routes.API_V1 + Routes.GET_ORG + "?id=" + org.getId(), HttpMethod.GET);
+        ApiResp getOrgResp = sendRequest(Routes.API_V1 + Routes.GET_ORG + "?rid=" + org.getRid(), HttpMethod.GET);
         Assertions.assertEquals(ApiResp.ResponseStatus.Success, newOrgResp.getStatus());
-        OrgResp org2 = mapFromMap((Map<String, Object>) getOrgResp.getData(), OrgResp.class);
+        RespOrg org2 = mapFromMap((Map<String, Object>) getOrgResp.getData(), RespOrg.class);
 
         Assertions.assertEquals(org, org2, "Org=" + org + "Org2=" + org2);
     }

@@ -4,16 +4,18 @@ GET {{api-host}}/health
 
 ### create org
 # @name=new_org
-POST {{api-host}}/v1/neworg
+POST {{api-host}}/v1/f/neworg
+Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "displayName": "Acme2"
+  "displayName": "Acme3"
 }
 
 ### get org
 # @name=get_org
-GET {{api-host}}/v1/org?id=2
+GET {{api-host}}/v1/f/org?rid=acme-rtzj7tv5
+Authorization: {{auth-header}}
 Accept: application/json
 
 ### create user
@@ -26,6 +28,11 @@ Content-Type: application/json
   "email": "root@root.com",
   "belongsToOrg": 1
 }
+
+### get user
+GET {{api-host}}/v1/user?id=1
+Accept: application/json
+
 
 ### proxy asset
 POST {{api-host}}/v1/proxyasset
@@ -50,7 +57,7 @@ Content-Type: application/json
 }
 
 ### new screen
-POST {{api-host}}/v1/bf/newscreen
+POST {{api-host}}/v1/f/newscreen
 Authorization: {{auth-header}}
 Content-Type: application/json
 

@@ -5,8 +5,8 @@ import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.ProxyAsset;
 import com.sharefable.api.repo.ProxyAssetRepo;
-import com.sharefable.api.transport.ProxyAssetReqParsed;
-import com.sharefable.api.transport.ProxyAssetResp;
+import com.sharefable.api.transport.ParsedReqProxyAsset;
+import com.sharefable.api.transport.RespProxyAsset;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -42,12 +42,12 @@ public class ProxyAssetService {
     }
 
     @Transactional
-    public ProxyAssetResp createProxyAsset(ProxyAssetReqParsed body) {
+    public RespProxyAsset createProxyAsset(ParsedReqProxyAsset body) {
         String origin = body.getOrigin();
         String hashedOrigin = DigestUtils.sha1Hex(origin);
         Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
         if (proxyAsset.isPresent()) {
-            return ProxyAssetResp.from(proxyAsset.get(), s3Config);
+            return RespProxyAsset.from(proxyAsset.get(), s3Config);
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -61,7 +61,7 @@ public class ProxyAssetService {
 
         try {
             ResponseEntity<byte[]> resp = this.restClient.exchange(origin, HttpMethod.GET, entity, byte[].class);
-            int status = resp.getStatusCodeValue();
+            int status = resp.getStatusCode().value();
             boolean isValidResponse = status >= 200 && status < 300;
             if (resp.getBody() != null && isValidResponse) {
                 String fileName = Utils.createUuidWord();
@@ -95,15 +95,15 @@ public class ProxyAssetService {
                     .build();
 
                 ProxyAsset savedAsset = proxyAssetRepo.save(asset);
-                return ProxyAssetResp.from(savedAsset, s3Config);
+                return RespProxyAsset.from(savedAsset, s3Config);
             } else {
                 log.error("Cannot get asset {} . Empty body or not okay status. Status = {}", origin, status);
-                return ProxyAssetResp.Empty();
+                return RespProxyAsset.Empty();
             }
         } catch (HttpStatusCodeException ex) {
             log.error("Cannot get asset {} [Status: {}, resp from server: {}]", origin, ex.getStatusCode(), ex.getResponseBodyAsString());
             ex.printStackTrace();
-            return ProxyAssetResp.Empty();
+            return RespProxyAsset.Empty();
         }
     }
 }

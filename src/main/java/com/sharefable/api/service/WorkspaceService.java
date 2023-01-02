@@ -7,10 +7,10 @@ import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.OrgRepo;
 import com.sharefable.api.repo.UserRepo;
-import com.sharefable.api.transport.NewOrgReq;
-import com.sharefable.api.transport.NewUserReq;
-import com.sharefable.api.transport.OrgResp;
-import com.sharefable.api.transport.UserResp;
+import com.sharefable.api.transport.ReqNewOrg;
+import com.sharefable.api.transport.ReqNewUser;
+import com.sharefable.api.transport.RespOrg;
+import com.sharefable.api.transport.RespUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public class WorkspaceService extends ServiceBase {
     }
 
     @Transactional
-    public OrgResp newOrg(NewOrgReq body) {
+    public RespOrg newOrg(ReqNewOrg body) {
         String displayName = body.displayName();
         String rid = Utils.createReadableId(displayName);
 
@@ -48,17 +48,17 @@ public class WorkspaceService extends ServiceBase {
         }
         Org org = orgBuilder.build();
         Org savedOrg = orgRepo.save(org);
-        return OrgResp.from(savedOrg);
+        return RespOrg.from(savedOrg);
     }
 
     @Transactional(readOnly = true)
-    public OrgResp getOrgById(Long id) {
-        Optional<Org> org = orgRepo.findById(id);
-        return org.map(OrgResp::from).orElse(OrgResp.Empty());
+    public RespOrg getOrgByRId(String id) {
+        Optional<Org> org = orgRepo.findFirstByRid(id);
+        return org.map(RespOrg::from).orElse(RespOrg.Empty());
     }
 
     @Transactional
-    public UserResp newUser(NewUserReq body) {
+    public RespUser newUser(ReqNewUser body) {
         User user = User.builder()
             .firstName(body.firstName())
             .lastName(body.lastName())
@@ -68,11 +68,12 @@ public class WorkspaceService extends ServiceBase {
             .build();
 
         User savedUser = userRepo.save(user);
-        return UserResp.from(savedUser);
+        return RespUser.from(savedUser);
     }
 
     @Transactional
-    Optional<User> getUserEntity(Long id) {
-        return userRepo.findById(id);
+    public RespUser getUserEntity(Long id) {
+        Optional<User> user = userRepo.findById(id);
+        return user.map(RespUser::from).orElse(RespUser.Empty());
     }
 }

@@ -1,11 +1,8 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.transport.RespUser;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.sql.Timestamp;
 
 @Entity
 @Table(name = "user")
@@ -15,17 +12,12 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @ToString
 @Builder
-public class User {
+@TransportObjRef(cls = RespUser.class)
+public class User extends EntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
     private Long id;
-
-    @CreationTimestamp
-    private Timestamp createdAt;
-
-    @UpdateTimestamp
-    private Timestamp updatedAt;
 
     @Column(nullable = false)
     private String firstName;

@@ -2,10 +2,7 @@ package com.sharefable.api.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.sql.Timestamp;
 import java.util.Set;
 
 @Entity
@@ -16,17 +13,11 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @Builder
-public class Screen {
+public class Screen extends EntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
     private Long id;
-
-    @CreationTimestamp
-    private Timestamp createdAt;
-
-    @UpdateTimestamp
-    private Timestamp updatedAt;
 
     @Column(nullable = false, name = "rid")
     private String rId;

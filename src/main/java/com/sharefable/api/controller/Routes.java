@@ -1,7 +1,7 @@
 package com.sharefable.api.controller;
 
 public interface Routes {
-    String __BEHIND_LOGIN__ = "/bf"; // bf => [B]ehind spring security [F]ilters for authentication
+    String __BEHIND_LOGIN__ = "/f"; // f => behind spring security [F]ilters for authentication
 
     String HEALTH = "/health";
 
@@ -12,6 +12,8 @@ public interface Routes {
     String GET_ORG = __BEHIND_LOGIN__ + "/org";
 
     String NEW_USER = "/newuser";
+
+    String GET_USER = "/user";
 
     String PROXY_ASSET = "/proxyasset";
 

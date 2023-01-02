@@ -4,6 +4,9 @@ import com.sharefable.api.entity.Org;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface OrgRepo extends CrudRepository<Org, Long> {
+    Optional<Org> findFirstByRid(String rId);
 }

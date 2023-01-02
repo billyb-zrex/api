@@ -5,8 +5,8 @@ import com.sharefable.api.auth.UserPrincipal;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.ScreenService;
-import com.sharefable.api.transport.NewScreenReq;
-import com.sharefable.api.transport.NewScreenResp;
+import com.sharefable.api.transport.ReqNewScreen;
+import com.sharefable.api.transport.RespScreen;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -28,9 +28,9 @@ public class ScreenController {
     }
 
     @RequestMapping(value = Routes.NEW_SCREEN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp newScreen(@RequestBody NewScreenReq body, @AuthenticationPrincipal UserPrincipal principal) {
-        NewScreenReq req = body.normalizeDisplayName();
-        NewScreenResp resp = screenService.createNewScreen(req, principal.userEntity());
+    public ApiResp newScreen(@RequestBody ReqNewScreen body, @AuthenticationPrincipal UserPrincipal principal) {
+        ReqNewScreen req = body.normalizeDisplayName();
+        RespScreen resp = screenService.createNewScreen(req, principal.userEntity());
         return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 }

@@ -1,6 +1,10 @@
 package com.sharefable.api.common;
 
+import com.sharefable.api.entity.EntityBase;
+import com.sharefable.api.entity.TransportObjRef;
+import com.sharefable.api.transport.ResponseBase;
 import jakarta.xml.bind.DatatypeConverter;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
@@ -8,7 +12,6 @@ import org.javatuples.Pair;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -50,26 +53,43 @@ public interface Utils {
         return "set" + StringUtils.capitalize(fieldName);
     }
 
-    static <K, T> T fromEntityToTransportObject(K entity, Class<T> clz, EntityTransportConversionDelegate<K, T> delegate)
-        throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        T transportObject = clz.getDeclaredConstructor().newInstance();
-        Field[] fields = clz.getDeclaredFields();
-        List<Field> notConvertedFields = new ArrayList<>(fields.length);
-        for (Field field : fields) {
-            try {
-                Method getterFromEntity = entity.getClass().getMethod(getterMethodNameFromFieldName(field.getName()));
-                Object valueFromEntity = getterFromEntity.invoke(entity);
-
-                Method setterFromTransport = clz.getMethod(setterMethodNameFromFieldName(field.getName()), field.getType());
-                setterFromTransport.invoke(transportObject, valueFromEntity);
-
-            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                notConvertedFields.add(field);
-            }
+    private static Field[] getAllFieldsForEntityClass(Class<?> cls) {
+        boolean isEntityBase = EntityBase.class.isAssignableFrom(cls);
+        if (!isEntityBase) {
+            return new Field[]{};
         }
-        delegate.apply(entity, transportObject, notConvertedFields);
+        Field[] declaredFields = cls.getDeclaredFields();
+        return ArrayUtils.addAll(declaredFields, getAllFieldsForEntityClass(cls.getSuperclass()));
+    }
 
-        return transportObject;
+    static <K extends EntityBase> ResponseBase fromEntityToTransportObject(K entity)
+        throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        TransportObjRef objRefAnnotation = entity.getClass().getAnnotation(TransportObjRef.class);
+        if (objRefAnnotation == null) {
+            throw new RuntimeException("An entity must be associated with corresponding transport object");
+        }
+        Class<? extends ResponseBase> transportCls = objRefAnnotation.cls();
+        ResponseBase transportObj = transportCls.getDeclaredConstructor().newInstance();
+
+        Field[] allFieldsForEntityClass = getAllFieldsForEntityClass(entity.getClass());
+        for (Field f : allFieldsForEntityClass) {
+            boolean isEntityBase = EntityBase.class.isAssignableFrom(f.getType());
+            try {
+                Method getterFromEntity = entity.getClass().getMethod(getterMethodNameFromFieldName(f.getName()));
+                Object valueFromEntity = getterFromEntity.invoke(entity);
+                Class<?> type = f.getType();
+
+                if (isEntityBase) {
+                    valueFromEntity = fromEntityToTransportObject((EntityBase) valueFromEntity);
+                    type = type.getAnnotation(TransportObjRef.class).cls();
+                }
+
+                Method setterFromTransport = transportCls.getMethod(setterMethodNameFromFieldName(f.getName()), type);
+                setterFromTransport.invoke(transportObj, valueFromEntity);
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) { /* noop */}
+        }
+
+        return transportObj;
     }
 
     static String normalizeWhitespace(String str) {

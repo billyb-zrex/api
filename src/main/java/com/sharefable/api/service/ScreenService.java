@@ -6,8 +6,8 @@ import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
-import com.sharefable.api.transport.NewScreenReq;
-import com.sharefable.api.transport.NewScreenResp;
+import com.sharefable.api.transport.ReqNewScreen;
+import com.sharefable.api.transport.RespScreen;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class ScreenService extends ServiceBase {
     }
 
     @Transactional
-    public NewScreenResp createNewScreen(NewScreenReq req, User createdByUser) {
+    public RespScreen createNewScreen(ReqNewScreen req, User createdByUser) {
         String prefixHash = Utils.createUuidWord();
         Callable<Optional<AssetFilePath>> dataFileUploader =
             () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, "index.json", S3Config.AssetType.Screen));
@@ -59,7 +59,7 @@ public class ScreenService extends ServiceBase {
                 .build();
 
             Screen storedScreen = screenRepo.save(screen);
-            return NewScreenResp.from(storedScreen);
+            return RespScreen.from(storedScreen);
         } catch (Exception e) {
             log.error("Error while uploading file to s3. Message: {}", e.getMessage());
             e.printStackTrace();

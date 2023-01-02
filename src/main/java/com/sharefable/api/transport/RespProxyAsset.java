@@ -4,30 +4,27 @@ import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.ProxyAsset;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Slf4j
-public class ProxyAssetResp {
+public class RespProxyAsset extends ResponseBase {
     private String proxyUri;
 
-    public static ProxyAssetResp from(ProxyAsset asset, S3Config pathConfig) {
+    public static RespProxyAsset from(ProxyAsset asset, S3Config pathConfig) {
         try {
-            return Utils.fromEntityToTransportObject(asset, ProxyAssetResp.class, (ProxyAsset entity, ProxyAssetResp transportObj, List<Field> failedFields) -> {
-                AssetFilePath filePath = pathConfig.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, asset.getProxyUri());
-                transportObj.setProxyUri(filePath.getS3UriToFile());
-            });
+            RespProxyAsset resp = (RespProxyAsset) Utils.fromEntityToTransportObject(asset);
+            AssetFilePath filePath = pathConfig.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, asset.getProxyUri());
+            resp.setProxyUri(filePath.getS3UriToFile());
+            return resp;
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
@@ -36,7 +33,7 @@ public class ProxyAssetResp {
         }
     }
 
-    public static ProxyAssetResp Empty() {
-        return new ProxyAssetResp();
+    public static RespProxyAsset Empty() {
+        return new RespProxyAsset();
     }
 }
