@@ -1,10 +1,10 @@
 package com.sharefable.api.entity;
 
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Set;
 
@@ -28,7 +28,7 @@ public class Screen {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "rid")
     private String rId;
 
     @Column(nullable = false)
@@ -47,10 +47,7 @@ public class Screen {
     private Long parentScreenId;
 
     @Column(nullable = false)
-    private Long belongToOrg;
-
-    @Column(nullable = false)
-    private String title;
+    private Long belongsToOrg;
 
     @Column(nullable = false)
     private String url;

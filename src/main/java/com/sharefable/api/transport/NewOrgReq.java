@@ -6,10 +6,12 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.sharefable.api.common.Utils.normalizeWhitespace;
+
 @Slf4j
 public record NewOrgReq(String displayName, String thumbnail) {
     public NewOrgReq normalizeDisplayName() {
-        return new NewOrgReq(displayName().trim(), thumbnail);
+        return new NewOrgReq(normalizeWhitespace(displayName()), thumbnail);
     }
 
     public ObjectValidationResult validate() {

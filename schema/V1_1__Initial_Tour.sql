@@ -67,7 +67,6 @@ CREATE TABLE screen
     thumbnail         VARCHAR(200)    NULL,
     parent_screen_id  BIGINT UNSIGNED NULL,
     belongs_to_org    BIGINT UNSIGNED NULL,
-    title             TEXT            NULL,
     url               TEXT            NULL,
     icon              TEXT            NULL,
     CONSTRAINT FK_screen_belongs_to_org FOREIGN KEY (belongs_to_org) REFERENCES org (id),
