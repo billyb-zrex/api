@@ -9,10 +9,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public interface Utils {
     static String getShortRandomId() {
@@ -67,5 +70,29 @@ public interface Utils {
         delegate.apply(entity, transportObject, notConvertedFields);
 
         return transportObject;
+    }
+
+    static String normalizeWhitespace(String str) {
+        return str.trim().replaceAll("\\s+", " ");
+    }
+
+    @SafeVarargs
+    static <T> List<T> runInParallel(Callable<T>... callables) throws Exception {
+        List<Callable<T>> list = Arrays.asList(callables);
+        int noOfThread = Math.min(list.size(), Runtime.getRuntime().availableProcessors());
+        ExecutorService execService = Executors.newFixedThreadPool(noOfThread);
+
+        try {
+            List<Future<T>> futures = execService.invokeAll(list);
+            return futures.stream().map(f -> {
+                try {
+                    return f.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toList());
+        } finally {
+            execService.shutdown();
+        }
     }
 }

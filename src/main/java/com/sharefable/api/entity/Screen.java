@@ -28,7 +28,7 @@ public class Screen {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "rid")
     private String rId;
 
     @Column(nullable = false)
@@ -47,7 +47,7 @@ public class Screen {
     private Long parentScreenId;
 
     @Column(nullable = false)
-    private Long belongToOrg;
+    private Long belongsToOrg;
 
     @Column(nullable = false)
     private String url;

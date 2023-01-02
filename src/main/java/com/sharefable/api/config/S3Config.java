@@ -21,8 +21,8 @@ import org.springframework.context.annotation.Configuration;
 public class S3Config {
     private final String PATH_FOR_COMMON_ASSET = "/cmn";
     private final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
-    private final String PATH_FOR_SCREEN_ASSET = "/srn/%d";
-    private final String PATH_FOR_FLOW_ASSET = "/flo/%d";
+    private final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
+    private final String PATH_FOR_FLOW_ASSET = "/flo/%s";
     private String accessKeyId;
     private String accessKeySecret;
     private String region;
@@ -39,12 +39,12 @@ public class S3Config {
     }
 
     public AssetFilePath getQualifiedPathFor(AssetType type, String filePath) {
-        return getQualifiedPathFor(type, 0L, filePath);
+        return getQualifiedPathFor(type, "0", filePath);
     }
 
-    public AssetFilePath getQualifiedPathFor(AssetType type, Long id, String filePath) {
+    public AssetFilePath getQualifiedPathFor(AssetType type, String prefix, String filePath) {
         String path = getPathForAssetType(type);
-        String prefixPath = rootQualifier + String.format(path, id);
+        String prefixPath = rootQualifier + String.format(path, prefix);
 
         AssetFilePath assetFilePath = new AssetFilePath();
         assetFilePath.setBucketName(assetBucketName);

@@ -1,7 +1,6 @@
 package com.sharefable.api.service;
 
 import com.sharefable.api.common.AssetFilePath;
-import com.sharefable.api.common.ImageType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Org;
@@ -14,13 +13,11 @@ import com.sharefable.api.transport.OrgResp;
 import com.sharefable.api.transport.UserResp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.UUID;
 
 /*
  * TODO upon implementation of authentication check if the users have access to certain entity
@@ -28,19 +25,15 @@ import java.util.UUID;
 
 @Service
 @Slf4j
-public class WorkspaceService {
+public class WorkspaceService extends ServiceBase {
     private final OrgRepo orgRepo;
-    private final S3Service s3Service;
     private final UserRepo userRepo;
-
-    private final S3Config s3Config;
 
     @Autowired
     public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config) {
+        super(s3Service, s3Config);
         this.orgRepo = orgRepo;
-        this.s3Service = s3Service;
         this.userRepo = userRepo;
-        this.s3Config = s3Config;
     }
 
     @Transactional
@@ -49,17 +42,9 @@ public class WorkspaceService {
         String rid = Utils.createReadableId(displayName);
 
         Org.OrgBuilder orgBuilder = Org.builder().displayName(displayName).rid(rid);
-
         if (StringUtils.isNotBlank(body.thumbnail())) {
-            Pair<byte[], ImageType> imgDataAndType = Utils.getImageDataFromBase64Str(body.thumbnail());
-            if (imgDataAndType.getValue1() == ImageType.Unknown) {
-                log.error("Can't find type from image data. Only allowed type is png. Skipping saving of image.");
-            } else {
-                String filePath = UUID.randomUUID() + "." + imgDataAndType.getValue1().type;
-                AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.Common, filePath);
-                s3Service.upload(assetFilePath, imgDataAndType.getValue0());
-                orgBuilder.thumbnail(assetFilePath.getFilePath());
-            }
+            Optional<AssetFilePath> assetFilePath = uploadBase64ImageToS3(body.thumbnail(), S3Config.AssetType.Common);
+            assetFilePath.ifPresent(filePath -> orgBuilder.thumbnail(filePath.getFilePath()));
         }
         Org org = orgBuilder.build();
         Org savedOrg = orgRepo.save(org);
