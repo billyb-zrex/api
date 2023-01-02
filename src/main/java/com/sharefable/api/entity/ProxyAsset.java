@@ -1,11 +1,8 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.transport.RespProxyAsset;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.sql.Timestamp;
 
 @Entity
 @Table(name = "asset_proxy")
@@ -15,17 +12,12 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @ToString
 @Builder
-public class ProxyAsset {
+@TransportObjRef(cls = RespProxyAsset.class)
+public class ProxyAsset extends EntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
     private Long id;
-
-    @CreationTimestamp
-    private Timestamp createdAt;
-
-    @UpdateTimestamp
-    private Timestamp updatedAt;
 
     @Column(nullable = false)
     private String rid;

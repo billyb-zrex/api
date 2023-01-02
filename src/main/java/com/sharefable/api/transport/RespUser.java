@@ -3,35 +3,29 @@ package com.sharefable.api.transport;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.User;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Timestamp;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Slf4j
-public class UserResp {
+public class RespUser extends ResponseBase {
     private Long id;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
     private String firstName;
     private String lastName;
     private String email;
     private String avatar;
+    private RespOrg belongsToOrg;
 
-    public static UserResp from(User user) {
+    public static RespUser from(User user) {
         try {
-            return Utils.fromEntityToTransportObject(user, UserResp.class, (User entity, UserResp transportObj, List<Field> failedFields) -> {
-                /* noop */
-            });
+            return (RespUser) Utils.fromEntityToTransportObject(user);
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
@@ -40,7 +34,7 @@ public class UserResp {
         }
     }
 
-    public static UserResp Empty() {
-        return new UserResp();
+    public static RespUser Empty() {
+        return new RespUser();
     }
 }

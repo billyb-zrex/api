@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProxyAssetReq {
+public class ReqProxyAsset {
     private String origin;
     private String clientInfo;
 }

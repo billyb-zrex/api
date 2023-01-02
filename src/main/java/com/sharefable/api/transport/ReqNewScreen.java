@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import static com.sharefable.api.common.Utils.normalizeWhitespace;
 
-public record NewScreenReq(
+public record ReqNewScreen(
     String name,
     String url,
     String thumbnail, // base64 image data
@@ -16,7 +16,7 @@ public record NewScreenReq(
         return parentId().orElse(0L);
     }
 
-    public NewScreenReq normalizeDisplayName() {
-        return new NewScreenReq(normalizeWhitespace(name()), url(), thumbnail(), favIcon(), parentId(), body());
+    public ReqNewScreen normalizeDisplayName() {
+        return new ReqNewScreen(normalizeWhitespace(name()), url(), thumbnail(), favIcon(), parentId(), body());
     }
 }

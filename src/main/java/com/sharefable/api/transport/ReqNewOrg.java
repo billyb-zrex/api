@@ -9,9 +9,9 @@ import java.util.List;
 import static com.sharefable.api.common.Utils.normalizeWhitespace;
 
 @Slf4j
-public record NewOrgReq(String displayName, String thumbnail) {
-    public NewOrgReq normalizeDisplayName() {
-        return new NewOrgReq(normalizeWhitespace(displayName()), thumbnail);
+public record ReqNewOrg(String displayName, String thumbnail) {
+    public ReqNewOrg normalizeDisplayName() {
+        return new ReqNewOrg(normalizeWhitespace(displayName()), thumbnail);
     }
 
     public ObjectValidationResult validate() {

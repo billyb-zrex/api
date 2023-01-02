@@ -8,17 +8,17 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-class ProxyAssetReqParsedTest {
+class ReqProxyAssetParsedTest {
     @Test
     void validProxyAssetReqParsing() {
-        ProxyAssetReq req = new ProxyAssetReq();
+        ReqProxyAsset req = new ReqProxyAsset();
         req.setOrigin("https://fonts.googleapis.com/css?family=Google+Sans:300,400,500,700,800,900");
 
         String clientInfo = "{ \"kie\": \"\", \"ua\": \"moz\" }";
         String encodedInfo = Base64Utils.encodeToString(clientInfo.getBytes(StandardCharsets.UTF_8));
         req.setClientInfo(encodedInfo);
 
-        Optional<ProxyAssetReqParsed> parsed = ProxyAssetReqParsed.from(req);
+        Optional<ParsedReqProxyAsset> parsed = ParsedReqProxyAsset.from(req);
         Assertions.assertTrue(parsed.isPresent());
         Assertions.assertInstanceOf(URL.class, parsed.get().getOriginParsed());
         Assertions.assertEquals("", parsed.get().getCookie());

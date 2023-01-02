@@ -1,97 +1,78 @@
 package com.sharefable.api.common;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.sharefable.api.entity.EntityBase;
+import com.sharefable.api.entity.TransportObjRef;
+import com.sharefable.api.transport.ResponseBase;
+import lombok.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
 
 class UtilsTest {
+    @SneakyThrows
     @Test
-    void testFromEntityToTransportObjectForSameMapping() {
-        TestEntity1 entity = new TestEntity1(1L, Timestamp.from(Instant.now()), "Test");
+    void testEntityTransportConversion() {
+        TestEntity100 testEntity100 = new TestEntity100("id", "rid", "dn", "th",
+            new TestEntity99("id2", "rid2", "john"));
+        testEntity100.setUpdatedAt(Timestamp.from(Instant.now()));
+        testEntity100.setCreatedAt(Timestamp.from(Instant.now()));
 
-        class DelegateImpl implements EntityTransportConversionDelegate<TestEntity1, TestTransport1> {
-            int i = -1;
+        TestResp100 responseBase = (TestResp100) Utils.fromEntityToTransportObject(testEntity100);
 
-            @Override
-            public void apply(TestEntity1 entityObj, TestTransport1 transportObj, List<Field> failedToConvertFields) {
-                i = failedToConvertFields.size();
-            }
-        }
-        DelegateImpl delegate = new DelegateImpl();
-        try {
-            TestTransport1 testTransport1 = Utils.fromEntityToTransportObject(entity, TestTransport1.class, delegate);
-            Assertions.assertEquals(0, delegate.i);
-            Assertions.assertEquals(entity.getId(), testTransport1.getId());
-            Assertions.assertEquals(entity.getFirstName(), testTransport1.getFirstName());
-            Assertions.assertEquals(entity.getCreatedAt(), testTransport1.getCreatedAt());
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
-                 InvocationTargetException e) {
-            e.printStackTrace();
-            Assertions.fail("Exception: " + e.getMessage());
-        }
+        Assertions.assertEquals("rid", responseBase.getRid());
+        Assertions.assertInstanceOf(TestResp99.class, responseBase.getT());
+        Assertions.assertEquals("rid2", responseBase.getT().getRid());
     }
 
-    @Test
-    void testFromEntityToTransportObjectForDifferentMapping() {
-        TestEntity1 entity = new TestEntity1(1L, Timestamp.from(Instant.now()), "Test");
 
-        class DelegateImpl implements EntityTransportConversionDelegate<TestEntity1, TestTransport2> {
-            int i = -1;
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @ToString(callSuper = true)
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @TransportObjRef(cls = TestResp100.class)
+    public static class TestEntity100 extends EntityBase {
+        private String id;
+        private String rid;
+        private String displayName;
+        private String thumbnail;
+        private TestEntity99 t;
+    }
 
-            @Override
-            public void apply(TestEntity1 entityObj, TestTransport2 transportObj, List<Field> failedToConvertFields) {
-                i = failedToConvertFields.size();
 
-                transportObj.setName(entityObj.getFirstName());
-                transportObj.setTime(entityObj.getCreatedAt().toString());
-            }
-        }
-        DelegateImpl delegate = new DelegateImpl();
-        try {
-            TestTransport2 testTransport2 = Utils.fromEntityToTransportObject(entity, TestTransport2.class, delegate);
-            Assertions.assertEquals(2, delegate.i);
-            Assertions.assertEquals(entity.getId(), testTransport2.getId());
-            Assertions.assertEquals(entity.getFirstName(), testTransport2.getName());
-            Assertions.assertEquals(entity.getCreatedAt().toString(), testTransport2.getTime());
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
-                 InvocationTargetException e) {
-            e.printStackTrace();
-            Assertions.fail("Exception: " + e.getMessage());
-        }
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @ToString(callSuper = true)
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TestResp100 extends ResponseBase {
+        private String rid;
+        private String displayName;
+        private String thumbnail;
+        private TestResp99 t;
     }
 
     @Data
+    @EqualsAndHashCode(callSuper = true)
+    @ToString(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class TestEntity1 {
-        Long id;
-        Timestamp createdAt;
-        String firstName;
+    @TransportObjRef(cls = TestResp99.class)
+    public static class TestEntity99 extends EntityBase {
+        private String id;
+        private String rid;
+        private String firstName;
     }
 
     @Data
+    @EqualsAndHashCode(callSuper = true)
+    @ToString(callSuper = true)
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class TestTransport1 {
-        Long id;
-        Timestamp createdAt;
-        String firstName;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class TestTransport2 {
-        Long id;
-        String name;
-        String time;
+    public static class TestResp99 extends ResponseBase {
+        private String rid;
+        private String firstName;
     }
 }

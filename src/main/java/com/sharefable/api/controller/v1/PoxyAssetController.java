@@ -3,9 +3,9 @@ package com.sharefable.api.controller.v1;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.ProxyAssetService;
-import com.sharefable.api.transport.ProxyAssetReq;
-import com.sharefable.api.transport.ProxyAssetReqParsed;
-import com.sharefable.api.transport.ProxyAssetResp;
+import com.sharefable.api.transport.ParsedReqProxyAsset;
+import com.sharefable.api.transport.ReqProxyAsset;
+import com.sharefable.api.transport.RespProxyAsset;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -29,14 +29,14 @@ public class PoxyAssetController {
 
 
     @RequestMapping(value = Routes.PROXY_ASSET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp createNewOrg(@RequestBody ProxyAssetReq body) {
-        Optional<ProxyAssetReqParsed> parsedBody = ProxyAssetReqParsed.from(body);
+    public ApiResp createNewOrg(@RequestBody ReqProxyAsset body) {
+        Optional<ParsedReqProxyAsset> parsedBody = ParsedReqProxyAsset.from(body);
         if (parsedBody.isEmpty()) {
             return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
                 .errStr("Could not create proxy asset").build();
         }
 
-        ProxyAssetResp proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get());
+        RespProxyAsset proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get());
         return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(proxyAsset).build();
     }
 }

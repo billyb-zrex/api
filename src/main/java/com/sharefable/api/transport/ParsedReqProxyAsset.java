@@ -16,18 +16,18 @@ import java.util.Optional;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
-public class ProxyAssetReqParsed extends ProxyAssetReq {
+public class ParsedReqProxyAsset extends ReqProxyAsset {
     private static final ObjectMapper om = new ObjectMapper();
 
     private URL originParsed;
     private String cookie;
     private String userAgent;
 
-    private ProxyAssetReqParsed() {
+    private ParsedReqProxyAsset() {
     }
 
-    public static Optional<ProxyAssetReqParsed> from(ProxyAssetReq req) {
-        ProxyAssetReqParsed parsedReq = new ProxyAssetReqParsed();
+    public static Optional<ParsedReqProxyAsset> from(ReqProxyAsset req) {
+        ParsedReqProxyAsset parsedReq = new ParsedReqProxyAsset();
         parsedReq.setOrigin(req.getOrigin());
         parsedReq.setClientInfo(req.getClientInfo());
         try {
@@ -41,7 +41,7 @@ public class ProxyAssetReqParsed extends ProxyAssetReq {
 
         byte[] bytes = Base64Utils.decodeFromString(req.getClientInfo());
         String clientInfoStr = new String(bytes);
-        TypeReference<HashMap<String, String>> typeRef = new TypeReference<HashMap<String, String>>() {
+        TypeReference<HashMap<String, String>> typeRef = new TypeReference<>() {
         };
         try {
             HashMap<String, String> map = om.readValue(clientInfoStr, typeRef);
