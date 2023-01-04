@@ -66,7 +66,7 @@ public interface Utils {
         throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         TransportObjRef objRefAnnotation = entity.getClass().getAnnotation(TransportObjRef.class);
         if (objRefAnnotation == null) {
-            throw new RuntimeException("An entity must be associated with corresponding transport object");
+            throw new RuntimeException("An entity must be associated with corresponding transport object. Entity: " + entity.getClass());
         }
         Class<? extends ResponseBase> transportCls = objRefAnnotation.cls();
         ResponseBase transportObj = transportCls.getDeclaredConstructor().newInstance();
