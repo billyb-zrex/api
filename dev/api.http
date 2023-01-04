@@ -46,7 +46,7 @@ Content-Type: application/json
 
 
 ### proxy asset
-POST {{api-host}}/v1/proxyasset
+POST {{api-host}}/v1/f/proxyasset
 Content-Type: application/json
 
 {
