@@ -27,7 +27,15 @@ public interface Utils {
 
     static String createReadableId(String name) {
         String uuid = getShortRandomId();
-        return name.toLowerCase().replaceAll("\\s+", "-") + "-" + uuid;
+        return StringUtils.appendIfMissing(
+            StringUtils.substring(
+                name
+                    .toLowerCase()
+                    .replaceAll("\\s+", "-")
+                    .replaceAll("[^\\w-]+", ""),
+                0, 30
+            ),
+            "-") + uuid;
     }
 
     static String createUuidWord() {
