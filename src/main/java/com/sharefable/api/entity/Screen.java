@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.transport.RespScreen;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @Builder
+@TransportObjRef(cls = RespScreen.class)
 public class Screen extends EntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

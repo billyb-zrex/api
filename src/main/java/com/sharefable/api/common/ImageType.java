@@ -4,6 +4,7 @@ import org.apache.commons.lang3.EnumUtils;
 
 public enum ImageType {
     PNG("png"),
+    JPEG("jpeg"),
     Unknown("na");
 
     public final String type;

@@ -23,7 +23,7 @@ public class WorkspaceController {
     }
 
     @RequestMapping(value = Routes.NEW_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp createNewOrg(@RequestBody ReqNewOrg body) {
+    public ApiResp<ResponseBase> createNewOrg(@RequestBody ReqNewOrg body) {
         ObjectValidationResult validation = body.validate();
         if (!validation.isValid()) {
             return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
@@ -35,7 +35,7 @@ public class WorkspaceController {
     }
 
     @RequestMapping(value = Routes.GET_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp getOrg(@RequestParam("rid") Optional<String> rId) {
+    public ApiResp<ResponseBase> getOrg(@RequestParam("rid") Optional<String> rId) {
         if (rId.isEmpty()) {
             return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
                 .errStr("Missing parameter").build();
@@ -45,13 +45,13 @@ public class WorkspaceController {
     }
 
     @RequestMapping(value = Routes.NEW_USER, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp newUser(@RequestBody ReqNewUser body) {
+    public ApiResp<ResponseBase> newUser(@RequestBody ReqNewUser body) {
         RespUser user = wsService.newUser(body);
         return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(user).build();
     }
 
     @RequestMapping(value = Routes.GET_USER, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp getUser(@RequestParam Long id) {
+    public ApiResp<ResponseBase> getUser(@RequestParam Long id) {
         RespUser resp = wsService.getUserEntity(id);
         return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }

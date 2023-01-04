@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Slf4j
+@GenerateTSDef
 public class RespOrg extends ResponseBase {
     private String rid;
     private String displayName;

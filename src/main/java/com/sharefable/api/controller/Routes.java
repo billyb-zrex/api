@@ -15,7 +15,7 @@ public interface Routes {
 
     String GET_USER = "/user";
 
-    String PROXY_ASSET = "/proxyasset";
+    String PROXY_ASSET = __BEHIND_LOGIN__ + "/proxyasset";
 
     String NEW_SCREEN = __BEHIND_LOGIN__ + "/newscreen";
 }
