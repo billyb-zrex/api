@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Slf4j
+@GenerateTSDef
 public class RespScreen extends ResponseBase {
     private String rId;
     private String assetPrefixHash;

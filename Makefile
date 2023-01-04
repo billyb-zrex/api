@@ -1,4 +1,4 @@
-.PHONY: teardown setup
+.PHONY: teardown setup gen clean-data setup db-schema-migrate env
 
 include env.now
 
@@ -14,6 +14,9 @@ setup:
 db-schema-migrate:
 	docker-compose up schema;
 
+gen:
+	mvn process-classes
+	cp -r ./gen/ ../app/workspace/packages/common/gen/
 
 # --------------------------------------------------------------
 # Different env file is required for different tool. Like idea

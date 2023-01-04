@@ -6,5 +6,6 @@ package com.sharefable.api.transport;
  *      belongsToOrg won't be sent from client side.
  */
 
+@GenerateTSDef
 public record ReqNewUser(String firstName, String lastName, String email, String avatar, Long belongsToOrg) {
 }

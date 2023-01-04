@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import static com.sharefable.api.common.Utils.normalizeWhitespace;
 
+@GenerateTSDef
 public record ReqNewScreen(
     String name,
     String url,

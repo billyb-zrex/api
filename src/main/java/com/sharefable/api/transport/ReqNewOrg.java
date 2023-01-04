@@ -9,6 +9,7 @@ import java.util.List;
 import static com.sharefable.api.common.Utils.normalizeWhitespace;
 
 @Slf4j
+@GenerateTSDef
 public record ReqNewOrg(String displayName, String thumbnail) {
     public ReqNewOrg normalizeDisplayName() {
         return new ReqNewOrg(normalizeWhitespace(displayName()), thumbnail);

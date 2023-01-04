@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 @AllArgsConstructor
 @Builder
 @Slf4j
+@GenerateTSDef
 public class RespProxyAsset extends ResponseBase {
     private String proxyUri;
 
