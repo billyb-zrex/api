@@ -3,7 +3,6 @@ package com.sharefable.api.common;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.sharefable.api.transport.GenerateTSDef;
-import com.sharefable.api.transport.ResponseBase;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,12 +14,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @GenerateTSDef
-public class ApiResp<T extends ResponseBase> {
+public class ApiResp<T> {
     private ResponseStatus status;
     private T data;
     private String errStr;
     private ErrorCode errCode;
-
 
     public enum ResponseStatus {Success, Failure}
 
