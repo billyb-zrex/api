@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -65,5 +66,10 @@ public class ScreenService extends ServiceBase {
             e.printStackTrace();
             throw new RuntimeException("Something went wrong when saving screen");
         }
+    }
+
+    public List<RespScreen> getAllScreensForOrg(Long orgId) {
+        List<Screen> screens = this.screenRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
+        return screens.stream().map(RespScreen::from).collect(Collectors.toList());
     }
 }

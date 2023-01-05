@@ -19,6 +19,10 @@ public class AssetFilePath {
     // File path after the prefix path data/index.json
     String filePath;
 
+    public static AssetFilePath from(AssetFilePath halfConstructedPath, String qualifiedPath) {
+        return new AssetFilePath(halfConstructedPath.regionName, halfConstructedPath.bucketName, qualifiedPath, "", "");
+    }
+
     public String getS3UriToFile() {
         return "https://" + bucketName + ".s3." + regionName + ".amazonaws.com/" + fullQualifiedPath;
     }

@@ -23,36 +23,44 @@ public class WorkspaceController {
     }
 
     @RequestMapping(value = Routes.NEW_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<ResponseBase> createNewOrg(@RequestBody ReqNewOrg body) {
+    public ApiResp<RespOrg> createNewOrg(@RequestBody ReqNewOrg body) {
         ObjectValidationResult validation = body.validate();
         if (!validation.isValid()) {
-            return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
+            return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
                 .errStr(String.join("; ", validation.validationMsg())).build();
         }
         body = body.normalizeDisplayName();
         RespOrg org = wsService.newOrg(body);
-        return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(org).build();
+        return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
     }
 
     @RequestMapping(value = Routes.GET_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<ResponseBase> getOrg(@RequestParam("rid") Optional<String> rId) {
+    public ApiResp<RespOrg> getOrg(@RequestParam("rid") Optional<String> rId) {
         if (rId.isEmpty()) {
-            return ApiResp.builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
+            return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
                 .errStr("Missing parameter").build();
         }
         RespOrg org = wsService.getOrgByRId(rId.get());
-        return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(org).build();
+        return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
     }
 
     @RequestMapping(value = Routes.NEW_USER, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<ResponseBase> newUser(@RequestBody ReqNewUser body) {
+    public ApiResp<RespUser> newUser(@RequestBody ReqNewUser body) {
         RespUser user = wsService.newUser(body);
-        return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(user).build();
+        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(user).build();
     }
 
     @RequestMapping(value = Routes.GET_USER, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<ResponseBase> getUser(@RequestParam Long id) {
+    public ApiResp<RespUser> getUser(@RequestParam Long id) {
         RespUser resp = wsService.getUserEntity(id);
-        return ApiResp.builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.GET_COMMON_CONFIG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespCommonConfig> getCommonConfig() {
+        RespCommonConfig.RespCommonConfigBuilder builder = RespCommonConfig.builder();
+        wsService.getCommonConfig(builder);
+        RespCommonConfig resp = builder.build();
+        return ApiResp.<RespCommonConfig>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 }

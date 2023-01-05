@@ -3,7 +3,6 @@ package com.sharefable.api.transport;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.Screen;
-import com.sharefable.api.entity.User;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +20,7 @@ public class RespScreen extends ResponseBase {
     private String rId;
     private String assetPrefixHash;
     private String displayName;
-    private User createdBy;
+    private RespUser createdBy;
     private String thumbnail;
     private String url;
     private String icon;
