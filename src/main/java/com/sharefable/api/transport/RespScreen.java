@@ -17,6 +17,11 @@ import java.lang.reflect.InvocationTargetException;
 @Slf4j
 @GenerateTSDef
 public class RespScreen extends ResponseBase {
+    // id and parentScreenId information are required by client to group the screens together while displaying
+    // all available screens. In order to enable this functionality we are leaking id information to client, which
+    // is not ideal, but we can handle this later on
+    private Long id;
+    private Long parentScreenId;
     private String rId;
     private String assetPrefixHash;
     private String displayName;
