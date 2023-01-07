@@ -73,6 +73,10 @@ GET {{api-host}}/v1/f/screens
 Authorization: {{auth-header}}
 Content-Type: application/json
 
+### get screen by rid
+GET {{api-host}}/v1/screen?rid=analytics-yeenjpf2
+Content-Type: application/json
+
 ### Get common config
 GET {{api-host}}/v1/cconfig
 Content-Type: application/json

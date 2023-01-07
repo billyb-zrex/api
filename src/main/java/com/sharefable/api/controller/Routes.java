@@ -21,5 +21,7 @@ public interface Routes {
 
     String GET_ALL_SCREENS = __BEHIND_LOGIN__ + "/screens";
 
+    String GET_SCREEN = "/screen";
+
     String GET_COMMON_CONFIG = "/cconfig";
 }

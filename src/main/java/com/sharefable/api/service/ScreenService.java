@@ -52,7 +52,7 @@ public class ScreenService extends ServiceBase {
             Screen screen = Screen.builder()
                 .createdBy(createdByUser)
                 .displayName(req.name())
-                .rId(Utils.createReadableId(req.name()))
+                .rid(Utils.createReadableId(req.name()))
                 .parentScreenId(req.normalizedParentId())
                 .assetPrefixHash(prefixHash)
                 .belongsToOrg(createdByUser.getBelongsToOrg().getId())
@@ -71,7 +71,12 @@ public class ScreenService extends ServiceBase {
     }
 
     public List<RespScreen> getAllScreensForOrg(Long orgId) {
-        List<Screen> screens = this.screenRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
+        List<Screen> screens = screenRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
         return screens.stream().map(RespScreen::from).collect(Collectors.toList());
+    }
+
+    public Optional<RespScreen> getScreenByRid(String rid) {
+        Optional<Screen> maybeScreen = screenRepo.findByRid(rid);
+        return maybeScreen.map(RespScreen::from);
     }
 }

@@ -21,8 +21,8 @@ public class Screen extends EntityBase {
     @Column(updatable = false, nullable = false)
     private Long id;
 
-    @Column(nullable = false, name = "rid")
-    private String rId;
+    @Column(nullable = false)
+    private String rid;
 
     @Column(nullable = false)
     private String assetPrefixHash;

@@ -12,12 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequestMapping(Routes.API_V1)
@@ -43,5 +44,15 @@ public class ScreenController {
         List<RespScreen> allScreensForOrg = screenService.getAllScreensForOrg(orgId);
         ResponseBase[] screens = allScreensForOrg.toArray(ResponseBase[]::new);
         return ApiResp.<ResponseBase[]>builder().status(ApiResp.ResponseStatus.Success).data(screens).build();
+    }
+
+    @RequestMapping(value = Routes.GET_SCREEN, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespScreen> getScreenByRId(@RequestParam("rid") String rId) {
+        Optional<RespScreen> maybeScreen = screenService.getScreenByRid(rId);
+        if (maybeScreen.isEmpty()) {
+            throw new ResponseStatusException(NOT_FOUND, String.format("Unable to find screen with rid %s", rId));
+        }
+
+        return ApiResp.<RespScreen>builder().data(maybeScreen.get()).build();
     }
 }

@@ -9,7 +9,7 @@ CREATE TABLE asset_proxy
     id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     created_at      TIMESTAMP    NOT NULL,
     updated_at      TIMESTAMP    NOT NULL,
-    rid             VARCHAR(255) NOT NULL,
+    rid             VARCHAR(255) NOT NULL UNIQUE,
     full_origin_url TEXT         NOT NULL,
     proxy_uri       VARCHAR(100),
     http_status     INT          NOT NULL
@@ -23,7 +23,7 @@ CREATE INDEX IDX_rid ON asset_proxy (rid);
 CREATE TABLE org
 (
     id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    rid          VARCHAR(255) NOT NULL,
+    rid          VARCHAR(255) NOT NULL UNIQUE,
     created_at   TIMESTAMP    NOT NULL,
     updated_at   TIMESTAMP    NOT NULL,
     display_name VARCHAR(200) NOT NULL,
@@ -58,7 +58,7 @@ CREATE INDEX IDX_org ON user (belongs_to_org);
 CREATE TABLE screen
 (
     id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    rid               VARCHAR(255)    NOT NULL,
+    rid               VARCHAR(255)    NOT NULL UNIQUE,
     asset_prefix_hash VARCHAR(32)     NULL,
     created_at        TIMESTAMP       NOT NULL,
     updated_at        TIMESTAMP       NOT NULL,
@@ -82,7 +82,7 @@ CREATE INDEX IDX_rid ON screen (rid);
 CREATE TABLE tour
 (
     id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    rid               VARCHAR(255)    NOT NULL,
+    rid               VARCHAR(255)    NOT NULL UNIQUE,
     asset_prefix_hash VARCHAR(32)     NULL,
     created_at        TIMESTAMP       NOT NULL,
     updated_at        TIMESTAMP       NOT NULL,

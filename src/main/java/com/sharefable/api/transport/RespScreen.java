@@ -22,7 +22,7 @@ public class RespScreen extends ResponseBase {
     // is not ideal, but we can handle this later on
     private Long id;
     private Long parentScreenId;
-    private String rId;
+    private String rid;
     private String assetPrefixHash;
     private String displayName;
     private RespUser createdBy;
