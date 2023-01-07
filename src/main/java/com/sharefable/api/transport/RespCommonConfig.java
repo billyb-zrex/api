@@ -14,4 +14,5 @@ public class RespCommonConfig extends ResponseBase {
     private String commonAssetPath;
     private String screenAssetPath;
     private String flowAssetPath;
+    private String dataFileName;
 }

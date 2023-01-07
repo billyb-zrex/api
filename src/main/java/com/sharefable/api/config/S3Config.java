@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 @AllArgsConstructor
 @Data
 public class S3Config {
+    private static final String DATA_FILE_NAME = "index.json";
     private static final String PATH_FOR_COMMON_ASSET = "/cmn";
     private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
     private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
@@ -50,6 +51,11 @@ public class S3Config {
             AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Flow, "")).getS3UriToFile()
         );
     }
+
+    public FileNames getFileNames() {
+        return new FileNames(DATA_FILE_NAME);
+    }
+
 
     private String getPrefixPath(AssetType type, String prefix) {
         String path = getPathForAssetType(type);
@@ -89,5 +95,8 @@ public class S3Config {
     }
 
     public record PathConfigForClient(String commonAsset, String screenAsset, String flowAsset) {
+    }
+
+    public record FileNames(String dataFile) {
     }
 }

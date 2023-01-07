@@ -22,10 +22,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ScreenService extends ServiceBase {
     private final ScreenRepo screenRepo;
+    private final S3Config s3Config;
 
     @Autowired
     public ScreenService(ScreenRepo screenRepo, S3Service s3Service, S3Config s3Config) {
         super(s3Service, s3Config);
+        this.s3Config = s3Config;
         this.screenRepo = screenRepo;
     }
 
@@ -33,7 +35,7 @@ public class ScreenService extends ServiceBase {
     public RespScreen createNewScreen(ReqNewScreen req, User createdByUser) {
         String prefixHash = Utils.createUuidWord();
         Callable<Optional<AssetFilePath>> dataFileUploader =
-            () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, "index.json", S3Config.AssetType.Screen));
+            () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, s3Config.getFileNames().dataFile(), S3Config.AssetType.Screen));
 
         Callable<Optional<AssetFilePath>> thumbnailUploader =
             () -> uploadBase64ImageToS3(req.thumbnail(), S3Config.AssetType.Common);

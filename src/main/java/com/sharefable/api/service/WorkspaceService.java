@@ -78,9 +78,11 @@ public class WorkspaceService extends ServiceBase {
 
     public void getCommonConfig(RespCommonConfig.RespCommonConfigBuilder builder) {
         S3Config.PathConfigForClient pathConfig = s3Config.getPathConfigForClient();
+        S3Config.FileNames fileNames = s3Config.getFileNames();
         builder
             .commonAssetPath(pathConfig.commonAsset())
             .screenAssetPath(pathConfig.screenAsset())
-            .flowAssetPath(pathConfig.flowAsset());
+            .flowAssetPath(pathConfig.flowAsset())
+            .dataFileName(fileNames.dataFile());
     }
 }
