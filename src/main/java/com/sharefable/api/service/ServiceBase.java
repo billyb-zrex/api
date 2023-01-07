@@ -6,10 +6,14 @@ import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,16 +36,27 @@ public abstract class ServiceBase {
             return Optional.empty();
         }
 
+        String contentType = switch (imgDataAndType.getValue1()) {
+            case PNG -> MediaType.IMAGE_PNG_VALUE;
+            case JPEG -> MediaType.IMAGE_JPEG_VALUE;
+            default -> MediaType.ALL_VALUE;
+        };
+
+        Map<String, String> userDefinedMetadata = new HashMap<>(1);
+        userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, contentType);
+
         String filePath = UUID.randomUUID() + "." + imgDataAndType.getValue1().type;
         AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, filePath);
-        s3Service.upload(assetFilePath, imgDataAndType.getValue0());
+        s3Service.upload(assetFilePath, imgDataAndType.getValue0(), userDefinedMetadata);
         return Optional.ofNullable(assetFilePath);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     AssetFilePath uploadDataFileToS3(String content, String prefixHash, String fileName, S3Config.AssetType assetType) {
         AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, fileName);
-        s3Service.upload(assetFilePath, content.getBytes(StandardCharsets.UTF_8));
+        Map<String, String> userDefinedMetadata = new HashMap<>(1);
+        userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        s3Service.upload(assetFilePath, content.getBytes(StandardCharsets.UTF_8), userDefinedMetadata);
         return assetFilePath;
     }
 }
