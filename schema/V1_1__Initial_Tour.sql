@@ -88,7 +88,7 @@ CREATE TABLE tour
     updated_at        TIMESTAMP       NOT NULL,
     display_name      VARCHAR(200)    NOT NULL,
     created_by        BIGINT UNSIGNED NULL,
-    thumbnail         VARCHAR(200)    NULL,
+    description       TEXT            NULL,
     belongs_to_org    BIGINT UNSIGNED NULL,
     CONSTRAINT FK_tour_belongs_to_org FOREIGN KEY (belongs_to_org) REFERENCES org (id),
     CONSTRAINT FK_tour_created_by_user FOREIGN KEY (created_by) REFERENCES user (id)
