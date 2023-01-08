@@ -16,15 +16,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class ScreenService extends ServiceBase {
     private final ScreenRepo screenRepo;
+    private final S3Config s3Config;
 
     @Autowired
     public ScreenService(ScreenRepo screenRepo, S3Service s3Service, S3Config s3Config) {
         super(s3Service, s3Config);
+        this.s3Config = s3Config;
         this.screenRepo = screenRepo;
     }
 
@@ -32,7 +35,7 @@ public class ScreenService extends ServiceBase {
     public RespScreen createNewScreen(ReqNewScreen req, User createdByUser) {
         String prefixHash = Utils.createUuidWord();
         Callable<Optional<AssetFilePath>> dataFileUploader =
-            () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, "index.json", S3Config.AssetType.Screen));
+            () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, s3Config.getFileNames().dataFile(), S3Config.AssetType.Screen));
 
         Callable<Optional<AssetFilePath>> thumbnailUploader =
             () -> uploadBase64ImageToS3(req.thumbnail(), S3Config.AssetType.Common);
@@ -49,7 +52,7 @@ public class ScreenService extends ServiceBase {
             Screen screen = Screen.builder()
                 .createdBy(createdByUser)
                 .displayName(req.name())
-                .rId(Utils.createReadableId(req.name()))
+                .rid(Utils.createReadableId(req.name()))
                 .parentScreenId(req.normalizedParentId())
                 .assetPrefixHash(prefixHash)
                 .belongsToOrg(createdByUser.getBelongsToOrg().getId())
@@ -65,5 +68,15 @@ public class ScreenService extends ServiceBase {
             e.printStackTrace();
             throw new RuntimeException("Something went wrong when saving screen");
         }
+    }
+
+    public List<RespScreen> getAllScreensForOrg(Long orgId) {
+        List<Screen> screens = screenRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
+        return screens.stream().map(RespScreen::from).collect(Collectors.toList());
+    }
+
+    public Optional<RespScreen> getScreenByRid(String rid) {
+        Optional<Screen> maybeScreen = screenRepo.findByRid(rid);
+        return maybeScreen.map(RespScreen::from);
     }
 }

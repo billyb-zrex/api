@@ -5,11 +5,14 @@ import lombok.*;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 @GenerateTSDef
-public class RespHealth extends ResponseBase {
-    private final String status = "up";
+public class RespCommonConfig extends ResponseBase {
+    private String commonAssetPath;
+    private String screenAssetPath;
+    private String flowAssetPath;
+    private String dataFileName;
 }

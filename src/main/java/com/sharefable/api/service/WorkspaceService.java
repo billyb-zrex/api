@@ -7,10 +7,7 @@ import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.OrgRepo;
 import com.sharefable.api.repo.UserRepo;
-import com.sharefable.api.transport.ReqNewOrg;
-import com.sharefable.api.transport.ReqNewUser;
-import com.sharefable.api.transport.RespOrg;
-import com.sharefable.api.transport.RespUser;
+import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +25,14 @@ import java.util.Optional;
 public class WorkspaceService extends ServiceBase {
     private final OrgRepo orgRepo;
     private final UserRepo userRepo;
+    private final S3Config s3Config;
 
     @Autowired
     public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config) {
         super(s3Service, s3Config);
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
+        this.s3Config = s3Config;
     }
 
     @Transactional
@@ -75,5 +74,15 @@ public class WorkspaceService extends ServiceBase {
     public RespUser getUserEntity(Long id) {
         Optional<User> user = userRepo.findById(id);
         return user.map(RespUser::from).orElse(RespUser.Empty());
+    }
+
+    public void getCommonConfig(RespCommonConfig.RespCommonConfigBuilder builder) {
+        S3Config.PathConfigForClient pathConfig = s3Config.getPathConfigForClient();
+        S3Config.FileNames fileNames = s3Config.getFileNames();
+        builder
+            .commonAssetPath(pathConfig.commonAsset())
+            .screenAssetPath(pathConfig.screenAsset())
+            .flowAssetPath(pathConfig.flowAsset())
+            .dataFileName(fileNames.dataFile());
     }
 }

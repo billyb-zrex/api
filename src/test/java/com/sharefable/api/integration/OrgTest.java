@@ -10,8 +10,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 
-import java.util.Map;
-
 public class OrgTest extends TestWithRunnerAndSetup {
     @SneakyThrows
     @Test
@@ -19,21 +17,21 @@ public class OrgTest extends TestWithRunnerAndSetup {
         ReqNewOrg newOrgReq = new ReqNewOrg("Acme", null);
 
         String str = mapToJson(newOrgReq);
-        ApiResp newOrgResp = sendRequest(
+        ApiResp<RespOrg> newOrgResp = sendRequest(
             Routes.API_V1 + Routes.NEW_ORG,
             HttpMethod.POST,
-            str
+            str,
+            RespOrg.class
         );
 
-        Assertions.assertEquals(ApiResp.ResponseStatus.Success, newOrgResp.getStatus());
-        RespOrg org = mapFromMap((Map<String, Object>) newOrgResp.getData(), RespOrg.class);
+        RespOrg org = newOrgResp.getData();
 
         Assertions.assertEquals("Acme", org.getDisplayName());
         Assertions.assertTrue(StringUtils.startsWith(org.getRid(), "acme-"), "Received rid=" + org.getRid());
 
-        ApiResp getOrgResp = sendRequest(Routes.API_V1 + Routes.GET_ORG + "?rid=" + org.getRid(), HttpMethod.GET);
+        ApiResp<RespOrg> getOrgResp = sendRequest(Routes.API_V1 + Routes.GET_ORG + "?rid=" + org.getRid(), HttpMethod.GET, RespOrg.class);
         Assertions.assertEquals(ApiResp.ResponseStatus.Success, newOrgResp.getStatus());
-        RespOrg org2 = mapFromMap((Map<String, Object>) getOrgResp.getData(), RespOrg.class);
+        RespOrg org2 = getOrgResp.getData();
 
         Assertions.assertEquals(org, org2, "Org=" + org + "Org2=" + org2);
     }

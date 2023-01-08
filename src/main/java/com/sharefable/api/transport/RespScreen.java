@@ -3,7 +3,6 @@ package com.sharefable.api.transport;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.Screen;
-import com.sharefable.api.entity.User;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,10 +17,15 @@ import java.lang.reflect.InvocationTargetException;
 @Slf4j
 @GenerateTSDef
 public class RespScreen extends ResponseBase {
-    private String rId;
+    // id and parentScreenId information are required by client to group the screens together while displaying
+    // all available screens. In order to enable this functionality we are leaking id information to client, which
+    // is not ideal, but we can handle this later on
+    private Long id;
+    private Long parentScreenId;
+    private String rid;
     private String assetPrefixHash;
     private String displayName;
-    private User createdBy;
+    private RespUser createdBy;
     private String thumbnail;
     private String url;
     private String icon;

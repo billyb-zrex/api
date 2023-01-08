@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2023-01-04 09:08:12.
+// Generated using typescript-generator version 2.35.1025 on 2023-01-06 17:59:37.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -36,6 +36,17 @@ export interface ReqProxyAsset {
     clientInfo: string;
 }
 
+export interface RespCommonConfig extends ResponseBase {
+    commonAssetPath: string;
+    screenAssetPath: string;
+    flowAssetPath: string;
+    dataFileName: string;
+}
+
+export interface RespHealth extends ResponseBase {
+    status: string;
+}
+
 export interface RespOrg extends ResponseBase {
     rid: string;
     displayName: string;
@@ -47,13 +58,15 @@ export interface RespProxyAsset extends ResponseBase {
 }
 
 export interface RespScreen extends ResponseBase {
+    id: number;
+    parentScreenId: number;
+    rid: string;
     assetPrefixHash: string;
     displayName: string;
-    createdBy: User;
+    createdBy: RespUser;
     thumbnail: string;
     url: string;
     icon: string;
-    rid: string;
 }
 
 export interface RespUser extends ResponseBase {
@@ -66,27 +79,6 @@ export interface RespUser extends ResponseBase {
 }
 
 export interface ResponseBase {
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-export interface User extends EntityBase {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    avatar: string;
-    belongsToOrg: Org;
-}
-
-export interface Org extends EntityBase {
-    id: number;
-    rid: string;
-    displayName: string;
-    thumbnail: string;
-}
-
-export interface EntityBase {
     createdAt: Date;
     updatedAt: Date;
 }

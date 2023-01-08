@@ -19,10 +19,11 @@ import org.springframework.context.annotation.Configuration;
 @AllArgsConstructor
 @Data
 public class S3Config {
-    private final String PATH_FOR_COMMON_ASSET = "/cmn";
-    private final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
-    private final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
-    private final String PATH_FOR_FLOW_ASSET = "/flo/%s";
+    private static final String DATA_FILE_NAME = "index.json";
+    private static final String PATH_FOR_COMMON_ASSET = "/cmn";
+    private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
+    private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
+    private static final String PATH_FOR_FLOW_ASSET = "/flo/%s";
     private String accessKeyId;
     private String accessKeySecret;
     private String region;
@@ -42,15 +43,37 @@ public class S3Config {
         return getQualifiedPathFor(type, "0", filePath);
     }
 
-    public AssetFilePath getQualifiedPathFor(AssetType type, String prefix, String filePath) {
-        String path = getPathForAssetType(type);
-        String prefixPath = rootQualifier + String.format(path, prefix);
+    public PathConfigForClient getPathConfigForClient() {
+        AssetFilePath assetFilePath = getAssetFilePathWithCommonProps();
+        return new PathConfigForClient(
+            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Common, "") + "/").getS3UriToFile(),
+            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Screen, "")).getS3UriToFile(),
+            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Flow, "")).getS3UriToFile()
+        );
+    }
 
+    public FileNames getFileNames() {
+        return new FileNames(DATA_FILE_NAME);
+    }
+
+
+    private String getPrefixPath(AssetType type, String prefix) {
+        String path = getPathForAssetType(type);
+        return rootQualifier + String.format(path, prefix);
+    }
+
+    private AssetFilePath getAssetFilePathWithCommonProps() {
         AssetFilePath assetFilePath = new AssetFilePath();
         assetFilePath.setBucketName(assetBucketName);
-        assetFilePath.setFilePath(filePath);
         assetFilePath.setRegionName(region);
+        return assetFilePath;
+    }
+
+    public AssetFilePath getQualifiedPathFor(AssetType type, String prefix, String filePath) {
+        AssetFilePath assetFilePath = getAssetFilePathWithCommonProps();
+        String prefixPath = getPrefixPath(type, prefix);
         assetFilePath.setPrefixPathForType(prefixPath);
+        assetFilePath.setFilePath(filePath);
         assetFilePath.setFullQualifiedPath(prefixPath + StringUtils.prependIfMissing(filePath, "/"));
         return assetFilePath;
     }
@@ -69,5 +92,11 @@ public class S3Config {
         Screen,
         Flow,
         Common,
+    }
+
+    public record PathConfigForClient(String commonAsset, String screenAsset, String flowAsset) {
+    }
+
+    public record FileNames(String dataFile) {
     }
 }

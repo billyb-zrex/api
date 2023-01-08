@@ -2,6 +2,7 @@ package com.sharefable.api.integration;
 
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
+import com.sharefable.api.transport.RespHealth;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,8 @@ public class HealthTest extends TestWithRunnerAndSetup {
     @SneakyThrows
     @Test
     void shouldRespondsToHealthCheck() {
-        ApiResp resp = sendRequest(Routes.HEALTH, HttpMethod.GET);
+        ApiResp<RespHealth> resp = sendRequest(Routes.HEALTH, HttpMethod.GET, RespHealth.class);
         Assertions.assertEquals(ApiResp.ResponseStatus.Success, resp.getStatus());
-        Assertions.assertEquals("ok", resp.getData());
+        Assertions.assertEquals("up", resp.getData().getStatus());
     }
 }

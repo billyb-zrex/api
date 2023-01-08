@@ -18,4 +18,10 @@ public interface Routes {
     String PROXY_ASSET = __BEHIND_LOGIN__ + "/proxyasset";
 
     String NEW_SCREEN = __BEHIND_LOGIN__ + "/newscreen";
+
+    String GET_ALL_SCREENS = __BEHIND_LOGIN__ + "/screens";
+
+    String GET_SCREEN = "/screen";
+
+    String GET_COMMON_CONFIG = "/cconfig";
 }

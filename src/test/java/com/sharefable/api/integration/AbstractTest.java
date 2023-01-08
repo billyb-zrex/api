@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.ApiResp;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +35,11 @@ public class AbstractTest {
         return objectMapper.writeValueAsString(obj);
     }
 
-    protected <T> T mapFromJson(String json, Class<T> clazz) throws IOException {
+    protected <T> T mapFromJson(String json, Class<T> clazz, Class<?> dataCls) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        return objectMapper.readValue(json, clazz);
+        JavaType javaType = objectMapper.getTypeFactory().constructParametricType(clazz, dataCls);
+        return objectMapper.readValue(json, javaType);
     }
 
     protected <T> T mapFromMap(Map<String, Object> map, Class<T> clazz) {
@@ -46,11 +48,11 @@ public class AbstractTest {
         return objectMapper.convertValue(map, clazz);
     }
 
-    protected ApiResp sendRequest(String uri, HttpMethod method) throws Exception {
-        return sendRequest(uri, method, "");
+    protected <T> ApiResp<T> sendRequest(String uri, HttpMethod method, Class<T> cls) throws Exception {
+        return sendRequest(uri, method, "", cls);
     }
 
-    protected ApiResp sendRequest(String uri, HttpMethod method, String body) throws Exception {
+    protected <T> ApiResp<T> sendRequest(String uri, HttpMethod method, String body, Class<T> cls) throws Exception {
         MockHttpServletRequestBuilder requestBuilder;
         if (method == HttpMethod.POST) {
             requestBuilder = MockMvcRequestBuilders.post(uri)
@@ -64,7 +66,7 @@ public class AbstractTest {
 
         MvcResult mvcResult = mvc.perform(requestBuilder).andReturn();
         String content = mvcResult.getResponse().getContentAsString();
-        ApiResp serviceResponse = mapFromJson(content, ApiResp.class);
+        ApiResp<T> serviceResponse = mapFromJson(content, ApiResp.class, cls);
 
         int status = mvcResult.getResponse().getStatus();
         if (status >= 500) {
