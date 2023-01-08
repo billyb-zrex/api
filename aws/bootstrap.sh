@@ -13,7 +13,7 @@ apt-get install -y docker-compose
 apt-get install -y build-essential
 
 # Install java
-apt-get install -y openjdk-8-jdk
+apt install -y openjdk-17-jdk openjdk-17-jre
 
 # Install maven
 # EXIT FROM SU
