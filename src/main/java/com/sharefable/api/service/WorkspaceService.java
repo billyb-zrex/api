@@ -82,7 +82,7 @@ public class WorkspaceService extends ServiceBase {
         builder
             .commonAssetPath(pathConfig.commonAsset())
             .screenAssetPath(pathConfig.screenAsset())
-            .flowAssetPath(pathConfig.flowAsset())
+            .tourAssetPath(pathConfig.tourAsset())
             .dataFileName(fileNames.dataFile());
     }
 }

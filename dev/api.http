@@ -4,7 +4,7 @@ GET {{api-host}}/health
 
 ### create org
 # @name=new_org
-POST {{api-host}}/v1/f/neworg
+POST {{api-host}}/v1/neworg
 Authorization: {{auth-header}}
 Content-Type: application/json
 
@@ -94,3 +94,7 @@ Content-Type: application/json
 {
   "name": "Default tour"
 }
+
+### get tour by rid
+GET {{api-host}}/v1/tour?rid=default-tour-xq4eulkm
+Content-Type: application/json
