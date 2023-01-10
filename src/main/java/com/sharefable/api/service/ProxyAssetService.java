@@ -65,27 +65,26 @@ public class ProxyAssetService {
             boolean isValidResponse = status >= 200 && status < 300;
             if (resp.getBody() != null && isValidResponse) {
                 String fileName = Utils.createUuidWord();
+                log.warn("f {} :: origin {} :: cookie {}", fileName, origin, body.getCookie());
                 HttpHeaders respHeaders = resp.getHeaders();
-                String contentType = null;
                 // Get the Content-Type information from response and set it directly into the s3 bucket
+                Map<String, String> metadata = new HashMap<>(3);
                 for (Map.Entry<String, List<String>> h : respHeaders.entrySet()) {
                     String headerName = h.getKey();
                     if (StringUtils.equalsIgnoreCase(headerName, HttpHeaders.CONTENT_TYPE)) {
                         // https://stackoverflow.com/a/50405667
-                        contentType = String.join(",", h.getValue());
+                        String contentType = String.join(",", h.getValue());
+                        metadata.put(HttpHeaders.CONTENT_TYPE, contentType);
+                    } else if (StringUtils.equalsIgnoreCase(headerName, HttpHeaders.CONTENT_ENCODING)) {
+                        String contentEncoding = String.join(" ", h.getValue());
+                        metadata.put(HttpHeaders.CONTENT_ENCODING, contentEncoding);
                     }
                 }
 
-                Map<String, String> userDefinedMetadata = new HashMap<>(1);
-                if (contentType == null) {
-                    log.warn("Content-Type header is not passed for resource {}. Client might not behave properly", origin);
-                } else {
-                    userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, contentType);
-                }
-                userDefinedMetadata.put("Orig-Url", origin);
+                metadata.put("Orig-Url", origin);
 
                 AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, fileName);
-                assetFilePath = s3Service.upload(assetFilePath, resp.getBody(), userDefinedMetadata);
+                assetFilePath = s3Service.upload(assetFilePath, resp.getBody(), metadata);
 
                 ProxyAsset asset = ProxyAsset.builder()
                     .rid(hashedOrigin)
