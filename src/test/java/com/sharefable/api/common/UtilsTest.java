@@ -4,13 +4,28 @@ import com.sharefable.api.entity.EntityBase;
 import com.sharefable.api.entity.TransportObjRef;
 import com.sharefable.api.transport.ResponseBase;
 import lombok.*;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
 
 class UtilsTest {
+    @Test
+    void test() {
+        try (InputStream resourceAsStream = getClass().getResourceAsStream("/data-schema/v=2023-01-10/tour/index.json")) {
+            assert resourceAsStream != null;
+            String s = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+            System.out.println(s);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @SneakyThrows
     @Test
     void testEntityTransportConversion() {

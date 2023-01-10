@@ -1,6 +1,7 @@
 package com.sharefable.api.controller.v1;
 
 import com.sharefable.api.common.ApiResp;
+import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.*;
@@ -16,10 +17,12 @@ import java.util.Optional;
 @Slf4j
 public class WorkspaceController {
     private final WorkspaceService wsService;
+    private final AppSettings settings;
 
     @Autowired
-    public WorkspaceController(WorkspaceService wsService) {
+    public WorkspaceController(WorkspaceService wsService, AppSettings settings) {
         this.wsService = wsService;
+        this.settings = settings;
     }
 
     @RequestMapping(value = Routes.NEW_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -60,6 +63,7 @@ public class WorkspaceController {
     public ApiResp<RespCommonConfig> getCommonConfig() {
         RespCommonConfig.RespCommonConfigBuilder builder = RespCommonConfig.builder();
         wsService.getCommonConfig(builder);
+        builder.latestSchemaVersion(settings.currentSchemaVersion());
         RespCommonConfig resp = builder.build();
         return ApiResp.<RespCommonConfig>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }

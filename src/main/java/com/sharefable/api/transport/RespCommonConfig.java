@@ -13,6 +13,7 @@ import lombok.*;
 public class RespCommonConfig extends ResponseBase {
     private String commonAssetPath;
     private String screenAssetPath;
-    private String flowAssetPath;
+    private String tourAssetPath;
     private String dataFileName;
+    private SchemaVersion latestSchemaVersion;
 }

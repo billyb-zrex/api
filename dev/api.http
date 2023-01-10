@@ -4,7 +4,7 @@ GET {{api-host}}/health
 
 ### create org
 # @name=new_org
-POST {{api-host}}/v1/f/neworg
+POST {{api-host}}/v1/neworg
 Authorization: {{auth-header}}
 Content-Type: application/json
 
@@ -79,4 +79,22 @@ Content-Type: application/json
 
 ### Get common config
 GET {{api-host}}/v1/cconfig
+Content-Type: application/json
+
+### get all tours
+GET {{api-host}}/v1/f/tours
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### create a new tour
+POST {{api-host}}/v1/f/newtour
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "name": "Default tour"
+}
+
+### get tour by rid
+GET {{api-host}}/v1/tour?rid=default-tour-xq4eulkm
 Content-Type: application/json

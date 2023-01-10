@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.transport.RespTour;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @Builder
+@TransportObjRef(cls = RespTour.class)
 public class Tour extends EntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +22,7 @@ public class Tour extends EntityBase {
     private Long id;
 
     @Column(nullable = false)
-    private String rId;
+    private String rid;
 
     @Column(nullable = false)
     private String assetPrefixHash;
@@ -32,15 +34,15 @@ public class Tour extends EntityBase {
     @JoinColumn(nullable = false, name = "created_by")
     private User createdBy;
 
-    private String thumbnail;
+    private String description;
 
     @Column(nullable = false)
-    private Long belongToOrg;
+    private Long belongsToOrg;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "screens_tours_join",
         joinColumns = @JoinColumn(name = "tour_id"),
         inverseJoinColumns = @JoinColumn(name = "screen_id"))
-    private Set<Screen> tours;
+    private Set<Screen> screens;
 }

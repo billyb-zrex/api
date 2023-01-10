@@ -23,7 +23,7 @@ public class S3Config {
     private static final String PATH_FOR_COMMON_ASSET = "/cmn";
     private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
     private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
-    private static final String PATH_FOR_FLOW_ASSET = "/flo/%s";
+    private static final String PATH_FOR_TOUR_ASSET = "/tour/%s";
     private String accessKeyId;
     private String accessKeySecret;
     private String region;
@@ -33,7 +33,7 @@ public class S3Config {
     private String getPathForAssetType(AssetType type) {
         return switch (type) {
             case ProxyAsset -> PATH_FOR_PROXY_ASSET;
-            case Flow -> PATH_FOR_FLOW_ASSET;
+            case Tour -> PATH_FOR_TOUR_ASSET;
             case Screen -> PATH_FOR_SCREEN_ASSET;
             case Common -> PATH_FOR_COMMON_ASSET;
         };
@@ -48,7 +48,7 @@ public class S3Config {
         return new PathConfigForClient(
             AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Common, "") + "/").getS3UriToFile(),
             AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Screen, "")).getS3UriToFile(),
-            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Flow, "")).getS3UriToFile()
+            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Tour, "")).getS3UriToFile()
         );
     }
 
@@ -90,11 +90,11 @@ public class S3Config {
     public enum AssetType {
         ProxyAsset,
         Screen,
-        Flow,
+        Tour,
         Common,
     }
 
-    public record PathConfigForClient(String commonAsset, String screenAsset, String flowAsset) {
+    public record PathConfigForClient(String commonAsset, String screenAsset, String tourAsset) {
     }
 
     public record FileNames(String dataFile) {

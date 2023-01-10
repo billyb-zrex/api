@@ -7,7 +7,6 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.ScreenService;
 import com.sharefable.api.transport.ReqNewScreen;
 import com.sharefable.api.transport.RespScreen;
-import com.sharefable.api.transport.ResponseBase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -39,11 +38,10 @@ public class ScreenController {
     }
 
     @RequestMapping(value = Routes.GET_ALL_SCREENS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<ResponseBase[]> getAllScreensForOrg(@AuthenticationPrincipal UserPrincipal principal) {
+    public ApiResp<RespScreen[]> getAllScreensForOrg(@AuthenticationPrincipal UserPrincipal principal) {
         Long orgId = principal.userEntity().getBelongsToOrg().getId();
-        List<RespScreen> allScreensForOrg = screenService.getAllScreensForOrg(orgId);
-        ResponseBase[] screens = allScreensForOrg.toArray(ResponseBase[]::new);
-        return ApiResp.<ResponseBase[]>builder().status(ApiResp.ResponseStatus.Success).data(screens).build();
+        List<RespScreen> allScreens = screenService.getAllScreensForOrg(orgId);
+        return ApiResp.<RespScreen[]>builder().status(ApiResp.ResponseStatus.Success).data(allScreens.toArray(RespScreen[]::new)).build();
     }
 
     @RequestMapping(value = Routes.GET_SCREEN, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
