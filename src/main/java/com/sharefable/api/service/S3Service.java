@@ -34,6 +34,11 @@ public class S3Service {
             meta.setContentType(contentType);
             assetMetadata.remove(HttpHeaders.CONTENT_TYPE);
         }
+        String contentEncoding;
+        if ((contentEncoding = assetMetadata.get(HttpHeaders.CONTENT_ENCODING)) != null) {
+            meta.setContentEncoding(contentEncoding);
+            assetMetadata.remove(HttpHeaders.CONTENT_ENCODING);
+        }
 
         for (Map.Entry<String, String> metadata : assetMetadata.entrySet()) {
             meta.addUserMetadata(metadata.getKey(), metadata.getValue());
