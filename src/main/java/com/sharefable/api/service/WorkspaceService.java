@@ -2,6 +2,7 @@ package com.sharefable.api.service;
 
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
@@ -28,8 +29,8 @@ public class WorkspaceService extends ServiceBase {
     private final S3Config s3Config;
 
     @Autowired
-    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config) {
-        super(s3Service, s3Config);
+    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings) {
+        super(settings, s3Service, s3Config);
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
         this.s3Config = s3Config;
