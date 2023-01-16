@@ -16,7 +16,7 @@ db-schema-migrate:
 
 gen:
 	mvn process-classes
-	cp -r ./gen/ ../app/workspace/packages/common/gen/
+	cp -r ./gen/api-contract.d.ts ../app/workspace/packages/common/src/api-contract.ts
 
 # --------------------------------------------------------------
 # Different env file is required for different tool. Like idea
