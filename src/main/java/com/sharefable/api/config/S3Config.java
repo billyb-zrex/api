@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class S3Config {
     private static final String DATA_FILE_NAME = "index.json";
+    private static final String EDIT_FILE_NAME = "edits.json";
     private static final String PATH_FOR_COMMON_ASSET = "/cmn";
     private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
     private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
@@ -53,7 +54,7 @@ public class S3Config {
     }
 
     public FileNames getFileNames() {
-        return new FileNames(DATA_FILE_NAME);
+        return new FileNames(DATA_FILE_NAME, EDIT_FILE_NAME);
     }
 
 
@@ -97,6 +98,6 @@ public class S3Config {
     public record PathConfigForClient(String commonAsset, String screenAsset, String tourAsset) {
     }
 
-    public record FileNames(String dataFile) {
+    public record FileNames(String dataFile, String editFile) {
     }
 }

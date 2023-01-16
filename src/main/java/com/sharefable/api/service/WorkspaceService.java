@@ -83,6 +83,7 @@ public class WorkspaceService extends ServiceBase {
             .commonAssetPath(pathConfig.commonAsset())
             .screenAssetPath(pathConfig.screenAsset())
             .tourAssetPath(pathConfig.tourAsset())
-            .dataFileName(fileNames.dataFile());
+            .dataFileName(fileNames.dataFile())
+            .editFileName(fileNames.editFile());
     }
 }
