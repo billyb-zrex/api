@@ -47,7 +47,7 @@ public class ScreenController {
 
     @RequestMapping(value = Routes.GET_ALL_SCREENS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespScreen[]> getAllScreensForOrg(@AuthenticationPrincipal UserPrincipal principal) {
-        Long orgId = principal.userEntity().getBelongsToOrg().getId();
+        Long orgId = principal.userEntity().getBelongsToOrg();
         List<RespScreen> allScreens = screenService.getAllScreensForOrg(orgId);
         return ApiResp.<RespScreen[]>builder().status(ApiResp.ResponseStatus.Success).data(allScreens.toArray(RespScreen[]::new)).build();
     }

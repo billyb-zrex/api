@@ -44,7 +44,7 @@ public class TourService extends ServiceBase {
             .description(req.description().orElse(""))
             .rid(Utils.createReadableId(req.name()))
             .assetPrefixHash(prefixHash)
-            .belongsToOrg(createdByUser.getBelongsToOrg().getId())
+            .belongsToOrg(createdByUser.getBelongsToOrg())
             .build();
 
         Tour storedTour = tourRepo.save(tour);

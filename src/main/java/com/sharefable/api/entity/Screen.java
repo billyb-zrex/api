@@ -53,7 +53,7 @@ public class Screen extends EntityBase {
     //      is logically sound, it has its own implication in UX.
     //      We might need many-to-many relationship down the line once we introduce the concept of a single screen
     //      sharing multiple tour with better UX.
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "screens_tours_join",
         joinColumns = @JoinColumn(name = "screen_id"),

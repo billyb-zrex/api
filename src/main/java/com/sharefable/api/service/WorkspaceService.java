@@ -64,7 +64,7 @@ public class WorkspaceService extends ServiceBase {
             .lastName(body.lastName())
             .email(body.email())
             .avatar(body.avatar())
-            .belongsToOrg(Org.builder().id(body.belongsToOrg()).build())
+            .belongsToOrg(body.belongsToOrg())
             .build();
 
         User savedUser = userRepo.save(user);

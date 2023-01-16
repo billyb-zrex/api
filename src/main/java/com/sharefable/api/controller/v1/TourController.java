@@ -31,7 +31,7 @@ public class TourController {
 
     @RequestMapping(value = Routes.GET_ALL_TOURS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespTour[]> getAllTours(@AuthenticationPrincipal UserPrincipal principal) {
-        Long orgId = principal.userEntity().getBelongsToOrg().getId();
+        Long orgId = principal.userEntity().getBelongsToOrg();
         List<RespTour> allTours = tourService.getAllToursForOrg(orgId);
         return ApiResp.<RespTour[]>builder().status(ApiResp.ResponseStatus.Success).data(allTours.toArray(RespTour[]::new)).build();
     }

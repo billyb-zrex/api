@@ -22,7 +22,6 @@ public class RespUser extends ResponseBase {
     private String lastName;
     private String email;
     private String avatar;
-    private RespOrg belongsToOrg;
 
     public static RespUser from(User user) {
         try {
