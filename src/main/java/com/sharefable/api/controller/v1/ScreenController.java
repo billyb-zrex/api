@@ -5,6 +5,7 @@ import com.sharefable.api.auth.UserPrincipal;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.ScreenService;
+import com.sharefable.api.transport.ReqCopyScreen;
 import com.sharefable.api.transport.ReqNewScreen;
 import com.sharefable.api.transport.RespScreen;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,13 @@ public class ScreenController {
         ReqNewScreen req = body.normalizeDisplayName();
         RespScreen resp = screenService.createNewScreen(req, principal.userEntity());
         return ApiResp.<RespScreen>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+    }
+
+
+    @RequestMapping(value = Routes.COPY_SCREEN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespScreen> copyScreen(@RequestBody ReqCopyScreen body, @AuthenticationPrincipal UserPrincipal principal) {
+        RespScreen respScreen = screenService.copyFromParentScreen(body, principal.userEntity());
+        return ApiResp.<RespScreen>builder().data(respScreen).build();
     }
 
     @RequestMapping(value = Routes.GET_ALL_SCREENS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)

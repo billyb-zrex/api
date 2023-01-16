@@ -68,6 +68,16 @@ Content-Type: application/json
   "body": "{\"key1\": 1}"
 }
 
+### copy screen
+POST {{api-host}}/v1/f/copyscreen
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "parentId": 1,
+  "tourRid": "default2-tour-wtc8x3xlbt66ipsd"
+}
+
 ### get all screens screen
 GET {{api-host}}/v1/f/screens
 Authorization: {{auth-header}}
@@ -92,7 +102,7 @@ Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "name": "Default tour"
+  "name": "Default2 tour"
 }
 
 ### get tour by rid

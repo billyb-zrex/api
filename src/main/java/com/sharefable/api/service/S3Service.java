@@ -54,6 +54,16 @@ public class S3Service {
         return filePath;
     }
 
+    public AssetFilePath copy(AssetFilePath fromObject, AssetFilePath toObject) {
+        CopyObjectRequest req = new CopyObjectRequest(
+            fromObject.getBucketName(),
+            fromObject.getFullQualifiedPath(),
+            toObject.getBucketName(),
+            toObject.getFullQualifiedPath());
+        client.copyObject(req);
+        return toObject;
+    }
+
     public byte[] getObjectContent(AssetFilePath filePath) throws IOException {
         GetObjectRequest req = new GetObjectRequest(
             filePath.getBucketName(),
