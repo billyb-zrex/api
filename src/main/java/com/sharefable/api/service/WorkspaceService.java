@@ -2,6 +2,7 @@ package com.sharefable.api.service;
 
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URL;
 import java.util.Optional;
 
 /*
@@ -26,13 +28,15 @@ public class WorkspaceService extends ServiceBase {
     private final OrgRepo orgRepo;
     private final UserRepo userRepo;
     private final S3Config s3Config;
+    private final S3Service s3Service;
 
     @Autowired
-    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config) {
-        super(s3Service, s3Config);
+    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings) {
+        super(settings, s3Service, s3Config);
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
         this.s3Config = s3Config;
+        this.s3Service = s3Service;
     }
 
     @Transactional
@@ -63,7 +67,7 @@ public class WorkspaceService extends ServiceBase {
             .lastName(body.lastName())
             .email(body.email())
             .avatar(body.avatar())
-            .belongsToOrg(Org.builder().id(body.belongsToOrg()).build())
+            .belongsToOrg(body.belongsToOrg())
             .build();
 
         User savedUser = userRepo.save(user);
@@ -83,6 +87,23 @@ public class WorkspaceService extends ServiceBase {
             .commonAssetPath(pathConfig.commonAsset())
             .screenAssetPath(pathConfig.screenAsset())
             .tourAssetPath(pathConfig.tourAsset())
-            .dataFileName(fileNames.dataFile());
+            .dataFileName(fileNames.dataFile())
+            .editFileName(fileNames.editFile());
+    }
+
+    public RespUploadUrl getPreSignedUrlToUploadFile(User user, String contentType, Optional<String> extension) {
+        String filename = Utils.createUuidWord();
+        if (extension.isPresent()) {
+            filename += StringUtils.prependIfMissing(extension.get(), ".");
+        }
+        AssetFilePath filePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.UserGenerated, user.getBelongsToOrg().toString(), filename);
+        URL url = s3Service.preSignedUrl(filePath, contentType);
+        log.warn("content type {} url {}", contentType, url);
+        return RespUploadUrl.builder()
+            .url(url.toString())
+            .expiry("default")
+            .filename(filename)
+            .build();
     }
 }

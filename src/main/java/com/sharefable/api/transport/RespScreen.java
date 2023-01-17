@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 @Data
 @NoArgsConstructor
@@ -29,10 +30,17 @@ public class RespScreen extends ResponseBase {
     private String thumbnail;
     private String url;
     private String icon;
+    private Optional<RespTour> tour;
 
     public static RespScreen from(Screen screen) {
         try {
-            return (RespScreen) Utils.fromEntityToTransportObject(screen);
+            RespScreen resp = (RespScreen) Utils.fromEntityToTransportObject(screen);
+            // `fromEntityToTransportObject` can't convert collection<type> to collection<resp_type>
+            // hence this explicit conversion is necessary
+            // Also although screen <-> tour is saved as many-many relationship in db / jpa, it's
+            // logically stored as many-one relationship
+            resp.setTour(screen.getTours().stream().findFirst().map(RespTour::from));
+            return resp;
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());

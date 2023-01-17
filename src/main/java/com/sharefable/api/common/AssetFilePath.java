@@ -23,6 +23,16 @@ public class AssetFilePath {
         return new AssetFilePath(halfConstructedPath.regionName, halfConstructedPath.bucketName, qualifiedPath, "", "");
     }
 
+    public static AssetFilePath from(AssetFilePath assetFilePath) {
+        return new AssetFilePath(
+            assetFilePath.regionName,
+            assetFilePath.bucketName,
+            assetFilePath.fullQualifiedPath,
+            assetFilePath.prefixPathForType,
+            assetFilePath.filePath
+        );
+    }
+
     public String getS3UriToFile() {
         return "https://" + bucketName + ".s3." + regionName + ".amazonaws.com/" + fullQualifiedPath;
     }

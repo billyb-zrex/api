@@ -1,5 +1,6 @@
 package com.sharefable.api.controller.v1;
 
+import com.sharefable.api.auth.UserPrincipal;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.controller.Routes;
@@ -8,8 +9,11 @@ import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @RestController
@@ -66,5 +70,16 @@ public class WorkspaceController {
         builder.latestSchemaVersion(settings.currentSchemaVersion());
         RespCommonConfig resp = builder.build();
         return ApiResp.<RespCommonConfig>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+    }
+
+
+    @RequestMapping(value = Routes.UPLOAD_LINK, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespUploadUrl> getPresignedUrl(
+        @RequestParam("te") String contentTypeEncoded,
+        @RequestParam("ext") Optional<String> maybeExtension,
+        @AuthenticationPrincipal UserPrincipal principal) {
+        String contentType = new String(Base64Utils.decodeFromString(contentTypeEncoded), StandardCharsets.UTF_8);
+        RespUploadUrl resp = wsService.getPreSignedUrlToUploadFile(principal.userEntity(), contentType, maybeExtension);
+        return ApiResp.<RespUploadUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 }

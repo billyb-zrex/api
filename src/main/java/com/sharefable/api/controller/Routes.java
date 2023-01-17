@@ -12,8 +12,10 @@ public interface Routes {
     String NEW_SCREEN = __BEHIND_LOGIN__ + "/newscreen";
     String GET_ALL_SCREENS = __BEHIND_LOGIN__ + "/screens";
     String GET_SCREEN = "/screen";
+    String COPY_SCREEN = __BEHIND_LOGIN__ + "/copyscreen";
     String GET_COMMON_CONFIG = "/cconfig";
     String GET_ALL_TOURS = __BEHIND_LOGIN__ + "/tours";
     String NEW_TOUR = __BEHIND_LOGIN__ + "/newtour";
     String GET_TOUR = "/tour";
+    String UPLOAD_LINK = __BEHIND_LOGIN__ + "/getuploadlink";
 }

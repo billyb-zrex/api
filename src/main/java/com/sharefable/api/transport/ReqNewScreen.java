@@ -10,14 +10,13 @@ public record ReqNewScreen(
     String url,
     String thumbnail, // base64 image data
     Optional<String> favIcon,
-    Optional<Long> parentId,
     String body
 ) {
     public Long normalizedParentId() {
-        return parentId().orElse(0L);
+        return 0L;
     }
 
     public ReqNewScreen normalizeDisplayName() {
-        return new ReqNewScreen(normalizeWhitespace(name()), url(), thumbnail(), favIcon(), parentId(), body());
+        return new ReqNewScreen(normalizeWhitespace(name()), url(), thumbnail(), favIcon(), body());
     }
 }

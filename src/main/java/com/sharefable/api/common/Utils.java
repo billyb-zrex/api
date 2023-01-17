@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public interface Utils {
     static String getShortRandomId() {
-        return RandomStringUtils.random(8, "0123456789abcdefghijklmnopqrstuvwxyz");
+        return RandomStringUtils.random(16, "0123456789abcdefghijklmnopqrstuvwxyz");
     }
 
     static String createReadableId(String name) {
@@ -32,8 +32,9 @@ public interface Utils {
                 name
                     .toLowerCase()
                     .replaceAll("\\s+", "-")
-                    .replaceAll("[^\\w-]+", ""),
-                0, 30
+                    .replaceAll("[^\\w-]+", "")
+                    .replaceAll("-+", "-"),
+                0, 22
             ),
             "-") + uuid;
     }

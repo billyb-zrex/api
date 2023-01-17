@@ -1,12 +1,17 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2023-01-09 15:53:05.
+// Generated using typescript-generator version 2.35.1025 on 2023-01-16 17:10:11.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
     data: T;
     errStr: string;
     errCode: ErrorCode;
+}
+
+export interface ReqCopyScreen {
+    parentId: number;
+    tourRid: string;
 }
 
 export interface ReqNewOrg {
@@ -19,7 +24,6 @@ export interface ReqNewScreen {
     url: string;
     thumbnail: string;
     favIcon?: string;
-    parentId?: number;
     body: string;
 }
 
@@ -46,6 +50,7 @@ export interface RespCommonConfig extends ResponseBase {
     screenAssetPath: string;
     tourAssetPath: string;
     dataFileName: string;
+    editFileName: string;
     latestSchemaVersion: SchemaVersion;
 }
 
@@ -73,6 +78,7 @@ export interface RespScreen extends ResponseBase {
     thumbnail: string;
     url: string;
     icon: string;
+    tour?: RespTour;
 }
 
 export interface RespTour extends ResponseBase {
@@ -89,7 +95,6 @@ export interface RespUser extends ResponseBase {
     lastName: string;
     email: string;
     avatar: string;
-    belongsToOrg: RespOrg;
 }
 
 export interface ResponseBase {
