@@ -1,15 +1,19 @@
 package com.sharefable.api.service;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import com.sharefable.api.common.AssetFilePath;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,6 +66,16 @@ public class S3Service {
             toObject.getFullQualifiedPath());
         client.copyObject(req);
         return toObject;
+    }
+
+    public URL preSignedUrl(AssetFilePath filePath, String contentType) {
+        GeneratePresignedUrlRequest req =
+            new GeneratePresignedUrlRequest(filePath.getBucketName(), filePath.getFullQualifiedPath());
+        Date expireAt = DateUtils.addMinutes(new Date(), 10);
+        req.setExpiration(expireAt);
+        req.setMethod(HttpMethod.PUT);
+        req.setContentType(contentType);
+        return client.generatePresignedUrl(req);
     }
 
     public byte[] getObjectContent(AssetFilePath filePath) throws IOException {

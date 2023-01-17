@@ -25,6 +25,7 @@ public class S3Config {
     private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
     private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
     private static final String PATH_FOR_TOUR_ASSET = "/tour/%s";
+    private static final String PATH_FOR_USER_UPLOADED_ASSET = "/usr/org/%s";
     private String accessKeyId;
     private String accessKeySecret;
     private String region;
@@ -37,6 +38,7 @@ public class S3Config {
             case Tour -> PATH_FOR_TOUR_ASSET;
             case Screen -> PATH_FOR_SCREEN_ASSET;
             case Common -> PATH_FOR_COMMON_ASSET;
+            case UserGenerated -> PATH_FOR_USER_UPLOADED_ASSET;
         };
     }
 
@@ -93,6 +95,7 @@ public class S3Config {
         Screen,
         Tour,
         Common,
+        UserGenerated
     }
 
     public record PathConfigForClient(String commonAsset, String screenAsset, String tourAsset) {
