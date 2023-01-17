@@ -111,6 +111,16 @@ Content-Type: application/json
 
 ### get s3 presigned url
 # {param} te => base64 encoding of content type (like image/png)
+# {resp}
+# {
+#   "status": "Success",
+#   "data": {
+#     "url": "https://fable-tour-app-gamma.s3.ap-south-1.amazonaws.com/akashgoswami/usr/org/1/8cc7a13911ec47beb9981327a9c0e5f6?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20230117T105616Z&X-Amz-SignedHeaders=content-type%3Bhost&X-Amz-Expires=600&X-Amz-Credential=AKIAYC537LARAUFIUQGT%2F20230117%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=42bea7f664bfc37923aca3df81aa33c23de806bf7a4934fca1b1e481c50225fd",
+#     "expiry": "default",
+#     "filename": "8cc7a13911ec47beb9981327a9c0e5f6"
+#    }
+# }
+
 GET {{api-host}}/v1/f/getuploadlink?te=aW1hZ2UvcG5n
 Authorization: {{auth-header}}
 Content-Type: application/json
