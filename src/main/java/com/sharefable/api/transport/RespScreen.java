@@ -39,7 +39,11 @@ public class RespScreen extends ResponseBase {
             // hence this explicit conversion is necessary
             // Also although screen <-> tour is saved as many-many relationship in db / jpa, it's
             // logically stored as many-one relationship
-            resp.setTour(screen.getTours().stream().findFirst().map(RespTour::from));
+            if (screen.getTours() == null) {
+                resp.setTour(Optional.empty());
+            } else {
+                resp.setTour(screen.getTours().stream().findFirst().map(RespTour::from));
+            }
             return resp;
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {

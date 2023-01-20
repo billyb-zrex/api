@@ -67,13 +67,13 @@ public abstract class ServiceBase {
             case TOUR_INDEX -> new TemplateFile(
                 String.format(PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX, schemaVersion),
                 S3Config.AssetType.Tour,
-                s3Config.getFileNames().dataFile()
+                S3Config.getEntityFiles().dataFile()
             );
 
             case SCREEN_EDIT -> new TemplateFile(
                 String.format(PATH_TO_SCHEMA_FILE_FOR_SCREEN_EDIT, schemaVersion),
                 S3Config.AssetType.Screen,
-                s3Config.getFileNames().editFile()
+                S3Config.getEntityFiles().editFile()
             );
         };
         try (InputStream resourceAsStream = getClass().getResourceAsStream(tFile.fromPath())) {
@@ -82,7 +82,7 @@ public abstract class ServiceBase {
                 throw new RuntimeException("Can't find schema file");
             }
             String fileContent = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-            return uploadDataFileToS3(fileContent, prefixHash, tFile.toFileName(), tFile.type());
+            return uploadDataFileToS3(fileContent, prefixHash, tFile.toFile(), tFile.type());
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -90,10 +90,13 @@ public abstract class ServiceBase {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    AssetFilePath uploadDataFileToS3(String content, String prefixHash, String fileName, S3Config.AssetType assetType) {
-        AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, fileName);
+    AssetFilePath uploadDataFileToS3(String content, String prefixHash, S3Config.FileConfig config, S3Config.AssetType assetType) {
+        AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, config.filename());
         Map<String, String> userDefinedMetadata = new HashMap<>(1);
         userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        if (config.cachePolicy() == S3Config.DATA_FILE_CACHE_POLICY.NoCache) {
+            userDefinedMetadata.put(HttpHeaders.CACHE_CONTROL, "no-cache");
+        }
         s3Service.upload(assetFilePath, content.getBytes(StandardCharsets.UTF_8), userDefinedMetadata);
         return assetFilePath;
     }
@@ -103,6 +106,6 @@ public abstract class ServiceBase {
         SCREEN_EDIT
     }
 
-    private record TemplateFile(String fromPath, S3Config.AssetType type, String toFileName) {
+    private record TemplateFile(String fromPath, S3Config.AssetType type, S3Config.FileConfig toFile) {
     }
 }
