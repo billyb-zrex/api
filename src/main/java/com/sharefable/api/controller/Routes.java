@@ -18,4 +18,5 @@ public interface Routes {
     String NEW_TOUR = __BEHIND_LOGIN__ + "/newtour";
     String GET_TOUR = "/tour";
     String UPLOAD_LINK = __BEHIND_LOGIN__ + "/getuploadlink";
+    String RECORD_EDIT = __BEHIND_LOGIN__ + "/recordedit";
 }

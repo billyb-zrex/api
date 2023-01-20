@@ -7,6 +7,7 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.ScreenService;
 import com.sharefable.api.transport.ReqCopyScreen;
 import com.sharefable.api.transport.ReqNewScreen;
+import com.sharefable.api.transport.ReqRecordEdit;
 import com.sharefable.api.transport.RespScreen;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,5 +61,11 @@ public class ScreenController {
         }
 
         return ApiResp.<RespScreen>builder().data(maybeScreen.get()).build();
+    }
+
+    @RequestMapping(value = Routes.RECORD_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespScreen> recordEdit(@RequestBody ReqRecordEdit body, @AuthenticationPrincipal UserPrincipal principal) {
+        RespScreen resp = screenService.updateEditForScreen(body, principal.userEntity());
+        return ApiResp.<RespScreen>builder().data(resp).build();
     }
 }

@@ -133,3 +133,13 @@ PUT https://fable-tour-app-gamma.s3.ap-south-1.amazonaws.com/akashgoswami/usr/or
 Content-Type: image/png
 
 < /Users/akashgoswami/Downloads/spidy.png
+
+### update edit file
+POST {{api-host}}/v1/f/recordedit
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "rid": "inbox-23-hustleag6969g-vdaozhz1u2n0kpky",
+  "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"edits\": { \"sample\": 1}}"
+}

@@ -11,6 +11,7 @@ import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.ReqCopyScreen;
 import com.sharefable.api.transport.ReqNewScreen;
+import com.sharefable.api.transport.ReqRecordEdit;
 import com.sharefable.api.transport.RespScreen;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,4 +153,28 @@ public class ScreenService extends ServiceBase {
         return maybeScreen.map(RespScreen::from);
     }
 
+    public RespScreen updateEditForScreen(ReqRecordEdit body, User userEntity) {
+        Optional<Screen> maybeScreen = screenRepo.findByRid(body.rid());
+        if (maybeScreen.isEmpty()) {
+            log.error("Can't update edit for screen {} as it's not found", body.rid());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "");
+        }
+        Screen screen = maybeScreen.get();
+        if (!Objects.equals(screen.getBelongsToOrg(), userEntity.getBelongsToOrg())) {
+            log.error("Can't update edit for screen {} as it's belong to different org. Requested by user {}, belongs to org {}",
+                body.rid(), userEntity.getId(), screen.getBelongsToOrg());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not enough permission");
+        }
+
+        uploadDataFileToS3(
+            body.editData(),
+            screen.getAssetPrefixHash(),
+            S3Config.getEntityFiles().editFile(),
+            S3Config.AssetType.Screen);
+
+        // Updates the updatedAt
+        screen.setUpdatedAt(Utils.getCurrentUtcTimestamp());
+        Screen updatedScreen = screenRepo.save(screen);
+        return RespScreen.from(updatedScreen);
+    }
 }
