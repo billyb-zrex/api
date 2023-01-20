@@ -82,13 +82,13 @@ public class WorkspaceService extends ServiceBase {
 
     public void getCommonConfig(RespCommonConfig.RespCommonConfigBuilder builder) {
         S3Config.PathConfigForClient pathConfig = s3Config.getPathConfigForClient();
-        S3Config.FileNames fileNames = s3Config.getFileNames();
+        S3Config.EntityFilesConfig entityFilesConfig = S3Config.getEntityFiles();
         builder
             .commonAssetPath(pathConfig.commonAsset())
             .screenAssetPath(pathConfig.screenAsset())
             .tourAssetPath(pathConfig.tourAsset())
-            .dataFileName(fileNames.dataFile())
-            .editFileName(fileNames.editFile());
+            .dataFileName(entityFilesConfig.dataFile().filename())
+            .editFileName(entityFilesConfig.editFile().filename());
     }
 
     public RespUploadUrl getPreSignedUrlToUploadFile(User user, String contentType, Optional<String> extension) {

@@ -32,6 +32,12 @@ public class S3Config {
     private String rootQualifier;
     private String assetBucketName;
 
+    public static EntityFilesConfig getEntityFiles() {
+        return new EntityFilesConfig(
+            new FileConfig(DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.Default),
+            new FileConfig(EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
+    }
+
     private String getPathForAssetType(AssetType type) {
         return switch (type) {
             case ProxyAsset -> PATH_FOR_PROXY_ASSET;
@@ -54,11 +60,6 @@ public class S3Config {
             AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Tour, "")).getS3UriToFile()
         );
     }
-
-    public FileNames getFileNames() {
-        return new FileNames(DATA_FILE_NAME, EDIT_FILE_NAME);
-    }
-
 
     private String getPrefixPath(AssetType type, String prefix) {
         String path = getPathForAssetType(type);
@@ -98,9 +99,17 @@ public class S3Config {
         UserGenerated
     }
 
+    public enum DATA_FILE_CACHE_POLICY {
+        Default,
+        NoCache,
+    }
+
     public record PathConfigForClient(String commonAsset, String screenAsset, String tourAsset) {
     }
 
-    public record FileNames(String dataFile, String editFile) {
+    public record FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
+    }
+
+    public record EntityFilesConfig(FileConfig dataFile, FileConfig editFile) {
     }
 }

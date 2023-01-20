@@ -12,6 +12,10 @@ import org.javatuples.Pair;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -123,5 +127,12 @@ public interface Utils {
         } finally {
             execService.shutdown();
         }
+    }
+
+    static Timestamp getCurrentUtcTimestamp() {
+        LocalDateTime ldt = LocalDateTime.now();
+        ZonedDateTime zdt = ZonedDateTime.of(ldt, ZoneId.systemDefault());
+        ZonedDateTime gmt = zdt.withZoneSameInstant(ZoneId.of("GMT"));
+        return Timestamp.valueOf(gmt.toLocalDateTime());
     }
 }

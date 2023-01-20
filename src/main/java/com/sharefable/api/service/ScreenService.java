@@ -11,6 +11,7 @@ import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.ReqCopyScreen;
 import com.sharefable.api.transport.ReqNewScreen;
+import com.sharefable.api.transport.ReqRecordEdit;
 import com.sharefable.api.transport.RespScreen;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,14 +44,14 @@ public class ScreenService extends ServiceBase {
     @Transactional
     public RespScreen createNewScreen(ReqNewScreen req, User createdByUser) {
         String prefixHash = Utils.createUuidWord();
-        Callable<Optional<AssetFilePath>> dataFileUploader =
-            () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, s3Config.getFileNames().dataFile(), S3Config.AssetType.Screen));
+        Callable<Optional<AssetFilePath>> screenFileUploader =
+            () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, S3Config.getEntityFiles().dataFile(), S3Config.AssetType.Screen));
 
         Callable<Optional<AssetFilePath>> thumbnailUploader =
             () -> uploadBase64ImageToS3(req.thumbnail(), S3Config.AssetType.Common);
 
         try {
-            List<Optional<AssetFilePath>> assetFiles = Utils.runInParallel(dataFileUploader, thumbnailUploader);
+            List<Optional<AssetFilePath>> assetFiles = Utils.runInParallel(screenFileUploader, thumbnailUploader);
             Optional<AssetFilePath> thumbnailFile = assetFiles.get(1);
 
             String thumbnailFilePath = null;
@@ -100,24 +101,24 @@ public class ScreenService extends ServiceBase {
         Screen parentScreen = maybeScreen.get();
         String prefixHash = Utils.createUuidWord();
 
-        AssetFilePath fromDataFilePath = s3Config.getQualifiedPathFor(
+        AssetFilePath fromScreenFilePath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Screen,
             parentScreen.getAssetPrefixHash(),
-            s3Config.getFileNames().dataFile());
+            S3Config.getEntityFiles().dataFile().filename());
         AssetFilePath fromThumbnailPath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Common, parentScreen.getThumbnail());
 
-        AssetFilePath toDataFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Screen, prefixHash, s3Config.getFileNames().dataFile());
+        AssetFilePath toScreenFilePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().dataFile().filename());
         AssetFilePath toThumbnailPath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Common, UUID.randomUUID().toString());
 
-        Callable<AssetFilePath> dataFileCopier = () -> s3Service.copy(fromDataFilePath, toDataFilePath);
+        Callable<AssetFilePath> screenFileCopier = () -> s3Service.copy(fromScreenFilePath, toScreenFilePath);
         Callable<AssetFilePath> thumbnailCopier = () -> s3Service.copy(fromThumbnailPath, toThumbnailPath);
         Callable<AssetFilePath> editFileUploader = () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
 
         try {
-            List<AssetFilePath> assetFiles = Utils.runInParallel(dataFileCopier, thumbnailCopier, editFileUploader);
+            List<AssetFilePath> assetFiles = Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileUploader);
             AssetFilePath thumbnailFile = assetFiles.get(1);
 
             Screen screen = Screen.builder()
@@ -152,4 +153,28 @@ public class ScreenService extends ServiceBase {
         return maybeScreen.map(RespScreen::from);
     }
 
+    public RespScreen updateEditForScreen(ReqRecordEdit body, User userEntity) {
+        Optional<Screen> maybeScreen = screenRepo.findByRid(body.rid());
+        if (maybeScreen.isEmpty()) {
+            log.error("Can't update edit for screen {} as it's not found", body.rid());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "");
+        }
+        Screen screen = maybeScreen.get();
+        if (!Objects.equals(screen.getBelongsToOrg(), userEntity.getBelongsToOrg())) {
+            log.error("Can't update edit for screen {} as it's belong to different org. Requested by user {}, belongs to org {}",
+                body.rid(), userEntity.getId(), screen.getBelongsToOrg());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not enough permission");
+        }
+
+        uploadDataFileToS3(
+            body.editData(),
+            screen.getAssetPrefixHash(),
+            S3Config.getEntityFiles().editFile(),
+            S3Config.AssetType.Screen);
+
+        // Updates the updatedAt
+        screen.setUpdatedAt(Utils.getCurrentUtcTimestamp());
+        Screen updatedScreen = screenRepo.save(screen);
+        return RespScreen.from(updatedScreen);
+    }
 }
