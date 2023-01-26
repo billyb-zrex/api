@@ -34,7 +34,9 @@ public class S3Config {
 
     public static EntityFilesConfig getEntityFiles() {
         return new EntityFilesConfig(
-            new FileConfig(DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.Default),
+            // TODO fix this, for screen datafile needs to be cached
+            //      for tour data file need not be cached
+            new FileConfig(DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
             new FileConfig(EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
     }
 

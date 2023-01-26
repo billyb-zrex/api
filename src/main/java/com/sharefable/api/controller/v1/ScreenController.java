@@ -63,7 +63,7 @@ public class ScreenController {
         return ApiResp.<RespScreen>builder().data(maybeScreen.get()).build();
     }
 
-    @RequestMapping(value = Routes.RECORD_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = Routes.RECORD_EL_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespScreen> recordEdit(@RequestBody ReqRecordEdit body, @AuthenticationPrincipal UserPrincipal principal) {
         RespScreen resp = screenService.updateEditForScreen(body, principal.userEntity());
         return ApiResp.<RespScreen>builder().data(resp).build();
