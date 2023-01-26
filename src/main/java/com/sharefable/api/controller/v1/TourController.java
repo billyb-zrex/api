@@ -5,6 +5,8 @@ import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.TourService;
 import com.sharefable.api.transport.ReqNewTour;
+import com.sharefable.api.transport.ReqRecordEdit;
+import com.sharefable.api.transport.ReqRenameTour;
 import com.sharefable.api.transport.RespTour;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,5 +52,17 @@ public class TourController {
             throw new ResponseStatusException(NOT_FOUND, String.format("Unable to find tour with rid %s", rId));
         }
         return ApiResp.<RespTour>builder().data(maybeTour.get()).build();
+    }
+
+    @RequestMapping(value = Routes.RECORD_TOUR_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespTour> recordEdit(@RequestBody ReqRecordEdit body, @AuthenticationPrincipal UserPrincipal principal) {
+        RespTour resp = tourService.updateEditForTour(body, principal.userEntity());
+        return ApiResp.<RespTour>builder().data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.RENAME_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespTour> renameTour(@RequestBody ReqRenameTour body, @AuthenticationPrincipal UserPrincipal principal) {
+        RespTour resp = tourService.renameTour(body, principal.userEntity());
+        return ApiResp.<RespTour>builder().data(resp).build();
     }
 }

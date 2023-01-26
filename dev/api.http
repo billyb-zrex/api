@@ -134,8 +134,8 @@ Content-Type: image/png
 
 < /Users/akashgoswami/Downloads/spidy.png
 
-### update edit file
-POST {{api-host}}/v1/f/recordedit
+### update edit file for el edit
+POST {{api-host}}/v1/f/recordeledit
 Authorization: {{auth-header}}
 Content-Type: application/json
 
@@ -143,3 +143,16 @@ Content-Type: application/json
   "rid": "inbox-23-hustleag6969g-vdaozhz1u2n0kpky",
   "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"edits\": { \"sample\": 1}}"
 }
+
+### update edit file
+POST {{api-host}}/v1/f/recordtredit
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "rid": "untitled-c5zs4mu8zqq4oi2u",
+  "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": 1234, \"main\": null, \"theme\": {}, \"entities\": {}}"
+}
+
+
+
