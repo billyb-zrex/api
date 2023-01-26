@@ -3,13 +3,11 @@ package com.sharefable.api.service;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
+import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.TourRepo;
-import com.sharefable.api.transport.ReqNewTour;
-import com.sharefable.api.transport.ReqRecordEdit;
-import com.sharefable.api.transport.ReqRenameTour;
-import com.sharefable.api.transport.RespTour;
+import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,11 +55,23 @@ public class TourService extends ServiceBase {
         return RespTour.from(storedTour);
     }
 
-    public Optional<RespTour> getTourByRid(String rid) {
+    @Transactional(readOnly = true)
+    public RespTour getTourByRid(String rid, boolean shouldGetScreens) {
         Optional<Tour> maybeTour = tourRepo.findByRid(rid);
-        return maybeTour.map(RespTour::from);
+        if (maybeTour.isEmpty()) {
+            log.error("Can't get tour by rid {}", rid);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
+        }
+        if (shouldGetScreens) {
+            Tour tour = maybeTour.get();
+            Set<Screen> screens = tour.getScreens();
+            tour.setScreens(screens);
+            return RespTourWithScreens.from(tour);
+        }
+        return RespTour.from(maybeTour.get());
     }
 
+    @Transactional
     public RespTour updateEditForTour(ReqRecordEdit body, User userEntity) {
         Tour tour = getTourByRIdWithAuthValidation(body.rid(), userEntity);
 
@@ -93,7 +104,10 @@ public class TourService extends ServiceBase {
 
     public RespTour renameTour(ReqRenameTour body, User userEntity) {
         Tour tour = getTourByRIdWithAuthValidation(body.rid(), userEntity);
-//        tour.setDisplayName();
-        return null;
+        String newName = body.newName();
+        tour.setDisplayName(newName);
+        tour.setRid(Utils.createReadableId(newName));
+        Tour updatedTour = tourRepo.save(tour);
+        return RespTour.from(updatedTour);
     }
 }
