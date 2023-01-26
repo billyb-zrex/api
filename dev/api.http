@@ -105,9 +105,24 @@ Content-Type: application/json
   "name": "Default2 tour"
 }
 
+### renaming tour
+POST {{api-host}}/v1/f/renametour
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "newName": "Lights out and away we go",
+  "rid": "untitled-4n0193hgecfkf2qn"
+}
+
 ### get tour by rid
 GET {{api-host}}/v1/tour?rid=default-tour-xq4eulkm
 Content-Type: application/json
+
+### get tour by rid with screens
+GET {{api-host}}/v1/tour?rid=untitled-4n0193hgecfkf2qn&s=1
+Content-Type: application/json
+
 
 ### get s3 presigned url
 # {param} te => base64 encoding of content type (like image/png)

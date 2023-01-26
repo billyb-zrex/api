@@ -1,6 +1,6 @@
 package com.sharefable.api.entity;
 
-import com.sharefable.api.transport.RespTour;
+import com.sharefable.api.transport.RespTourWithScreens;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @Builder
-@TransportObjRef(cls = RespTour.class)
+@TransportObjRef(cls = RespTourWithScreens.class)
 public class Tour extends EntityBase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

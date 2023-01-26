@@ -13,12 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequestMapping(Routes.API_V1)
@@ -46,12 +43,9 @@ public class TourController {
     }
 
     @RequestMapping(value = Routes.GET_TOUR, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespTour> getScreenByRId(@RequestParam("rid") String rId) {
-        Optional<RespTour> maybeTour = tourService.getTourByRid(rId);
-        if (maybeTour.isEmpty()) {
-            throw new ResponseStatusException(NOT_FOUND, String.format("Unable to find tour with rid %s", rId));
-        }
-        return ApiResp.<RespTour>builder().data(maybeTour.get()).build();
+    public ApiResp<RespTour> getScreenByRId(@RequestParam("rid") String rId, @RequestParam("s") Optional<Boolean> shouldGetScreens) {
+        RespTour tour = tourService.getTourByRid(rId, shouldGetScreens.orElse(Boolean.FALSE));
+        return ApiResp.<RespTour>builder().data(tour).build();
     }
 
     @RequestMapping(value = Routes.RECORD_TOUR_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -62,7 +56,8 @@ public class TourController {
 
     @RequestMapping(value = Routes.RENAME_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespTour> renameTour(@RequestBody ReqRenameTour body, @AuthenticationPrincipal UserPrincipal principal) {
-        RespTour resp = tourService.renameTour(body, principal.userEntity());
+        ReqRenameTour nBody = body.normalizeDisplayName();
+        RespTour resp = tourService.renameTour(nBody, principal.userEntity());
         return ApiResp.<RespTour>builder().data(resp).build();
     }
 }
