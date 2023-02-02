@@ -87,6 +87,16 @@ Content-Type: application/json
 GET {{api-host}}/v1/screen?rid=analytics-yeenjpf2
 Content-Type: application/json
 
+### renaming screen
+POST {{api-host}}/v1/f/renamescreen
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "newName": "Lights out and away we go",
+  "rid": "hacker-news-z9czhtl128zka745"
+}
+
 ### Get common config
 GET {{api-host}}/v1/cconfig
 Content-Type: application/json

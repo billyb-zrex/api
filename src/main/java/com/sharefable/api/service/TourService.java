@@ -95,14 +95,14 @@ public class TourService extends ServiceBase {
         }
         Tour tour = maybeTour.get();
         if (!Objects.equals(tour.getBelongsToOrg(), user.getBelongsToOrg())) {
-            log.error("Can't update edit for screen {} as it's belong to different org. Requested by user {}, belongs to org {}",
+            log.error("Can't update edit for tour {} as it's belong to different org. Requested by user {}, belongs to org {}",
                 rid, user.getId(), tour.getBelongsToOrg());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not enough permission");
         }
         return tour;
     }
 
-    public RespTour renameTour(ReqRenameTour body, User userEntity) {
+    public RespTour renameTour(ReqRenameGeneric body, User userEntity) {
         Tour tour = getTourByRIdWithAuthValidation(body.rid(), userEntity);
         String newName = body.newName();
         tour.setDisplayName(newName);

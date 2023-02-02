@@ -6,7 +6,7 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.TourService;
 import com.sharefable.api.transport.ReqNewTour;
 import com.sharefable.api.transport.ReqRecordEdit;
-import com.sharefable.api.transport.ReqRenameTour;
+import com.sharefable.api.transport.ReqRenameGeneric;
 import com.sharefable.api.transport.RespTour;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,8 +55,8 @@ public class TourController {
     }
 
     @RequestMapping(value = Routes.RENAME_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespTour> renameTour(@RequestBody ReqRenameTour body, @AuthenticationPrincipal UserPrincipal principal) {
-        ReqRenameTour nBody = body.normalizeDisplayName();
+    public ApiResp<RespTour> renameTour(@RequestBody ReqRenameGeneric body, @AuthenticationPrincipal UserPrincipal principal) {
+        ReqRenameGeneric nBody = body.normalizeDisplayName();
         RespTour resp = tourService.renameTour(nBody, principal.userEntity());
         return ApiResp.<RespTour>builder().data(resp).build();
     }

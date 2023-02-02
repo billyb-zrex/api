@@ -9,10 +9,7 @@ import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
-import com.sharefable.api.transport.ReqCopyScreen;
-import com.sharefable.api.transport.ReqNewScreen;
-import com.sharefable.api.transport.ReqRecordEdit;
-import com.sharefable.api.transport.RespScreen;
+import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -176,5 +173,29 @@ public class ScreenService extends ServiceBase {
         screen.setUpdatedAt(Utils.getCurrentUtcTimestamp());
         Screen updatedScreen = screenRepo.save(screen);
         return RespScreen.from(updatedScreen);
+    }
+
+    private Screen getScreenByRIdWithAuthValidation(String rid, User user) {
+        Optional<Screen> maybeScreen = screenRepo.findByRid(rid);
+        if (maybeScreen.isEmpty()) {
+            log.error("Can't update edit for screen {} as it's not found", rid);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "");
+        }
+        Screen screen = maybeScreen.get();
+        if (!Objects.equals(screen.getBelongsToOrg(), user.getBelongsToOrg())) {
+            log.error("Can't update edit for screen {} as it's belong to different org. Requested by user {}, belongs to org {}",
+                rid, user.getId(), screen.getBelongsToOrg());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not enough permission");
+        }
+        return screen;
+    }
+
+    public RespScreen renameScreen(ReqRenameGeneric body, User userEntity) {
+        Screen screen = getScreenByRIdWithAuthValidation(body.rid(), userEntity);
+        String newName = body.newName();
+        screen.setDisplayName(newName);
+        screen.setRid(Utils.createReadableId(newName));
+        Screen savedScreen = screenRepo.save(screen);
+        return RespScreen.from(savedScreen);
     }
 }

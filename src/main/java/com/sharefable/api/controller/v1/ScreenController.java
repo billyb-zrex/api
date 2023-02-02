@@ -5,10 +5,7 @@ import com.sharefable.api.auth.UserPrincipal;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.service.ScreenService;
-import com.sharefable.api.transport.ReqCopyScreen;
-import com.sharefable.api.transport.ReqNewScreen;
-import com.sharefable.api.transport.ReqRecordEdit;
-import com.sharefable.api.transport.RespScreen;
+import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -66,6 +63,13 @@ public class ScreenController {
     @RequestMapping(value = Routes.RECORD_EL_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespScreen> recordEdit(@RequestBody ReqRecordEdit body, @AuthenticationPrincipal UserPrincipal principal) {
         RespScreen resp = screenService.updateEditForScreen(body, principal.userEntity());
+        return ApiResp.<RespScreen>builder().data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.RENAME_SCREEN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespScreen> renameTour(@RequestBody ReqRenameGeneric body, @AuthenticationPrincipal UserPrincipal principal) {
+        ReqRenameGeneric nBody = body.normalizeDisplayName();
+        RespScreen resp = screenService.renameScreen(nBody, principal.userEntity());
         return ApiResp.<RespScreen>builder().data(resp).build();
     }
 }

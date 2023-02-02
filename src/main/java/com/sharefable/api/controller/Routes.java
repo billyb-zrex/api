@@ -21,4 +21,5 @@ public interface Routes {
     String RECORD_EL_EDIT = __BEHIND_LOGIN__ + "/recordeledit";
     String RECORD_TOUR_EDIT = __BEHIND_LOGIN__ + "/recordtredit";
     String RENAME_TOUR = __BEHIND_LOGIN__ + "/renametour";
+    String RENAME_SCREEN = __BEHIND_LOGIN__ + "/renamescreen";
 }
