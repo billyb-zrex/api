@@ -34,6 +34,12 @@ public class RespProxyAsset extends ResponseBase {
         }
     }
 
+    public static RespProxyAsset from(String absUrl) {
+        RespProxyAsset resp = Empty();
+        resp.setProxyUri(absUrl);
+        return resp;
+    }
+
     public static RespProxyAsset Empty() {
         return new RespProxyAsset();
     }

@@ -35,11 +35,11 @@ Accept: application/json
 
 
 ### proxy asset
-POST {{api-host}}/v1/proxyasset
+POST {{api-host}}/v1/f/proxyasset
 Content-Type: application/json
 
 {
-  "origin": "https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,800,900|Product+Sans:100,300,400,500,700",
+  "origin": "https://saaspages.xyz/_next/static/css/bee9601ed6f6686bc6ea.css",
   "projectId": 1,
   "clientInfo": "eyJraWUiOiJHQV9YU1JGX1RPS0VOPUFPNlk3bThLeXh4b0xSdUlPU1Vud2ZoQ3haRGZveGVzUnc6MTY2OTY1NjU4Mjg0NjsgU0lEPVF3anlOeHpIZHRLT3Fmam5oSklncGlVUHo1NEpZNTNySmlEOGJhTldBSExFWjZ1dGUtejZIUGduV3ZsS21FZVpxcG53bFEuOyBBUElTSUQ9bXBHS1lSLXFKUkxxYjRKLS9Bbi00TG9MSE8xYVJwZUlJQTsgU0FQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBfX1NlY3VyZS0xUEFQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBfX1NlY3VyZS0zUEFQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBTPWFuYWx5dGljcy1yZWFsdGltZS1mcm9udGVuZD1IaWx5aHh3WlpjWWg5THZSS1g4MTRrRk03bnhPSGZ0QzsgMVBfSkFSPTIwMjItMTEtMjgtMTg7IFNJRENDPUFJS2tJczNjS3Vvb3Y4RUVhMjV4QmcxZjZBdVRKX08zNDB4eER0RlZTMEUzZ1EyODBsX2tTSjNReWc2Wl9sQU5wZnpoYm5ZWnhCQSIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEwNy4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
 }
@@ -169,14 +169,14 @@ Content-Type: application/json
   "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"edits\": { \"sample\": 1}}"
 }
 
-### update edit file
+### update tour file
 POST {{api-host}}/v1/f/recordtredit
 Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "rid": "untitled-c5zs4mu8zqq4oi2u",
-  "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": 1234, \"main\": null, \"theme\": {}, \"entities\": {}}"
+  "rid": "untitled-g1qvp22g7qjgu3x5",
+  "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"entities\": {}}"
 }
 
 

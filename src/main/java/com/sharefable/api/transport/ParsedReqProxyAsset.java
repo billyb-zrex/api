@@ -3,12 +3,14 @@ package com.sharefable.api.transport;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sharefable.api.common.Utils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Base64Utils;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Optional;
@@ -59,5 +61,22 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
         }
 
         return Optional.of(parsedReq);
+    }
+
+    public Optional<ParsedReqProxyAsset> updateUrl(String assetUrl) {
+        try {
+            URL originParsed = Utils.convertRelativeUrlToAbsoluteUrlIfRequired(assetUrl, this.originParsed);
+            ParsedReqProxyAsset parsedReq = new ParsedReqProxyAsset();
+            parsedReq.setOriginParsed(originParsed);
+            parsedReq.setCookie(this.getCookie());
+            parsedReq.setUserAgent(this.getUserAgent());
+            parsedReq.setOrigin(originParsed.toString());
+            parsedReq.setClientInfo(this.getClientInfo());
+            return Optional.of(parsedReq);
+        } catch (MalformedURLException | URISyntaxException e) {
+            log.error("Could not parse url because of error {}", e.getMessage());
+            e.printStackTrace();
+            return Optional.empty();
+        }
     }
 }

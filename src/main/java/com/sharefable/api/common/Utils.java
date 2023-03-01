@@ -8,10 +8,15 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
+import org.springframework.http.HttpHeaders;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -134,5 +139,33 @@ public interface Utils {
         ZonedDateTime zdt = ZonedDateTime.of(ldt, ZoneId.systemDefault());
         ZonedDateTime gmt = zdt.withZoneSameInstant(ZoneId.of("GMT"));
         return Timestamp.valueOf(gmt.toLocalDateTime());
+    }
+
+    static URL convertRelativeUrlToAbsoluteUrlIfRequired(String url, URL origin) throws URISyntaxException, MalformedURLException {
+        URI uri = new URI(url);
+        if (uri.isAbsolute()) {
+            return uri.toURL();
+        } else {
+            return new URL(origin, url);
+        }
+    }
+
+    static String getContentTypeFromHeader(HttpHeaders headers) {
+        List<String> contentTypes = headers.get(HttpHeaders.CONTENT_TYPE);
+        return contentTypes == null ? "" : String.join(",", contentTypes);
+    }
+
+    static String getContentEncodingFromHeader(HttpHeaders headers) {
+        List<String> contentEncodings = headers.get(HttpHeaders.CONTENT_ENCODING);
+        return contentEncodings == null ? "" : String.join(",", contentEncodings);
+    }
+
+    static boolean isUrlPresentInIgnoreList(URL nestedParsedOrigin, String[] ignoreList) {
+        for (String host : ignoreList) {
+            if (host.equalsIgnoreCase(nestedParsedOrigin.getHost())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

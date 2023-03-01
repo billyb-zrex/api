@@ -20,10 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -32,6 +34,8 @@ public class ProxyAssetService {
     private final RestTemplate restClient;
     private final S3Service s3Service;
     private final S3Config s3Config;
+
+    String[] ignoreList = new String[]{"fonts.googleapis.com"};
 
     @Autowired
     public ProxyAssetService(ProxyAssetRepo proxyAssetRepo, RestTemplate restClient, S3Service s3Service, S3Config s3Config) {
@@ -45,6 +49,17 @@ public class ProxyAssetService {
     public RespProxyAsset createProxyAsset(ParsedReqProxyAsset body) {
         String origin = body.getOrigin();
         String hashedOrigin = DigestUtils.sha1Hex(origin);
+
+        try {
+            boolean shouldIgnore = Utils.isUrlPresentInIgnoreList(new URL(origin), ignoreList);
+            if (shouldIgnore) {
+                return RespProxyAsset.from(origin);
+            }
+        } catch (MalformedURLException e) {
+            log.error("Could not match with ignore list as the url {} could not be parsed to URL.", origin);
+            e.printStackTrace();
+        }
+
         Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
         if (proxyAsset.isPresent()) {
             return RespProxyAsset.from(proxyAsset.get(), s3Config);
@@ -61,11 +76,25 @@ public class ProxyAssetService {
 
         try {
             ResponseEntity<byte[]> resp = this.restClient.exchange(origin, HttpMethod.GET, entity, byte[].class);
+
+            // if css then convert the body to string and parse the body for further urls and process those again
+            // if not then continue with previous code
+
+            String contentType = Utils.getContentTypeFromHeader(resp.getHeaders());
+            String contentEncoding = Utils.getContentEncodingFromHeader(resp.getHeaders());
             int status = resp.getStatusCode().value();
             boolean isValidResponse = status >= 200 && status < 300;
             if (resp.getBody() != null && isValidResponse) {
                 String fileName = Utils.createUuidWord();
-                log.warn("f {} :: origin {} :: cookie {}", fileName, origin, body.getCookie());
+                // TODO if content type is gzipped or someother value we have to do decompress the file
+
+                byte[] contentBody = resp.getBody();
+
+                if (contentType.contains("css") && contentEncoding.isEmpty()) {
+                    String resolvedBody = resolveNestedProxyForCssFile(new String(contentBody), body);
+                    contentBody = resolvedBody.getBytes(StandardCharsets.UTF_8);
+                }
+
                 HttpHeaders respHeaders = resp.getHeaders();
                 // Get the Content-Type information from response and set it directly into the s3 bucket
                 Map<String, String> metadata = new HashMap<>(3);
@@ -73,18 +102,15 @@ public class ProxyAssetService {
                     String headerName = h.getKey();
                     if (StringUtils.equalsIgnoreCase(headerName, HttpHeaders.CONTENT_TYPE)) {
                         // https://stackoverflow.com/a/50405667
-                        String contentType = String.join(",", h.getValue());
                         metadata.put(HttpHeaders.CONTENT_TYPE, contentType);
                     } else if (StringUtils.equalsIgnoreCase(headerName, HttpHeaders.CONTENT_ENCODING)) {
-                        String contentEncoding = String.join(" ", h.getValue());
                         metadata.put(HttpHeaders.CONTENT_ENCODING, contentEncoding);
                     }
                 }
-
                 metadata.put("Orig-Url", origin);
 
                 AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, fileName);
-                assetFilePath = s3Service.upload(assetFilePath, resp.getBody(), metadata);
+                assetFilePath = s3Service.upload(assetFilePath, contentBody, metadata);
 
                 ProxyAsset asset = ProxyAsset.builder()
                     .rid(hashedOrigin)
@@ -95,14 +121,36 @@ public class ProxyAssetService {
 
                 ProxyAsset savedAsset = proxyAssetRepo.save(asset);
                 return RespProxyAsset.from(savedAsset, s3Config);
+
+
             } else {
                 log.error("Cannot get asset {} . Empty body or not okay status. Status = {}", origin, status);
                 return RespProxyAsset.Empty();
             }
+
         } catch (HttpStatusCodeException ex) {
             log.error("Cannot get asset {} [Status: {}, resp from server: {}]", origin, ex.getStatusCode(), ex.getResponseBodyAsString());
             ex.printStackTrace();
             return RespProxyAsset.Empty();
         }
+
+    }
+
+    private String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body) {
+        String respbody = content;
+        ArrayList<String> nestedUrls = new ArrayList<>();
+        Pattern urlRegex = Pattern.compile("url\\((.*?)\\)");
+        Matcher urlMatcher = urlRegex.matcher(respbody);
+        while (urlMatcher.find()) {
+            nestedUrls.add(urlMatcher.group(1));
+        }
+
+        for (String url : nestedUrls) {
+            Optional<ParsedReqProxyAsset> nestedParsedReqBody = body.updateUrl(url);
+            if (nestedParsedReqBody.isEmpty()) continue;
+            RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get());
+            respbody = respbody.replace("url(" + url + ")", "url(" + nestedProxyUri.getProxyUri() + ")");
+        }
+        return respbody;
     }
 }
