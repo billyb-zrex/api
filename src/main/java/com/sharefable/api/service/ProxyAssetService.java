@@ -80,13 +80,36 @@ public class ProxyAssetService {
             // if css then convert the body to string and parse the body for further urls and process those again
             // if not then continue with previous code
 
-            String contentType = Utils.getContentTypeFromHeader(resp.getHeaders());
-            String contentEncoding = Utils.getContentEncodingFromHeader(resp.getHeaders());
+            HttpHeaders respHeaders = resp.getHeaders();
+            String contentType = Utils.getContentTypeFromHeader(respHeaders);
+            String contentEncoding = Utils.getContentEncodingFromHeader(respHeaders);
             int status = resp.getStatusCode().value();
+            boolean isRedirected = status == 302 || status == 301 || status == 307 || status == 308;
             boolean isValidResponse = status >= 200 && status < 300;
-            if (resp.getBody() != null && isValidResponse) {
+            if (isRedirected) {
+                List<String> locations = respHeaders.get(HttpHeaders.LOCATION);
+                String redirectTo = "";
+                if (locations != null) {
+                    redirectTo = locations.get(0);
+                    if (redirectTo == null || redirectTo.isEmpty()) {
+                        redirectTo = "";
+                    }
+                }
+                log.info("Redirecting req for {} with status {} to {}", origin, status, redirectTo);
+                if (!redirectTo.isEmpty()) {
+                    Optional<ParsedReqProxyAsset> redirectProxyAsset = body.updateUrl(redirectTo);
+                    if (redirectProxyAsset.isEmpty()) {
+                        log.error("Cant form redirect url {}", redirectTo);
+                        return RespProxyAsset.Empty();
+                    } else {
+                        return createProxyAsset(redirectProxyAsset.get());
+                    }
+                } else {
+                    log.error("Asset returns redirection status {} but location not found", status);
+                    return RespProxyAsset.Empty();
+                }
+            } else if (resp.getBody() != null && isValidResponse) {
                 String fileName = Utils.createUuidWord();
-                // TODO if content type is gzipped or someother value we have to do decompress the file
 
                 byte[] contentBody = resp.getBody();
 
@@ -95,7 +118,6 @@ public class ProxyAssetService {
                     contentBody = resolvedBody.getBytes(StandardCharsets.UTF_8);
                 }
 
-                HttpHeaders respHeaders = resp.getHeaders();
                 // Get the Content-Type information from response and set it directly into the s3 bucket
                 Map<String, String> metadata = new HashMap<>(3);
                 for (Map.Entry<String, List<String>> h : respHeaders.entrySet()) {
@@ -133,7 +155,6 @@ public class ProxyAssetService {
             ex.printStackTrace();
             return RespProxyAsset.Empty();
         }
-
     }
 
     private String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body) {
@@ -145,7 +166,11 @@ public class ProxyAssetService {
             nestedUrls.add(urlMatcher.group(1));
         }
 
+        int l = nestedUrls.size();
+        log.info("{} nested css found", l);
+        int i = 0;
         for (String url : nestedUrls) {
+            log.info("Resolving nested css {} {}/{}", url, i++, l);
             Optional<ParsedReqProxyAsset> nestedParsedReqBody = body.updateUrl(url);
             if (nestedParsedReqBody.isEmpty()) continue;
             RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get());
