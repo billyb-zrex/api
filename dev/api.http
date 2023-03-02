@@ -34,18 +34,29 @@ GET {{api-host}}/v1/user?id=2
 Accept: application/json
 
 
-### proxy asset
+### proxy asset - auth issue
 POST {{api-host}}/v1/f/proxyasset
 Content-Type: application/json
 
 {
-  "origin": "https://saaspages.xyz/_next/static/css/bee9601ed6f6686bc6ea.css",
+  "origin": "https://www.udemy.com/staticx/udemy/js/webpack/entry-main.bffa2f581400dc3e4224.css",
   "projectId": 1,
-  "clientInfo": "eyJraWUiOiJHQV9YU1JGX1RPS0VOPUFPNlk3bThLeXh4b0xSdUlPU1Vud2ZoQ3haRGZveGVzUnc6MTY2OTY1NjU4Mjg0NjsgU0lEPVF3anlOeHpIZHRLT3Fmam5oSklncGlVUHo1NEpZNTNySmlEOGJhTldBSExFWjZ1dGUtejZIUGduV3ZsS21FZVpxcG53bFEuOyBBUElTSUQ9bXBHS1lSLXFKUkxxYjRKLS9Bbi00TG9MSE8xYVJwZUlJQTsgU0FQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBfX1NlY3VyZS0xUEFQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBfX1NlY3VyZS0zUEFQSVNJRD0xOWhlMURSaE5fNmVHYUdWL0FSZHZQam9jMDJ5QjFPS0RROyBTPWFuYWx5dGljcy1yZWFsdGltZS1mcm9udGVuZD1IaWx5aHh3WlpjWWg5THZSS1g4MTRrRk03bnhPSGZ0QzsgMVBfSkFSPTIwMjItMTEtMjgtMTg7IFNJRENDPUFJS2tJczNjS3Vvb3Y4RUVhMjV4QmcxZjZBdVRKX08zNDB4eER0RlZTMEUzZ1EyODBsX2tTSjNReWc2Wl9sQU5wZnpoYm5ZWnhCQSIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEwNy4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
+  "clientInfo": "eyJraWUiOiJfX2NmX2JtPXpOR3VBeDRPSlRKbnRGTXVOMUhPd2luVm5IUmJ6TW5ac2VIRTllR1dfYTgtMTY3Nzc0MTYzNC0wLUFSRDJZU1ozeXdRUEZEa1dTK3R6c1BwN0ZsUk9ha2lhWlp2M0JQbHhGWGc0MmRocEZ5ajRoR0U0KzJqRXVQM3IzSWNlVlFUZlB4dzQxWGE1cU1KeUhkTT07IF9fY2ZydWlkPWQ2M2VlNGIxYjY2ZDdhODQxZGZkNDFhZWIyN2QwMWUzMDVjZjA4ZDQtMTY3Nzc0MTYzNCIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEwNy4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
 }
 
 
-### proxy asset
+### proxy asset - infinite recursion
+POST {{api-host}}/v1/f/proxyasset
+Content-Type: application/json
+
+{
+  "origin": "https://ssl.gstatic.com/analytics/20230301-00/web/analytics-ltr_2.css",
+  "projectId": 1,
+  "clientInfo": "eyJraWUiOiJfX2NmX2JtPXpOR3VBeDRPSlRKbnRGTXVOMUhPd2luVm5IUmJ6TW5ac2VIRTllR1dfYTgtMTY3Nzc0MTYzNC0wLUFSRDJZU1ozeXdRUEZEa1dTK3R6c1BwN0ZsUk9ha2lhWlp2M0JQbHhGWGc0MmRocEZ5ajRoR0U0KzJqRXVQM3IzSWNlVlFUZlB4dzQxWGE1cU1KeUhkTT07IF9fY2ZydWlkPWQ2M2VlNGIxYjY2ZDdhODQxZGZkNDFhZWIyN2QwMWUzMDVjZjA4ZDQtMTY3Nzc0MTYzNCIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEwNy4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
+}
+
+
+### proxy asset - redirection
 POST {{api-host}}/v1/f/proxyasset
 Content-Type: application/json
 

@@ -170,6 +170,10 @@ public class ProxyAssetService {
         log.info("{} nested css found", l);
         int i = 0;
         for (String url : nestedUrls) {
+            if (StringUtils.startsWith(url, "#") || StringUtils.equalsIgnoreCase(url, "/")) {
+                continue;
+            }
+            url = url.replaceAll("['\"]+", "");
             log.info("Resolving nested css {} {}/{}", url, i++, l);
             Optional<ParsedReqProxyAsset> nestedParsedReqBody = body.updateUrl(url);
             if (nestedParsedReqBody.isEmpty()) continue;
