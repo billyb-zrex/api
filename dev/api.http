@@ -50,7 +50,7 @@ POST {{api-host}}/v1/f/proxyasset
 Content-Type: application/json
 
 {
-  "origin": "https://ssl.gstatic.com/analytics/20230301-00/web/analytics-ltr_2.css",
+  "origin": "https://ssl.gstatic.com/analytics/analytics-frontend.indexpage_20230226.18_p0/index/css/css.css",
   "projectId": 1,
   "clientInfo": "eyJraWUiOiJfX2NmX2JtPXpOR3VBeDRPSlRKbnRGTXVOMUhPd2luVm5IUmJ6TW5ac2VIRTllR1dfYTgtMTY3Nzc0MTYzNC0wLUFSRDJZU1ozeXdRUEZEa1dTK3R6c1BwN0ZsUk9ha2lhWlp2M0JQbHhGWGc0MmRocEZ5ajRoR0U0KzJqRXVQM3IzSWNlVlFUZlB4dzQxWGE1cU1KeUhkTT07IF9fY2ZydWlkPWQ2M2VlNGIxYjY2ZDdhODQxZGZkNDFhZWIyN2QwMWUzMDVjZjA4ZDQtMTY3Nzc0MTYzNCIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEwNy4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
 }

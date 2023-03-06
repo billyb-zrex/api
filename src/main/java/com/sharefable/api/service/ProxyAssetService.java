@@ -10,6 +10,7 @@ import com.sharefable.api.transport.RespProxyAsset;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -159,26 +160,42 @@ public class ProxyAssetService {
 
     private String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body) {
         String respbody = content;
-        ArrayList<String> nestedUrls = new ArrayList<>();
-        Pattern urlRegex = Pattern.compile("url\\((.*?)\\)");
+        ArrayList<Pair<String, String>> nestedUrls = new ArrayList<>();
+        // format of url(...) or url("...") or url('...')
+        Pattern urlRegex = Pattern.compile("url\\(\"(.*?)\"\\)|url\\('(.*?)'\\)|url\\((.*?)\\)");
         Matcher urlMatcher = urlRegex.matcher(respbody);
+
         while (urlMatcher.find()) {
-            nestedUrls.add(urlMatcher.group(1));
+            int l = urlMatcher.groupCount();
+            String url = "";
+            while (l > 0) {
+                // the first group is always the full string hence the condition is not >= 0
+                if (urlMatcher.group(l) != null) {
+                    url = urlMatcher.group(l);
+                    break;
+                }
+                l--;
+            }
+            if (StringUtils.isBlank(url)
+                || StringUtils.startsWithIgnoreCase(url, "data:")
+                || StringUtils.startsWithIgnoreCase(url, "#")) {
+                continue;
+            }
+            url = url.trim();
+            nestedUrls.add(Pair.with(url, urlMatcher.group(0)));
         }
 
         int l = nestedUrls.size();
         log.info("{} nested css found", l);
         int i = 0;
-        for (String url : nestedUrls) {
-            if (StringUtils.startsWith(url, "#") || StringUtils.equalsIgnoreCase(url, "/")) {
-                continue;
-            }
-            url = url.replaceAll("['\"]+", "");
+        for (Pair<String, String> urlPair : nestedUrls) {
+            String url = urlPair.getValue0();
+            String replaceTarget = urlPair.getValue1();
             log.info("Resolving nested css {} {}/{}", url, i++, l);
             Optional<ParsedReqProxyAsset> nestedParsedReqBody = body.updateUrl(url);
             if (nestedParsedReqBody.isEmpty()) continue;
             RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get());
-            respbody = respbody.replace("url(" + url + ")", "url(" + nestedProxyUri.getProxyUri() + ")");
+            respbody = respbody.replace(replaceTarget, "url(" + nestedProxyUri.getProxyUri() + ")");
         }
         return respbody;
     }
