@@ -64,6 +64,7 @@ public class ScreenService extends ServiceBase {
                 .assetPrefixHash(prefixHash)
                 .belongsToOrg(createdByUser.getBelongsToOrg())
                 .icon(req.favIcon().orElse(null))
+                .responsive(false)
                 .url(req.url())
                 .thumbnail(thumbnailFilePath)
                 .build();
@@ -126,6 +127,7 @@ public class ScreenService extends ServiceBase {
                 .assetPrefixHash(prefixHash)
                 .belongsToOrg(userEntity.getBelongsToOrg())
                 .icon(parentScreen.getIcon())
+                .responsive(parentScreen.getResponsive())
                 .thumbnail(thumbnailFile.getFilePath())
                 .tours(tours)
                 .parentScreenId(parentId)
@@ -201,7 +203,7 @@ public class ScreenService extends ServiceBase {
 
     public RespScreen updateScreenProperty(ReqUpdateScreenProperty body, User userEntity) {
         Screen screen = getScreenByRIdWithAuthValidation(body.rid(), userEntity);
-        if(body.propName().equals("responsive")) {
+        if (body.propName().equals("responsive")) {
             screen.setResponsive((Boolean) body.propValue());
         }
         Screen updatedScreen = screenRepo.save(screen);
