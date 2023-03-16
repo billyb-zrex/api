@@ -72,4 +72,10 @@ public class ScreenController {
         RespScreen resp = screenService.renameScreen(nBody, principal.userEntity());
         return ApiResp.<RespScreen>builder().data(resp).build();
     }
+
+    @RequestMapping(value = Routes.UPDATE_SCREEN_PROPERTY, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespScreen> renameTour(@RequestBody ReqUpdateScreenProperty body, @AuthenticationPrincipal UserPrincipal principal) {
+        RespScreen respScreen = screenService.updateScreenProperty(body, principal.userEntity());
+        return ApiResp.<RespScreen>builder().data(respScreen).build();
+    }
 }

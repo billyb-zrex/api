@@ -47,6 +47,9 @@ public class Screen extends EntityBase {
 
     private String icon;
 
+    @Column(nullable = false)
+    private Boolean responsive;
+
     // NOTE Although screen <-> tour is defined as many-to-many relationship in database, from logical standpoint
     //      this is a many-one relationship (for the time being). The reason we kept it as many-to-many relationship
     //      in persistent layer is because we initially thought that one screen can be part of many tours, while that

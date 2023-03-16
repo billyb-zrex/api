@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2023-02-02 06:34:19.
+// Generated using typescript-generator version 2.35.1025 on 2023-03-16 11:25:53.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -55,6 +55,12 @@ export interface ReqRenameGeneric {
     rid: string;
 }
 
+export interface ReqUpdateScreenProperty {
+    rid: string;
+    propName: string;
+    propValue: any;
+}
+
 export interface RespCommonConfig extends ResponseBase {
     commonAssetPath: string;
     screenAssetPath: string;
@@ -88,6 +94,7 @@ export interface RespScreen extends ResponseBase {
     thumbnail: string;
     url: string;
     icon: string;
+    responsive: boolean;
     tour?: RespTour;
 }
 

@@ -30,6 +30,7 @@ public class RespScreen extends ResponseBase {
     private String thumbnail;
     private String url;
     private String icon;
+    private Boolean responsive;
     private Optional<RespTour> tour;
 
     public static RespScreen from(Screen screen) {

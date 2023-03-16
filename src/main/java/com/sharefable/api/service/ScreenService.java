@@ -198,4 +198,13 @@ public class ScreenService extends ServiceBase {
         Screen savedScreen = screenRepo.save(screen);
         return RespScreen.from(savedScreen);
     }
+
+    public RespScreen updateScreenProperty(ReqUpdateScreenProperty body, User userEntity) {
+        Screen screen = getScreenByRIdWithAuthValidation(body.rid(), userEntity);
+        if(body.propName().equals("responsive")) {
+            screen.setResponsive((Boolean) body.propValue());
+        }
+        Screen updatedScreen = screenRepo.save(screen);
+        return RespScreen.from(updatedScreen);
+    }
 }

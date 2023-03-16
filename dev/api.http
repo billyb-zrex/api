@@ -107,6 +107,17 @@ Content-Type: application/json
   "rid": "hacker-news-z9czhtl128zka745"
 }
 
+### @name=screen_property
+POST {{api-host}}/v1/f/updatescreenproperty
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "rid": "test-screens-ddxuogj2cvvzugl1",
+  "propName": "responsive",
+  "propValue": true
+}
+
 ### Get common config
 GET {{api-host}}/v1/cconfig
 Content-Type: application/json
