@@ -2,36 +2,22 @@
 # @name=health
 GET {{api-host}}/health
 
-### create org
-# @name=new_org
-POST {{api-host}}/v1/neworg
-Authorization: {{auth-header}}
-Content-Type: application/json
-
-{
-  "displayName": "Acme"
-}
-
-### get org
-# @name=get_org
-GET {{api-host}}/v1/f/org?rid=acme-rtzj7tv5
-Authorization: {{auth-header}}
-Accept: application/json
-
-### create user
-POST {{api-host}}/v1/newuser
-Content-Type: application/json
-
-{
-  "firstName": "root",
-  "lastName": "root",
-  "email": "root@root.com",
-  "belongsToOrg": 1
-}
 
 ### get user
-GET {{api-host}}/v1/user?id=2
-Accept: application/json
+GET {{api-host}}/v1/f/iam
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+
+### update user
+POST {{api-host}}/v1/f/updateuserprop
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "firstName": "Alan",
+  "lastName": "James"
+}
 
 
 ### proxy asset - auth issue
@@ -199,6 +185,7 @@ Content-Type: application/json
   "rid": "untitled-g1qvp22g7qjgu3x5",
   "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"entities\": {}}"
 }
+
 
 
 

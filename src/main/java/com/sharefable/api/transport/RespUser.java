@@ -22,10 +22,15 @@ public class RespUser extends ResponseBase {
     private String lastName;
     private String email;
     private String avatar;
+    private Boolean personalEmail;
+    private Long belongsToOrg;
+    private UserOrgAssociation orgAssociation;
 
     public static RespUser from(User user) {
         try {
-            return (RespUser) Utils.fromEntityToTransportObject(user);
+            RespUser respUser = (RespUser) Utils.fromEntityToTransportObject(user);
+            respUser.setPersonalEmail(user.getDomainBlacklisted());
+            return respUser;
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
@@ -36,5 +41,11 @@ public class RespUser extends ResponseBase {
 
     public static RespUser Empty() {
         return new RespUser();
+    }
+
+    public enum UserOrgAssociation {
+        Implicit,
+        Explicit,
+        NA
     }
 }

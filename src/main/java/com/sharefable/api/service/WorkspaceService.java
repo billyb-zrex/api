@@ -16,18 +16,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
-
-/*
- * TODO upon implementation of authentication check if the users have access to certain entity
- */
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class WorkspaceService extends ServiceBase {
     private final OrgRepo orgRepo;
-    private final UserRepo userRepo;
     private final S3Config s3Config;
+    private final UserRepo userRepo;
     private final S3Service s3Service;
 
     @Autowired
@@ -40,18 +39,43 @@ public class WorkspaceService extends ServiceBase {
     }
 
     @Transactional
-    public RespOrg newOrg(ReqNewOrg body) {
+    public RespOrg createNewOrgAndAssignUserToIt(ReqNewOrg body, User user) {
+        String emailDomain = Utils.getDomainFromEmail(user.getEmail());
+
+        // For now only one org per domain is allowed
+        Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
+        if (orgs.size() > 0) {
+            log.error("Org for domain is already present but still requested by {}", user);
+            return RespOrg.from(orgs.iterator().next());
+        }
+
         String displayName = body.displayName();
         String rid = Utils.createReadableId(displayName);
-
-        Org.OrgBuilder orgBuilder = Org.builder().displayName(displayName).rid(rid);
+        Org.OrgBuilder orgBuilder = Org.builder().displayName(displayName).domain(emailDomain).rid(rid);
         if (StringUtils.isNotBlank(body.thumbnail())) {
             Optional<AssetFilePath> assetFilePath = uploadBase64ImageToS3(body.thumbnail(), S3Config.AssetType.Common);
             assetFilePath.ifPresent(filePath -> orgBuilder.thumbnail(filePath.getFilePath()));
         }
         Org org = orgBuilder.build();
         Org savedOrg = orgRepo.save(org);
+        user.setBelongsToOrg(savedOrg.getId());
+        userRepo.save(user);
         return RespOrg.from(savedOrg);
+    }
+
+    /*
+     * TODO
+     *  When a property of an entity object gets updated, the normal standard is to pass an array of following struct
+     *  [{ prop: 'firstname', val: 'John' },
+     *  { prop: 'lastname', val: 'Doe' }]
+     *  this format is not implement here
+     */
+    @Transactional
+    public RespUser updateUserFirstAndLastName(ReqUpdateUser body, User user) {
+        user.setFirstName(body.firstName());
+        user.setLastName(body.lastName());
+        User savedUser = userRepo.save(user);
+        return RespUser.from(savedUser);
     }
 
     @Transactional(readOnly = true)
@@ -60,24 +84,42 @@ public class WorkspaceService extends ServiceBase {
         return org.map(RespOrg::from).orElse(RespOrg.Empty());
     }
 
-    @Transactional
-    public RespUser newUser(ReqNewUser body) {
-        User user = User.builder()
-            .firstName(body.firstName())
-            .lastName(body.lastName())
-            .email(body.email())
-            .avatar(body.avatar())
-            .belongsToOrg(body.belongsToOrg())
-            .build();
-
-        User savedUser = userRepo.save(user);
-        return RespUser.from(savedUser);
+    @Transactional(readOnly = true)
+    public List<RespOrg> getOrgByEmail(String email) {
+        String emailDomain = Utils.getDomainFromEmail(email);
+        Set<Org> org = orgRepo.findOrgByDomain(emailDomain);
+        return org.stream().map(RespOrg::from).collect(Collectors.toList());
     }
 
     @Transactional
-    public RespUser getUserEntity(Long id) {
-        Optional<User> user = userRepo.findById(id);
-        return user.map(RespUser::from).orElse(RespUser.Empty());
+    public RespUser assignUserToImplicitOrg(User user) {
+        String emailDomain = Utils.getDomainFromEmail(user.getEmail());
+        Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
+        if (orgs.size() > 0) {
+            Org org = orgs.iterator().next();
+            user.setBelongsToOrg(org.getId());
+            userRepo.save(user);
+        } else {
+            log.error("No org present but call to assignUserToImplicitOrg is done by user {}", user);
+        }
+        return RespUser.from(user);
+    }
+
+    @Transactional(readOnly = true)
+    public RespUser getUserWithOrgData(User user) {
+        RespUser respUser = RespUser.from(user);
+        // No DB operation should happen if the user is part of an org already.
+        if (user.getBelongsToOrg() == null) {
+            // If user is not part of an org then find out is there implicit org that is present as part of user's
+            // email domain
+            Set<Org> orgs = orgRepo.findOrgByDomain(Utils.getDomainFromEmail(user.getEmail()));
+            respUser.setOrgAssociation(!orgs.isEmpty()
+                ? RespUser.UserOrgAssociation.Implicit
+                : RespUser.UserOrgAssociation.NA);
+        } else {
+            respUser.setOrgAssociation(RespUser.UserOrgAssociation.Explicit);
+        }
+        return respUser;
     }
 
     public void getCommonConfig(RespCommonConfig.RespCommonConfigBuilder builder) {
@@ -106,4 +148,5 @@ public class WorkspaceService extends ServiceBase {
             .filename(filename)
             .build();
     }
+
 }

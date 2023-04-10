@@ -19,7 +19,8 @@ public class User extends EntityBase {
     @Column(updatable = false, nullable = false)
     private Long id;
 
-    @Column(nullable = false)
+    private String authId;
+
     private String firstName;
 
     private String lastName;
@@ -29,6 +30,7 @@ public class User extends EntityBase {
 
     private String avatar;
 
-    @Column(nullable = false)
+    private Boolean domainBlacklisted;
+
     private Long belongsToOrg;
 }

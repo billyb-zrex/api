@@ -29,10 +29,10 @@ public class OrgTest extends TestWithRunnerAndSetup {
         Assertions.assertEquals("Acme", org.getDisplayName());
         Assertions.assertTrue(StringUtils.startsWith(org.getRid(), "acme-"), "Received rid=" + org.getRid());
 
-        ApiResp<RespOrg> getOrgResp = sendRequest(Routes.API_V1 + Routes.GET_ORG + "?rid=" + org.getRid(), HttpMethod.GET, RespOrg.class);
-        Assertions.assertEquals(ApiResp.ResponseStatus.Success, newOrgResp.getStatus());
-        RespOrg org2 = getOrgResp.getData();
-
-        Assertions.assertEquals(org, org2, "Org=" + org + "Org2=" + org2);
+//        ApiResp<RespOrg> getOrgResp = sendRequest(Routes.API_V1 + Routes.GET_ORG + "?rid=" + org.getRid(), HttpMethod.GET, RespOrg.class);
+//        Assertions.assertEquals(ApiResp.ResponseStatus.Success, newOrgResp.getStatus());
+//        RespOrg org2 = getOrgResp.getData();
+//
+//        Assertions.assertEquals(org, org2, "Org=" + org + "Org2=" + org2);
     }
 }

@@ -26,4 +26,7 @@ public class Org extends EntityBase {
     private String displayName;
 
     private String thumbnail;
+
+    @Column(nullable = false)
+    private String domain;
 }

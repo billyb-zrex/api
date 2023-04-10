@@ -168,4 +168,14 @@ public interface Utils {
         }
         return false;
     }
+
+    static String getDomainFromEmail(String email) {
+        Pattern pattern = Pattern.compile("@(\\S+)");
+        Matcher matcher = pattern.matcher(email);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return "";
+    }
+
 }

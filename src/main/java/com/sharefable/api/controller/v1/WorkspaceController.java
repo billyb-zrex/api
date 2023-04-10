@@ -1,66 +1,71 @@
 package com.sharefable.api.controller.v1;
 
-import com.sharefable.api.auth.UserPrincipal;
+import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.controller.Routes;
+import com.sharefable.api.entity.User;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(Routes.API_V1)
 @Slf4j
+@RequiredArgsConstructor
 public class WorkspaceController {
     private final WorkspaceService wsService;
     private final AppSettings settings;
 
-    @Autowired
-    public WorkspaceController(WorkspaceService wsService, AppSettings settings) {
-        this.wsService = wsService;
-        this.settings = settings;
-    }
-
     @RequestMapping(value = Routes.NEW_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespOrg> createNewOrg(@RequestBody ReqNewOrg body) {
+    public ApiResp<RespOrg> createNewOrg(@RequestBody ReqNewOrg body, @AuthUser User user) {
         ObjectValidationResult validation = body.validate();
         if (!validation.isValid()) {
-            return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
-                .errStr(String.join("; ", validation.validationMsg())).build();
+            String reasons = String.join("; ", validation.validationMsg());
+            log.error("Could not create org, reason {}", reasons);
+            return ApiResp.<RespOrg>builder()
+                .status(ApiResp.ResponseStatus.Failure)
+                .errCode(ApiResp.ErrorCode.IllegalArgs)
+                .errStr(reasons)
+                .build();
         }
         body = body.normalizeDisplayName();
-        RespOrg org = wsService.newOrg(body);
+        RespOrg org = wsService.createNewOrgAndAssignUserToIt(body, user);
         return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
     }
 
-    @RequestMapping(value = Routes.GET_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespOrg> getOrg(@RequestParam("rid") Optional<String> rId) {
-        if (rId.isEmpty()) {
-            return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
-                .errStr("Missing parameter").build();
-        }
-        RespOrg org = wsService.getOrgByRId(rId.get());
-        return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
+    @RequestMapping(value = Routes.GET_ORG_FOR_USER, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<List<RespOrg>> getOrgForUser(@AuthUser User user) {
+        List<RespOrg> org = wsService.getOrgByEmail(user.getEmail());
+        return ApiResp.<List<RespOrg>>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
     }
 
-    @RequestMapping(value = Routes.NEW_USER, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespUser> newUser(@RequestBody ReqNewUser body) {
-        RespUser user = wsService.newUser(body);
-        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(user).build();
+    @RequestMapping(value = Routes.ASSIGN_IMPLICIT_USER_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespUser> assignDefaultOrgForUserUsingDomain(@AuthUser User user) {
+        RespUser updatedUser = wsService.assignUserToImplicitOrg(user);
+        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(updatedUser).build();
     }
 
-    @RequestMapping(value = Routes.GET_USER, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespUser> getUser(@RequestParam Long id) {
-        RespUser resp = wsService.getUserEntity(id);
-        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+    @RequestMapping(value = Routes.IAM, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespUser> newUser(@AuthUser User user) {
+        RespUser respUser = wsService.getUserWithOrgData(user);
+        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(respUser).build();
+    }
+
+    @RequestMapping(value = Routes.UPDATE_USER_PROP, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespUser> updateUserName(@RequestBody ReqUpdateUser body, @AuthUser User user) {
+        body = body.normalize();
+        RespUser respUser = wsService.updateUserFirstAndLastName(body, user);
+        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(respUser).build();
     }
 
     @RequestMapping(value = Routes.GET_COMMON_CONFIG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -73,13 +78,14 @@ public class WorkspaceController {
     }
 
 
+    @PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
     @RequestMapping(value = Routes.UPLOAD_LINK, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespUploadUrl> getPresignedUrl(
         @RequestParam("te") String contentTypeEncoded,
         @RequestParam("ext") Optional<String> maybeExtension,
-        @AuthenticationPrincipal UserPrincipal principal) {
+        @AuthUser User user) {
         String contentType = new String(Base64Utils.decodeFromString(contentTypeEncoded), StandardCharsets.UTF_8);
-        RespUploadUrl resp = wsService.getPreSignedUrlToUploadFile(principal.userEntity(), contentType, maybeExtension);
+        RespUploadUrl resp = wsService.getPreSignedUrlToUploadFile(user, contentType, maybeExtension);
         return ApiResp.<RespUploadUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 }
