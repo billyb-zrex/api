@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HealthController {
     @RequestMapping(value = Routes.HEALTH, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespHealth> health() {
+        log.info("invoked {}", Routes.HEALTH);
         return ApiResp.<RespHealth>builder()
             .status(ApiResp.ResponseStatus.Success)
             .data(RespHealth.builder().build())

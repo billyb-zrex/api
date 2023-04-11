@@ -45,10 +45,29 @@ env:
 
 
 # --------------------------------------------------------------
-# Command for application build + execution setps
+# Command for application build + execution steps
 # --------------------------------------------------------------
 build:
 	mvn clean compile
 
 run:
 	mvn spring-boot:run
+
+containerize: export SERVICE_NAME=`jq -r '.SERVICE_NAME' service.json`
+containerize: export AWS_ORG=`aws sts get-caller-identity --query "Account" --output text`
+containerize: export AWS_REGION=ap-southeast-1
+containerize: export ECR_IMAGE_TAG=$(AWS_ORG).dkr.ecr.$(AWS_REGION).amazonaws.com/$(SERVICE_NAME):$(v)
+containerize:
+	@if [ -z "$(v)" ]; then \
+        echo "[v]ersion is mandatory. Usage: make containerize v=2.1.0"; \
+        false ; \
+	fi
+	@echo "ECR tag: $(ECR_IMAGE_TAG)"
+	docker build -t $(SERVICE_NAME) -t $(ECR_IMAGE_TAG) .
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ORG).dkr.ecr.$(AWS_REGION).amazonaws.com
+	docker push $(ECR_IMAGE_TAG)
+
+# If you are running this in local make sure in env.idea file
+# DB_CONN_URL=jdbc:mysql://host.docker.internal:3306 is set
+container-run:
+	docker rm fa; docker run --name fa --env-file env.idea -p 8080:8080 fable-api

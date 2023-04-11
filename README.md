@@ -93,3 +93,22 @@ scp aws/.tmux.conf fab-api:~/.
 - Use the commands in _aws/bootstrap.sh_ file to set up env + install toolchains
 - Once done you can start running the _Makefile_ scripts
 - Create elastic search indexes from _dev/es.http_ file
+
+# Deployment via ECR
+
+## Create ECR (one time)
+
+- Make sure the `service.json` file is present
+- From `cd infra` dir
+
+```bash
+terraform init
+terraform workspace list
+terraform workspace staging # or prod
+terraform apply
+```
+
+## Build and upload image to ECR
+
+- `cd ..` to go back to the project root
+- `make containerize v=1.0.1` with proper version number

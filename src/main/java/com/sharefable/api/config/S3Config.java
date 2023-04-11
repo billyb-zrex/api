@@ -8,16 +8,20 @@ import com.sharefable.api.common.AssetFilePath;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @Configuration
 @ConfigurationProperties(prefix = "com.sharefable.api.s3")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@Slf4j
 public class S3Config {
     private static final String DATA_FILE_NAME = "index.json";
     private static final String EDIT_FILE_NAME = "edits.json";
@@ -31,6 +35,9 @@ public class S3Config {
     private String region;
     private String rootQualifier;
     private String assetBucketName;
+
+    @Autowired
+    private Environment env;
 
     public static EntityFilesConfig getEntityFiles() {
         return new EntityFilesConfig(
@@ -84,11 +91,28 @@ public class S3Config {
         return assetFilePath;
     }
 
+    private boolean isLocal() {
+        String[] activeProfiles = env.getActiveProfiles();
+        for (String activeProfile : activeProfiles) {
+            if (StringUtils.equalsIgnoreCase(activeProfile, "dev")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Bean
     AmazonS3 s3Client() {
+        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withRegion(region);
+
+        if (!isLocal()) {
+            log.info("Building s3 client using iam role");
+            return builder.build();
+        }
+
+        log.info("Building s3 client using user access keys");
         final BasicAWSCredentials basicAwsCredentials = new BasicAWSCredentials(accessKeyId, accessKeySecret);
-        return AmazonS3ClientBuilder.standard()
-            .withRegion(region)
+        return builder
             .withCredentials(new AWSStaticCredentialsProvider(basicAwsCredentials))
             .build();
     }

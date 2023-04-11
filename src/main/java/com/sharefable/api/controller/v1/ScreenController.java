@@ -50,7 +50,6 @@ public class ScreenController {
     }
 
     @RequestMapping(value = Routes.GET_SCREEN, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAuthority(@Perm.READ_SCREEN)")
     public ApiResp<RespScreen> getScreenByRId(@RequestParam("rid") String rId) {
         Optional<RespScreen> maybeScreen = screenService.getScreenByRid(rId);
         if (maybeScreen.isEmpty()) {
