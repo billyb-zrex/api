@@ -155,6 +155,10 @@ public class ProxyAssetService {
             log.error("Cannot get asset {} [Status: {}, resp from server: {}]", origin, ex.getStatusCode(), ex.getResponseBodyAsString());
             ex.printStackTrace();
             return RespProxyAsset.Empty();
+        } catch (Exception ex) {
+            log.error("Cannot get asset {} error {}", origin, ex.getMessage());
+            ex.printStackTrace();
+            return RespProxyAsset.Empty();
         }
     }
 
