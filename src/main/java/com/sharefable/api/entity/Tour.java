@@ -3,6 +3,7 @@ package com.sharefable.api.entity;
 import com.sharefable.api.transport.RespTourWithScreens;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
 
@@ -13,9 +14,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Builder
+@SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespTourWithScreens.class)
-public class Tour extends EntityBase {
+public class Tour extends EntityBaseWithOwnership {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
@@ -35,9 +36,6 @@ public class Tour extends EntityBase {
     private User createdBy;
 
     private String description;
-
-    @Column(nullable = false)
-    private Long belongsToOrg;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

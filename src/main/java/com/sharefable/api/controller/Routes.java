@@ -18,8 +18,10 @@ public interface Routes {
     String UPDATE_USER_PROP = __BEHIND_LOGIN__ + "/userprop";
     String PROXY_ASSET = __BEHIND_LOGIN__ + "/proxyasset";
     String NEW_SCREEN = __BEHIND_LOGIN__ + "/newscreen";
+    String CREATE_THUMBNAIL = __BEHIND_LOGIN__ + "/genthumb";
     String GET_ALL_SCREENS = __BEHIND_LOGIN__ + "/screens";
     String COPY_SCREEN = __BEHIND_LOGIN__ + "/copyscreen";
+    String ASSOCIATE_SCREEN_TO_TOUR = __BEHIND_LOGIN__ + "/astsrntotour";
     String GET_ALL_TOURS = __BEHIND_LOGIN__ + "/tours";
     String NEW_TOUR = __BEHIND_LOGIN__ + "/newtour";
     String UPLOAD_LINK = __BEHIND_LOGIN__ + "/getuploadlink";

@@ -1,15 +1,12 @@
 package com.sharefable.api.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.sql.Timestamp;
 
 @MappedSuperclass
 @Getter
@@ -17,10 +14,7 @@ import java.sql.Timestamp;
 @ToString
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true)
-public abstract class EntityBase {
-    @CreationTimestamp
-    protected Timestamp createdAt;
-
-    @UpdateTimestamp
-    protected Timestamp updatedAt;
+public abstract class EntityBaseWithOwnership extends EntityBase {
+    @Column(nullable = false)
+    public Long belongsToOrg;
 }

@@ -6,6 +6,7 @@ import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,8 +27,8 @@ public class TourService extends ServiceBase {
     private final TourRepo tourRepo;
 
     @Autowired
-    public TourService(TourRepo tourRepo, AppSettings settings, S3Service s3Service, S3Config s3Config) {
-        super(settings, s3Service, s3Config);
+    public TourService(TourRepo tourRepo, AppSettings settings, S3Service s3Service, S3Config s3Config, ScreenRepo screenRepo) {
+        super(settings, s3Service, s3Config, screenRepo, tourRepo);
         this.tourRepo = tourRepo;
     }
 
@@ -73,7 +73,7 @@ public class TourService extends ServiceBase {
 
     @Transactional
     public RespTour updateEditForTour(ReqRecordEdit body, User userEntity) {
-        Tour tour = getTourByRIdWithAuthValidation(body.rid(), userEntity);
+        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
 
         uploadDataFileToS3(
             body.editData(),
@@ -87,23 +87,8 @@ public class TourService extends ServiceBase {
         return RespTour.from(updatedTour);
     }
 
-    private Tour getTourByRIdWithAuthValidation(String rid, User user) {
-        Optional<Tour> maybeTour = tourRepo.findByRid(rid);
-        if (maybeTour.isEmpty()) {
-            log.error("Can't update edit for tour {} as it's not found", rid);
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "");
-        }
-        Tour tour = maybeTour.get();
-        if (!Objects.equals(tour.getBelongsToOrg(), user.getBelongsToOrg())) {
-            log.error("Can't update edit for tour {} as it's belong to different org. Requested by user {}, belongs to org {}",
-                rid, user.getId(), tour.getBelongsToOrg());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not enough permission");
-        }
-        return tour;
-    }
-
     public RespTour renameTour(ReqRenameGeneric body, User userEntity) {
-        Tour tour = getTourByRIdWithAuthValidation(body.rid(), userEntity);
+        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
         String newName = body.newName();
         tour.setDisplayName(newName);
         tour.setRid(Utils.createReadableId(newName));

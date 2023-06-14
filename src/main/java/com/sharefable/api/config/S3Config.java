@@ -25,6 +25,7 @@ import org.springframework.core.env.Environment;
 public class S3Config {
     private static final String DATA_FILE_NAME = "index.json";
     private static final String EDIT_FILE_NAME = "edits.json";
+    private static final String IMAGE_FILE_NAME = "index.img";
     private static final String PATH_FOR_COMMON_ASSET = "/cmn";
     private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
     private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
@@ -44,7 +45,8 @@ public class S3Config {
             // TODO fix this, for screen datafile needs to be cached
             //      for tour data file need not be cached
             new FileConfig(DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-            new FileConfig(EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
+            new FileConfig(EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
+            new FileConfig(IMAGE_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
     }
 
     private String getPathForAssetType(AssetType type) {
@@ -136,6 +138,6 @@ public class S3Config {
     public record FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
     }
 
-    public record EntityFilesConfig(FileConfig dataFile, FileConfig editFile) {
+    public record EntityFilesConfig(FileConfig dataFile, FileConfig editFile, FileConfig imgFile) {
     }
 }

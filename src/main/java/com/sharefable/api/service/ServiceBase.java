@@ -5,21 +5,26 @@ import com.sharefable.api.common.ImageType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
+import com.sharefable.api.entity.EntityBaseWithOwnership;
+import com.sharefable.api.entity.Screen;
+import com.sharefable.api.entity.Tour;
+import com.sharefable.api.entity.User;
+import com.sharefable.api.repo.ScreenRepo;
+import com.sharefable.api.repo.TourRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.javatuples.Pair;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 public abstract class ServiceBase {
@@ -29,11 +34,15 @@ public abstract class ServiceBase {
     private final S3Service s3Service;
     private final S3Config s3Config;
     private final AppSettings settings;
+    private final ScreenRepo screenRepo;
+    private final TourRepo tourRepo;
 
-    protected ServiceBase(AppSettings settings, S3Service s3Service, S3Config s3Config) {
+    protected ServiceBase(AppSettings settings, S3Service s3Service, S3Config s3Config, ScreenRepo screenRepo, TourRepo tourRepo) {
         this.s3Service = s3Service;
         this.s3Config = s3Config;
         this.settings = settings;
+        this.screenRepo = screenRepo;
+        this.tourRepo = tourRepo;
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -99,6 +108,32 @@ public abstract class ServiceBase {
         }
         s3Service.upload(assetFilePath, content.getBytes(StandardCharsets.UTF_8), userDefinedMetadata);
         return assetFilePath;
+    }
+
+    protected <T extends EntityBaseWithOwnership> T getEntityByRIdWithAuthValidation(Class<T> cls, String rid, User user) {
+        Optional<? extends EntityBaseWithOwnership> maybeEntity;
+        String entityType;
+        if (cls.isAssignableFrom(Screen.class)) {
+            maybeEntity = screenRepo.findByRid(rid);
+            entityType = "screen";
+        } else if (cls.isAssignableFrom(Tour.class)) {
+            maybeEntity = tourRepo.findByRid(rid);
+            entityType = "tour";
+        } else {
+            throw new IllegalArgumentException("{} not yet supported" + cls.getName());
+        }
+
+        if (maybeEntity.isEmpty()) {
+            log.error("Can't update edit for {} {} as it's not found", entityType, rid);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "");
+        }
+        EntityBaseWithOwnership entity = maybeEntity.get();
+        if (!Objects.equals(entity.getBelongsToOrg(), user.getBelongsToOrg())) {
+            log.error("Can't update edit for {} {} as it's belong to different org. Requested by user {}, belongs to org {}",
+                entityType, rid, user.getId(), entity.getBelongsToOrg());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not enough permission");
+        }
+        return (T) entity;
     }
 
     public enum DATA_FILE_TYPE {

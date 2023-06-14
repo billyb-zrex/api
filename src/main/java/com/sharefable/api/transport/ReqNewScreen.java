@@ -6,17 +6,19 @@ import static com.sharefable.api.common.Utils.normalizeWhitespace;
 
 @GenerateTSDef
 public record ReqNewScreen(
-    String name,
-    String url,
-    String thumbnail, // base64 image data
-    Optional<String> favIcon,
-    String body
+        String name,
+        Optional<String> url,
+        Optional<String> thumbnail, // base64 image data
+        Optional<String> favIcon,
+        ScreenType type,
+        Optional<String> contentType,
+        String body
 ) {
     public Long normalizedParentId() {
         return 0L;
     }
 
     public ReqNewScreen normalizeDisplayName() {
-        return new ReqNewScreen(normalizeWhitespace(name()), url(), thumbnail(), favIcon(), body());
+        return new ReqNewScreen(normalizeWhitespace(name()), url(), thumbnail(), favIcon(), type(), contentType(), body());
     }
 }

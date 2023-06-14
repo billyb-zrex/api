@@ -1,6 +1,5 @@
 package com.sharefable.api.controller.v1;
 
-
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
@@ -32,6 +31,20 @@ public class ScreenController {
         ReqNewScreen req = body.normalizeDisplayName();
         RespScreen resp = screenService.createNewScreen(req, user);
         return ApiResp.<RespScreen>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.CREATE_THUMBNAIL, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority(@Perm.WRITE_SCREEN)")
+    public ApiResp<RespScreen> createThumbnail(@RequestBody ReqThumbnailCreation body, @AuthUser User user) {
+        RespScreen respScreen = screenService.createThumbnailFromImage(body, user);
+        return ApiResp.<RespScreen>builder().status(ApiResp.ResponseStatus.Success).data(respScreen).build();
+    }
+
+    @RequestMapping(value = Routes.ASSOCIATE_SCREEN_TO_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority(@Perm.WRITE_SCREEN)")
+    public ApiResp<RespScreen> assignScreenToTour(@RequestBody ReqScreenTour body, @AuthUser User user) {
+        RespScreen respScreen = screenService.assignScreenToTour(body, user);
+        return ApiResp.<RespScreen>builder().status(ApiResp.ResponseStatus.Success).data(respScreen).build();
     }
 
     @RequestMapping(value = Routes.COPY_SCREEN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)

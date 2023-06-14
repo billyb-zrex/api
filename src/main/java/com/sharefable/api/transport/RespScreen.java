@@ -32,6 +32,8 @@ public class RespScreen extends ResponseBase {
     private String icon;
     private Boolean responsive;
     private Optional<RespTour> tour;
+    private ScreenType type;
+    private Optional<String> uploadUrl;
 
     public static RespScreen from(Screen screen) {
         try {

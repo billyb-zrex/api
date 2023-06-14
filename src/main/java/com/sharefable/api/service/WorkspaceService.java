@@ -7,6 +7,8 @@ import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.OrgRepo;
+import com.sharefable.api.repo.ScreenRepo;
+import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.repo.UserRepo;
 import com.sharefable.api.transport.*;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +32,8 @@ public class WorkspaceService extends ServiceBase {
     private final S3Service s3Service;
 
     @Autowired
-    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings) {
-        super(settings, s3Service, s3Config);
+    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo) {
+        super(settings, s3Service, s3Config, screenRepo, tourRepo);
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
         this.s3Config = s3Config;
