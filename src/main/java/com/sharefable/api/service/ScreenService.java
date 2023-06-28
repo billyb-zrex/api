@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -128,6 +129,7 @@ public class ScreenService extends ServiceBase {
         return objectMapper.writeValueAsString(jsonNode);
     }
 
+    @Transactional
     public RespScreen copyFromParentScreen(ReqCopyScreen body, User userEntity) {
         Long parentId = body.parentId();
         String tourRid = body.tourRid();
@@ -142,19 +144,29 @@ public class ScreenService extends ServiceBase {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Tour with id %s not found", tourRid));
         }
 
-        Tour tour = maybeTour.get();
-        Set<Tour> tours = new HashSet<>();
-        tours.add(tour);
+        Screen clonedScreen = cloneScreen(maybeScreen.get(), userEntity, maybeTour.get());
+        return RespScreen.from(clonedScreen);
+    }
 
-        Screen parentScreen = maybeScreen.get();
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    Screen cloneScreen(Screen sourceScreen, User user, Tour tour) {
+        return cloneScreen(sourceScreen.getDisplayName(), sourceScreen, user, tour);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    Screen cloneScreen(String displayName, Screen sourceScreen, User user, Tour tour) {
         String prefixHash = Utils.createUuidWord();
-
         AssetFilePath fromScreenFilePath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Screen,
-            parentScreen.getAssetPrefixHash(),
+            sourceScreen.getAssetPrefixHash(),
             S3Config.getEntityFiles().dataFile().filename());
         AssetFilePath fromThumbnailPath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Common, parentScreen.getThumbnail());
+            S3Config.AssetType.Common, sourceScreen.getThumbnail());
+        AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.Screen,
+            sourceScreen.getAssetPrefixHash(),
+            S3Config.getEntityFiles().editFile().filename());
 
         AssetFilePath toScreenFilePath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().dataFile().filename());
@@ -163,36 +175,38 @@ public class ScreenService extends ServiceBase {
 
         Callable<AssetFilePath> screenFileCopier = () -> s3Service.copy(fromScreenFilePath, toScreenFilePath);
         Callable<AssetFilePath> thumbnailCopier = () -> s3Service.copy(fromThumbnailPath, toThumbnailPath);
-        Callable<AssetFilePath> editFileUploader = () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
+        Callable<AssetFilePath> editFileCopier = Utils.isParentScreen(sourceScreen)
+            ? () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT)
+            : () -> copyDataFileToS3(fromScreenEditFilePath, prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
 
         try {
-            List<AssetFilePath> assetFiles = Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileUploader);
+            List<AssetFilePath> assetFiles = Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileCopier);
             AssetFilePath thumbnailFile = assetFiles.get(1);
 
             Screen screen = Screen.builder()
-                .rid(Utils.createReadableId(parentScreen.getDisplayName()))
-                .createdBy(userEntity)
-                .url(parentScreen.getUrl())
-                .displayName(parentScreen.getDisplayName())
+                .rid(Utils.createReadableId(displayName))
+                .createdBy(user)
+                .url(sourceScreen.getUrl())
+                .displayName(displayName)
                 .assetPrefixHash(prefixHash)
-                .belongsToOrg(userEntity.getBelongsToOrg())
-                .icon(parentScreen.getIcon())
-                .responsive(parentScreen.getResponsive())
+                .belongsToOrg(user.getBelongsToOrg())
+                .icon(sourceScreen.getIcon())
+                .responsive(sourceScreen.getResponsive())
                 .thumbnail(thumbnailFile.getFilePath())
-                .tours(tours)
-                .parentScreenId(parentId)
-                .type(parentScreen.getType())
+                .tours(Set.of(tour))
+                .parentScreenId(Utils.isParentScreen(sourceScreen) ? sourceScreen.getId() : sourceScreen.getParentScreenId())
+                .type(sourceScreen.getType())
                 .build();
 
-            Screen storedScreen = screenRepo.save(screen);
-            return RespScreen.from(storedScreen);
+            return screenRepo.save(screen);
         } catch (Exception e) {
             log.error("Error while copying file from parent screen to child screen. Message: {}", e.getMessage());
             e.printStackTrace();
-            throw new RuntimeException("Something went wrong when saving screen");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
         }
     }
 
+    @Transactional
     public RespScreen createThumbnailFromImage(ReqThumbnailCreation body, User user) {
         Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
 
@@ -238,6 +252,7 @@ public class ScreenService extends ServiceBase {
         }
     }
 
+    @Transactional
     public RespScreen assignScreenToTour(ReqScreenTour body, User user) {
         Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
         Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), user);
@@ -249,16 +264,19 @@ public class ScreenService extends ServiceBase {
         return RespScreen.from(storedScreen);
     }
 
+    @Transactional
     public List<RespScreen> getAllScreensForOrg(Long orgId) {
         List<Screen> screens = screenRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
         return screens.stream().map(RespScreen::from).collect(Collectors.toList());
     }
 
+    @Transactional
     public Optional<RespScreen> getScreenByRid(String rid) {
         Optional<Screen> maybeScreen = screenRepo.findByRid(rid);
         return maybeScreen.map(RespScreen::from);
     }
 
+    @Transactional
     public RespScreen updateEditForScreen(ReqRecordEdit body, User userEntity) {
         Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
 
@@ -274,7 +292,7 @@ public class ScreenService extends ServiceBase {
         return RespScreen.from(updatedScreen);
     }
 
-
+    @Transactional
     public RespScreen renameScreen(ReqRenameGeneric body, User userEntity) {
         Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
         String newName = body.newName();
@@ -284,6 +302,7 @@ public class ScreenService extends ServiceBase {
         return RespScreen.from(savedScreen);
     }
 
+    @Transactional
     public RespScreen updateScreenProperty(ReqUpdateScreenProperty body, User userEntity) {
         Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
         if (body.propName().equals("responsive")) {

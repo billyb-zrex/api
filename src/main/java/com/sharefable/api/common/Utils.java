@@ -1,6 +1,7 @@
 package com.sharefable.api.common;
 
 import com.sharefable.api.entity.EntityBase;
+import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.TransportObjRef;
 import com.sharefable.api.transport.ResponseBase;
 import jakarta.xml.bind.DatatypeConverter;
@@ -112,6 +113,10 @@ public interface Utils {
 
     static String normalizeWhitespace(String str) {
         return str.trim().replaceAll("\\s+", " ");
+    }
+
+    static boolean isParentScreen(Screen screen) {
+        return screen.getParentScreenId() == 0;
     }
 
     @SafeVarargs

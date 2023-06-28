@@ -5,14 +5,12 @@ import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
-import com.sharefable.api.transport.ReqNewTour;
-import com.sharefable.api.transport.ReqRecordEdit;
-import com.sharefable.api.transport.ReqRenameGeneric;
-import com.sharefable.api.transport.RespTour;
+import com.sharefable.api.transport.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -60,5 +58,14 @@ public class TourController {
         ReqRenameGeneric nBody = body.normalizeDisplayName();
         RespTour resp = tourService.renameTour(nBody, user);
         return ApiResp.<RespTour>builder().data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.DUPLICATE_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+    @Transactional
+    public ApiResp<RespTourWithScreens> duplicateTour(@RequestBody ReqDuplicateTour body, @AuthUser User user) {
+        ReqDuplicateTour nBody = body.normalizeDisplayName();
+        RespTourWithScreens resp = tourService.duplicateTour(nBody, user);
+        return ApiResp.<RespTourWithScreens>builder().data(resp).build();
     }
 }

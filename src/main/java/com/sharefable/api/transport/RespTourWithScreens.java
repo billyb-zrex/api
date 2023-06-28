@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Data
 @NoArgsConstructor
@@ -19,6 +21,7 @@ import java.util.List;
 @GenerateTSDef
 public class RespTourWithScreens extends RespTour {
     private List<RespScreen> screens;
+    private Optional<Map<String, String>> idxm;
 
     public static RespTourWithScreens from(Tour tour) {
         try {

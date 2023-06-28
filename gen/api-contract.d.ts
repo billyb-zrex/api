@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2023-06-13 11:25:59.
+// Generated using typescript-generator version 2.35.1025 on 2023-06-27 21:30:38.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -12,6 +12,11 @@ export interface ApiResp<T> {
 export interface ReqCopyScreen {
     parentId: number;
     tourRid: string;
+}
+
+export interface ReqDuplicateTour {
+    duplicateTourName: string;
+    fromTourRid: string;
 }
 
 export interface ReqNewOrg {
@@ -118,6 +123,7 @@ export interface RespTour extends ResponseBase {
 
 export interface RespTourWithScreens extends RespTour {
     screens: RespScreen[];
+    idxm?: { [index: string]: string };
 }
 
 export interface RespUploadUrl {

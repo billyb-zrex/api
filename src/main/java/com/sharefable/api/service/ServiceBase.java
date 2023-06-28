@@ -69,10 +69,9 @@ public abstract class ServiceBase {
         return Optional.ofNullable(assetFilePath);
     }
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    protected AssetFilePath uploadTemplateFileToS3(String prefixHash, DATA_FILE_TYPE type) {
+    protected TemplateFile getTemplateFileLocFor(DATA_FILE_TYPE type) {
         String schemaVersion = settings.currentSchemaVersion().toValue();
-        TemplateFile tFile = switch (type) {
+        return switch (type) {
             case TOUR_INDEX -> new TemplateFile(
                 String.format(PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX, schemaVersion),
                 S3Config.AssetType.Tour,
@@ -85,6 +84,19 @@ public abstract class ServiceBase {
                 S3Config.getEntityFiles().editFile()
             );
         };
+    }
+
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    AssetFilePath copyDataFileToS3(AssetFilePath fromEntityDataFile, String prefixHash, DATA_FILE_TYPE type) {
+        TemplateFile tFile = getTemplateFileLocFor(type);
+        AssetFilePath toEntityDataFile = s3Config.getQualifiedPathFor(tFile.type, prefixHash, tFile.toFile().filename());
+        return s3Service.copy(fromEntityDataFile, toEntityDataFile);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    protected AssetFilePath uploadTemplateFileToS3(String prefixHash, DATA_FILE_TYPE type) {
+        TemplateFile tFile = getTemplateFileLocFor(type);
         try (InputStream resourceAsStream = getClass().getResourceAsStream(tFile.fromPath())) {
             if (resourceAsStream == null) {
                 log.error("No default data file is present while creating tour. Can't find schema file with path = {}", tFile.fromPath);
@@ -97,6 +109,7 @@ public abstract class ServiceBase {
             throw new RuntimeException(e);
         }
     }
+
 
     @Transactional(propagation = Propagation.MANDATORY)
     AssetFilePath uploadDataFileToS3(String content, String prefixHash, S3Config.FileConfig config, S3Config.AssetType assetType) {
