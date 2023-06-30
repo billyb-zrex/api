@@ -70,4 +70,7 @@ containerize:
 # If you are running this in local make sure in env.idea file
 # DB_CONN_URL=jdbc:mysql://host.docker.internal:3306 is set
 container-run:
-	docker rm fa; docker run --name fa --env-file env.idea -p 8080:8080 fable-api
+	sed -r 's/^export[[:space:]]+//' env.now > env.dkr.tmp
+	sed -r 's/\\#/#/' env.dkr.tmp > env.dkr
+	rm env.dkr.tmp
+	docker rm fa; docker run --name fa --env-file env.dkr -p 8080:8080 fable-api
