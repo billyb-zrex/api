@@ -1,6 +1,6 @@
 package com.sharefable.api.entity;
 
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,4 +23,9 @@ public abstract class EntityBase {
 
     @UpdateTimestamp
     protected Timestamp updatedAt;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(updatable = false, nullable = false)
+    private Long id;
 }

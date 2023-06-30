@@ -6,18 +6,24 @@ import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.WorkspaceService;
-import com.sharefable.api.transport.*;
+import com.sharefable.api.transport.ObjectValidationResult;
+import com.sharefable.api.transport.req.ReqNewOrg;
+import com.sharefable.api.transport.req.ReqUpdateUser;
+import com.sharefable.api.transport.resp.RespCommonConfig;
+import com.sharefable.api.transport.resp.RespOrg;
+import com.sharefable.api.transport.resp.RespUploadUrl;
+import com.sharefable.api.transport.resp.RespUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("removal")
 @RestController
 @RequestMapping(Routes.API_V1)
 @Slf4j
@@ -84,7 +90,7 @@ public class WorkspaceController {
         @RequestParam("te") String contentTypeEncoded,
         @RequestParam("ext") Optional<String> maybeExtension,
         @AuthUser User user) {
-        String contentType = new String(Base64Utils.decodeFromString(contentTypeEncoded), StandardCharsets.UTF_8);
+        String contentType = new String(org.springframework.util.Base64Utils.decodeFromString(contentTypeEncoded), StandardCharsets.UTF_8);
         RespUploadUrl resp = wsService.getPreSignedUrlToUploadFile(user, contentType, maybeExtension);
         return ApiResp.<RespUploadUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }

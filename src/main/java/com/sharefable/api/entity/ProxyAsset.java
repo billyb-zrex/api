@@ -1,8 +1,11 @@
 package com.sharefable.api.entity;
 
-import com.sharefable.api.transport.RespProxyAsset;
-import jakarta.persistence.*;
+import com.sharefable.api.transport.resp.RespProxyAsset;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "asset_proxy")
@@ -11,17 +14,9 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Builder
+@SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespProxyAsset.class)
-public class ProxyAsset extends EntityBase {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(updatable = false, nullable = false)
-    private Long id;
-
-    @Column(nullable = false)
-    private String rid;
-
+public class ProxyAsset extends EntityBaseWithReadableId {
     @Column(nullable = false)
     private String fullOriginUrl;
 

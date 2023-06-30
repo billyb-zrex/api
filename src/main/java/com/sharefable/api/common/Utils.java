@@ -3,7 +3,7 @@ package com.sharefable.api.common;
 import com.sharefable.api.entity.EntityBase;
 import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.TransportObjRef;
-import com.sharefable.api.transport.ResponseBase;
+import com.sharefable.api.transport.resp.ResponseBase;
 import jakarta.xml.bind.DatatypeConverter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -33,6 +33,37 @@ import java.util.stream.Collectors;
 public interface Utils {
     static String getShortRandomId() {
         return RandomStringUtils.random(16, "0123456789abcdefghijklmnopqrstuvwxyz");
+    }
+
+    static String formKeyFromObjectUrl(String url, int charLimit) {
+        String path = url.replace("https://", "");
+        int length = path.length();
+        return StringUtils.substring(path, Math.max(0, length - charLimit), length);
+    }
+
+    static String appendSuffixAfterFilename(String urlStr, String suffix) {
+        String[] urlSplit = urlStr.split("/");
+        String fileName = urlSplit[urlSplit.length - 1];
+        String[] fileNameSplit = fileName.split("\\.");
+        if (fileNameSplit.length == 1) {
+            // In case there are no extension then normalize by adding empty string so that the
+            // loop iteration doesn't have to branch
+            fileNameSplit = ArrayUtils.add(fileNameSplit, "");
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < fileNameSplit.length; i++) {
+            sb.append(fileNameSplit[i]);
+            if (i == fileNameSplit.length - 2) {
+                sb.append("_").append(suffix);
+            }
+            if (!fileNameSplit[i].isEmpty()) {
+                sb.append(".");
+            }
+        }
+        sb.deleteCharAt(sb.length() - 1); // delete the last dot
+        String suffixedFileName = sb.toString();
+        urlSplit[urlSplit.length - 1] = suffixedFileName;
+        return StringUtils.join(urlSplit, "/");
     }
 
     static String createReadableId(String name) {

@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @ToString
 @NoArgsConstructor
 @SuperBuilder(toBuilder = true)
-public abstract class EntityBaseWithOwnership extends EntityBase {
+public abstract class EntityBaseWithOwnership extends EntityBaseWithReadableId {
     @Column(nullable = false)
     public Long belongsToOrg;
 }

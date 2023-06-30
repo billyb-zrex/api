@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.transport.req.ReqProxyAsset;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.Base64Utils;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -30,6 +30,7 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
     private ParsedReqProxyAsset() {
     }
 
+    @SuppressWarnings("removal")
     public static Optional<ParsedReqProxyAsset> from(ReqProxyAsset req) {
         req.setOrigin(URLDecoder.decode(req.getOrigin(), StandardCharsets.UTF_8));
 
@@ -45,7 +46,7 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
             return Optional.empty();
         }
 
-        byte[] bytes = Base64Utils.decodeFromString(req.getClientInfo());
+        byte[] bytes = org.springframework.util.Base64Utils.decodeFromString(req.getClientInfo());
         String clientInfoStr = new String(bytes);
         TypeReference<HashMap<String, String>> typeRef = new TypeReference<>() {
         };

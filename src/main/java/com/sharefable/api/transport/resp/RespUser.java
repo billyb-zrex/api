@@ -1,0 +1,52 @@
+package com.sharefable.api.transport.resp;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sharefable.api.common.Utils;
+import com.sharefable.api.entity.User;
+import com.sharefable.api.transport.GenerateTSDef;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+
+import java.lang.reflect.InvocationTargetException;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Slf4j
+@GenerateTSDef
+public class RespUser extends ResponseBase {
+    private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String avatar;
+    private Boolean personalEmail;
+    private Long belongsToOrg;
+    private UserOrgAssociation orgAssociation;
+
+    public static RespUser from(User user) {
+        try {
+            RespUser respUser = (RespUser) Utils.fromEntityToTransportObject(user);
+            respUser.setPersonalEmail(user.getDomainBlacklisted());
+            return respUser;
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException e) {
+            log.error("Can't convert entity to transport object. Error: " + e.getMessage());
+            e.printStackTrace();
+            return Empty();
+        }
+    }
+
+    public static RespUser Empty() {
+        return new RespUser();
+    }
+
+    public enum UserOrgAssociation {
+        Implicit,
+        Explicit,
+        NA
+    }
+}

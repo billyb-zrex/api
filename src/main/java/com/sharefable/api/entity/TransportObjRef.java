@@ -1,6 +1,6 @@
 package com.sharefable.api.entity;
 
-import com.sharefable.api.transport.ResponseBase;
+import com.sharefable.api.transport.resp.ResponseBase;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

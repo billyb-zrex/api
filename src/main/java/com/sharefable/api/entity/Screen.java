@@ -1,7 +1,7 @@
 package com.sharefable.api.entity;
 
-import com.sharefable.api.transport.RespScreen;
 import com.sharefable.api.transport.ScreenType;
+import com.sharefable.api.transport.resp.RespScreen;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -18,14 +18,6 @@ import java.util.Set;
 @SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespScreen.class)
 public class Screen extends EntityBaseWithOwnership {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(updatable = false, nullable = false)
-    private Long id;
-
-    @Column(nullable = false)
-    private String rid;
-
     @Column(nullable = false)
     private String assetPrefixHash;
 

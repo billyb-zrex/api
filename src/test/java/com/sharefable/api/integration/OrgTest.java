@@ -2,8 +2,8 @@ package com.sharefable.api.integration;
 
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
-import com.sharefable.api.transport.ReqNewOrg;
-import com.sharefable.api.transport.RespOrg;
+import com.sharefable.api.transport.req.ReqNewOrg;
+import com.sharefable.api.transport.resp.RespOrg;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;

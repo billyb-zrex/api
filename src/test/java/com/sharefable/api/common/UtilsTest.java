@@ -2,8 +2,9 @@ package com.sharefable.api.common;
 
 import com.sharefable.api.entity.EntityBase;
 import com.sharefable.api.entity.TransportObjRef;
-import com.sharefable.api.transport.ResponseBase;
+import com.sharefable.api.transport.resp.ResponseBase;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -20,8 +21,18 @@ class UtilsTest {
     @SneakyThrows
     @Test
     void testEntityTransportConversion() {
-        TestEntity100 testEntity100 = new TestEntity100("id", "rid", "dn", "th",
-            new TestEntity99("id2", "rid2", "john"));
+        TestEntity100 testEntity100 = TestEntity100.builder()
+            .id(1L)
+            .rid("rid")
+            .displayName("dn")
+            .thumbnail("th")
+            .t(TestEntity99.builder()
+                .id(2L)
+                .rid("rid2")
+                .firstName("john")
+                .build())
+            .build();
+
         testEntity100.setUpdatedAt(Timestamp.from(Instant.now()));
         testEntity100.setCreatedAt(Timestamp.from(Instant.now()));
 
@@ -32,15 +43,29 @@ class UtilsTest {
         Assertions.assertEquals("rid2", responseBase.getT().getRid());
     }
 
+    @Test
+    void appendSuffixAfterFilename() {
+        String s1 = Utils.appendSuffixAfterFilename(
+            "https://fable-tour-app-gamma.s3.ap-south-1.amazonaws.com/akashgoswami/job_test/test_img_3.png",
+            "720"
+        );
+        Assertions.assertTrue(s1.endsWith("_720.png"));
+
+        String s2 = Utils.appendSuffixAfterFilename(
+            "https://fable-tour-app-gamma.s3.ap-south-1.amazonaws.com/akashgoswami/job_test/test_img_3",
+            "720"
+        );
+        Assertions.assertTrue(s2.endsWith("_720"));
+    }
+
 
     @Data
     @EqualsAndHashCode(callSuper = true)
     @ToString(callSuper = true)
     @NoArgsConstructor
-    @AllArgsConstructor
+    @SuperBuilder(toBuilder = true)
     @TransportObjRef(cls = TestResp100.class)
     public static class TestEntity100 extends EntityBase {
-        private String id;
         private String rid;
         private String displayName;
         private String thumbnail;
@@ -64,10 +89,9 @@ class UtilsTest {
     @EqualsAndHashCode(callSuper = true)
     @ToString(callSuper = true)
     @NoArgsConstructor
-    @AllArgsConstructor
+    @SuperBuilder(toBuilder = true)
     @TransportObjRef(cls = TestResp99.class)
     public static class TestEntity99 extends EntityBase {
-        private String id;
         private String rid;
         private String firstName;
     }

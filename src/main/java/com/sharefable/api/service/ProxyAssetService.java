@@ -6,7 +6,7 @@ import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.ProxyAsset;
 import com.sharefable.api.repo.ProxyAssetRepo;
 import com.sharefable.api.transport.ParsedReqProxyAsset;
-import com.sharefable.api.transport.RespProxyAsset;
+import com.sharefable.api.transport.resp.RespProxyAsset;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;

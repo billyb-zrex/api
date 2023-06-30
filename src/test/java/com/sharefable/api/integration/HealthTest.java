@@ -2,7 +2,7 @@ package com.sharefable.api.integration;
 
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
-import com.sharefable.api.transport.RespHealth;
+import com.sharefable.api.transport.resp.RespHealth;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

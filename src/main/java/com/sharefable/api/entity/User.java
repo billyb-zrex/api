@@ -1,7 +1,9 @@
 package com.sharefable.api.entity;
 
-import com.sharefable.api.transport.RespUser;
-import jakarta.persistence.*;
+import com.sharefable.api.transport.resp.RespUser;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
@@ -14,11 +16,6 @@ import lombok.*;
 @Builder
 @TransportObjRef(cls = RespUser.class)
 public class User extends EntityBase {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(updatable = false, nullable = false)
-    private Long id;
-
     private String authId;
 
     private String firstName;

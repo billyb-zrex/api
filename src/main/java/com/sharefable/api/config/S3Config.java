@@ -1,7 +1,5 @@
 package com.sharefable.api.config;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.sharefable.api.common.AssetFilePath;
@@ -105,18 +103,20 @@ public class S3Config {
 
     @Bean
     AmazonS3 s3Client() {
-        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withRegion(region);
+        return AmazonS3ClientBuilder.standard().withRegion(region).build();
 
-        if (!isLocal()) {
-            log.info("Building s3 client using iam role");
-            return builder.build();
-        }
+//        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withRegion(region);
 
-        log.info("Building s3 client using user access keys");
-        final BasicAWSCredentials basicAwsCredentials = new BasicAWSCredentials(accessKeyId, accessKeySecret);
-        return builder
-            .withCredentials(new AWSStaticCredentialsProvider(basicAwsCredentials))
-            .build();
+//        if (!isLocal()) {
+//            log.info("Building s3 client using iam role");
+//            return builder.build();
+//        }
+//
+//        log.info("Building s3 client using user access keys");
+//        final BasicAWSCredentials basicAwsCredentials = new BasicAWSCredentials(accessKeyId, accessKeySecret);
+//        return builder
+//            .withCredentials(new AWSStaticCredentialsProvider(basicAwsCredentials))
+//            .build();
     }
 
     public enum AssetType {
