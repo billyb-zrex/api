@@ -1,8 +1,12 @@
-name: DB Migration
+name: DB Migration & Deploy to ECS
 
 on:
   workflow_dispatch:
     inputs:
+      deploy_env:
+        type: environment
+        description: Deployment environment?
+        required: true
       migration:
         type: choice
         description: Run DB migration?
@@ -11,24 +15,30 @@ on:
           - no
         default: no
         required: true
+      deploy_to_ecs:
+        type: boolean
+        description: Deploy to ECS?
+        options:
+          - yes
+          - no
+        default: no
+        required: true
 
-env:
-  #  DEPLOY_ENV: ${{ github.ref_name == 'master' && 'prod' ||  github.ref_name == 'develop' && 'staging' || 'na' }}
-  DEPLOY_ENV: prod
+#env:
+#  #  DEPLOY_ENV: ${{ github.ref_name == 'master' && 'prod' ||  github.ref_name == 'develop' && 'staging' || 'na' }}
+#  DEPLOY_ENV: prod
 
 jobs:
   db-migration:
-    if: github.event.inputs.migration == 'yes'
+    if: github.event.inputs.migration == 'yes' && contains('["agfabl"]', github.actor)
     runs-on: ubuntu-latest
-    environment: prod
     permissions:
       id-token: write
       contents: read
       issues: write
 
     steps:
-      - name: Migrating to [TODO] replace it with manual approval
-        run: echo "${{ env.DEPLOY_ENV }}"
+      - run: echo "Running db migration in ${{ github.event.inputs.deploy_env }}"
 
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -53,3 +63,14 @@ jobs:
         run: >
           cat env.now
 
+  deploy-to-ecs:
+    if: github.event.inputs.deploy_to_ecs == 'yes' && contains('["agfabl"]', github.actor)
+    runs-on: ubuntu-latest
+    needs: db-migration
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+
+    steps:
+      - run: echo "Deploying to ECS in ${{ github.event.inputs.deploy_env }}"
