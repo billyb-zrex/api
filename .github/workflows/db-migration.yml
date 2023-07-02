@@ -1,0 +1,56 @@
+name: DB Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration:
+        type: choice
+        description: Run DB migration?
+        options:
+          - yes
+          - no
+        default: no
+        required: true
+
+env:
+  #  DEPLOY_ENV: ${{ github.ref_name == 'master' && 'prod' ||  github.ref_name == 'develop' && 'staging' || 'na' }}
+  DEPLOY_ENV: prod
+
+jobs:
+  db-migration:
+    if: github.event.inputs.migration == 'yes'
+    needs: build-and-install
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+
+    steps:
+      - name: Migrating to [TODO] replace it with manual approval
+        run: echo "${{ env.DEPLOY_ENV }}"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Creating empty env file
+        run: touch env.now
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: app-deployment
+
+      - name: Feed env from parameter store
+        run: >
+          echo "export DB_USER=$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.api.DB_USER" --query 'Parameter.Value' --output text)" >> env.now &&
+          echo "export DB_PWD=$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.api.DB_PWD" --query 'Parameter.Value' --output text)" >> env.now &&
+          echo "export DB_CONN_URL_DOCKER=$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.api.DB_CONN_URL" --query 'Parameter.Value' --output text)" >> env.now
+
+      - name: show file content
+        run: >
+          cat env.now
+
