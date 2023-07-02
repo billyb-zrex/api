@@ -60,7 +60,7 @@ jobs:
           cat env.now
 
   deploy-to-ecs:
-    if: github.event.inputs.deploy_to_ecs == 'true' && contains('["agfabl"]', github.actor)
+    if: ! success() && ! cancelled() && github.event.inputs.deploy_to_ecs == 'true' && contains('["agfabl"]', github.actor)
     runs-on: ubuntu-latest
     needs: db-migration
     permissions:
