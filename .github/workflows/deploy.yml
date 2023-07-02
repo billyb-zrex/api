@@ -1,0 +1,26 @@
+name: Build and Deploy Ext and Client
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  DEPLOY_ENV: ${{ github.ref_name == 'master' && 'prod' ||  github.ref_name == 'develop' && 'staging' || 'na' }}
+
+jobs:
+  build-and-deploy-ext-and-client:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'master' && 'prod' ||  github.ref_name == 'develop' && 'staging' || 'na' }}
+
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Deploy env
+        run: echo "${{ env.DEPLOY_ENV }}
