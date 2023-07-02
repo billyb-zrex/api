@@ -8,20 +8,14 @@ on:
         description: Deployment environment?
         required: true
       migration:
-        type: choice
+        type: boolean
         description: Run DB migration?
-        options:
-          - yes
-          - no
-        default: no
+        default: false
         required: true
       deploy_to_ecs:
         type: boolean
         description: Deploy to ECS?
-        options:
-          - yes
-          - no
-        default: no
+        default: false
         required: true
 
 #env:
@@ -30,7 +24,7 @@ on:
 
 jobs:
   db-migration:
-    if: github.event.inputs.migration == 'yes' && contains('["agfabl"]', github.actor)
+    if: github.event.inputs.migration
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -39,6 +33,8 @@ jobs:
 
     steps:
       - run: echo "Running db migration in ${{ github.event.inputs.deploy_env }}"
+
+      - run: echo "Triggered by ${{ github.actor }}"
 
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -64,7 +60,7 @@ jobs:
           cat env.now
 
   deploy-to-ecs:
-    if: github.event.inputs.deploy_to_ecs == 'yes' && contains('["agfabl"]', github.actor)
+    if: github.event.inputs.deploy_to_ecs
     runs-on: ubuntu-latest
     needs: db-migration
     permissions:
