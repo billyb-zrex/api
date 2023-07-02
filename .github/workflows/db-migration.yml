@@ -19,7 +19,6 @@ env:
 jobs:
   db-migration:
     if: github.event.inputs.migration == 'yes'
-    needs: build-and-install
     runs-on: ubuntu-latest
     environment: prod
     permissions:
