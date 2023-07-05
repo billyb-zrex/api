@@ -1,0 +1,85 @@
+name: Build and install code in ECR
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        type: environment
+        description: Deployment environment?
+        required: true
+
+jobs:
+  build-and-install:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+
+    steps:
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github
+          settings-path: ${{ github.workspace }}
+
+      - name: Setup jq
+        uses: dcarbone/install-jq-action@v1.0.1
+
+      - name: 'Check jq'
+        run: |
+          which jq
+          jq --version         
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Getting project version
+        id: version
+        run: |
+          echo "V=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
+
+      - name: Printing version
+        run: |
+          echo "Builing for v=${{ steps.version.outputs.V }} env=${{ github.event.inputs.deploy_env }} branch=${{github.ref}}"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          role-session-name: app-deployment
+
+      - name: Manual approval
+        uses: trstringer/manual-approval@v1
+        timeout-minutes: 3
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: ${{vars.APPROVERS}}
+          minimum-approvals: 1
+          issue-title: |
+            Build and install v=${{ steps.version.outputs.V }} env=${{ github.event.inputs.deploy_env }} in ECR
+          issue-body: |
+            Make sure the server version in pom.xml is updated
+            **Please approve or deny within 3 min.**
+
+
+      - name: Checking if tag is present in ecr
+        run: >
+          if aws ecr describe-images --repository-name fable-api --region ap-southeast-1 --query 'sort_by(imageDetails,& imagePushedAt)[*].imageTags[]' | grep -q ${{ steps.version.outputs.V }}; then
+            echo "::error::Image ${{ steps.version.outputs.V }} already present in registry. Update version in pom.xml"; exit 1
+          else
+            echo "Image not found in registry. Will create a new tag with ${{ steps.version.outputs.V }}"
+          fi
+
+      - name: Creating empty env file
+        run: touch env.now
+
+      - name: Containerize build & install
+        run: |
+          make containerize v=${{ steps.version.outputs.V }}
+
+      - run: |
+          echo "### :warning: container img uploaded to ECR with v=${{steps.version.outputs.V}}. Please perform manual deployment in ECS." >> $GITHUB_STEP_SUMMARY
