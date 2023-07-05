@@ -18,6 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 @Slf4j
 @GenerateTSDef
 public class RespTour extends ResponseBase {
+    private Long id;
     private String rid;
     private String assetPrefixHash;
     private String displayName;
