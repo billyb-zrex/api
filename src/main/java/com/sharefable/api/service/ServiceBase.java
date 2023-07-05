@@ -117,7 +117,7 @@ public abstract class ServiceBase {
         Map<String, String> userDefinedMetadata = new HashMap<>(1);
         userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         if (config.cachePolicy() == S3Config.DATA_FILE_CACHE_POLICY.NoCache) {
-            userDefinedMetadata.put(HttpHeaders.CACHE_CONTROL, "no-cache");
+            userDefinedMetadata.put(HttpHeaders.CACHE_CONTROL, "max-age=0");
         }
         s3Service.upload(assetFilePath, content.getBytes(StandardCharsets.UTF_8), userDefinedMetadata);
         return assetFilePath;

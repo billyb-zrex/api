@@ -44,6 +44,13 @@ public class S3Service {
             assetMetadata.remove(HttpHeaders.CONTENT_ENCODING);
         }
 
+        String cacheControl;
+        if ((cacheControl = assetMetadata.get(HttpHeaders.CACHE_CONTROL)) != null) {
+            meta.setCacheControl(cacheControl);
+            assetMetadata.remove(HttpHeaders.CACHE_CONTROL);
+        }
+
+
         for (Map.Entry<String, String> metadata : assetMetadata.entrySet()) {
             meta.addUserMetadata(metadata.getKey(), metadata.getValue());
         }

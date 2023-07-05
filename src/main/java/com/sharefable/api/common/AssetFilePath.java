@@ -4,12 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 @Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssetFilePath {
+    String cdn;
     String regionName;
     String bucketName;
     // Full path to the file without the bucket name; like root/srn/0/data/index.json
@@ -20,11 +22,12 @@ public class AssetFilePath {
     String filePath;
 
     public static AssetFilePath from(AssetFilePath halfConstructedPath, String qualifiedPath) {
-        return new AssetFilePath(halfConstructedPath.regionName, halfConstructedPath.bucketName, qualifiedPath, "", "");
+        return new AssetFilePath(halfConstructedPath.cdn, halfConstructedPath.regionName, halfConstructedPath.bucketName, qualifiedPath, "", "");
     }
 
     public static AssetFilePath from(AssetFilePath assetFilePath) {
         return new AssetFilePath(
+            assetFilePath.cdn,
             assetFilePath.regionName,
             assetFilePath.bucketName,
             assetFilePath.fullQualifiedPath,
@@ -34,6 +37,10 @@ public class AssetFilePath {
     }
 
     public String getS3UriToFile() {
-        return "https://" + bucketName + ".s3." + regionName + ".amazonaws.com/" + fullQualifiedPath;
+        // For production systems this is served via cdn, otherwise s3 directly
+        if (StringUtils.isBlank(cdn)) {
+            return "https://" + bucketName + ".s3." + regionName + ".amazonaws.com/" + fullQualifiedPath;
+        }
+        return "https://" + cdn + "/" + fullQualifiedPath;
     }
 }

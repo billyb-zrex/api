@@ -37,8 +37,11 @@ env:
         cp env.dev env.now; \
         echo "[dev]"; \
     elif [ "$(prod)" ]; then \
-        cp env.prod env.now; \
-        echo "[PROD]"; \
+        cp env.prod env.now && \
+        `aws ssm get-parameters-by-path --region us-east-2 --path / | jq -r '.Parameters[] | "export \(.Name)=\(.Value)"' >> env.now` && \
+        sed -i -e 's/prod\.api\.//' env.now && \
+        sed -r 's/^export[[:space:]]+//' env.now > env.idea && \
+        echo "[PROD!!!]"; \
     else \
         echo "Not known. Allowed [ide, staging, dev, prod]"; \
     fi

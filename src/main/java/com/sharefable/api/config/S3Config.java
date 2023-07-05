@@ -29,11 +29,10 @@ public class S3Config {
     private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
     private static final String PATH_FOR_TOUR_ASSET = "/tour/%s";
     private static final String PATH_FOR_USER_UPLOADED_ASSET = "/usr/org/%s";
-    private String accessKeyId;
-    private String accessKeySecret;
     private String region;
     private String rootQualifier;
     private String assetBucketName;
+    private String cdn;
 
     @Autowired
     private Environment env;
@@ -79,6 +78,7 @@ public class S3Config {
         AssetFilePath assetFilePath = new AssetFilePath();
         assetFilePath.setBucketName(assetBucketName);
         assetFilePath.setRegionName(region);
+        assetFilePath.setCdn(cdn);
         return assetFilePath;
     }
 
@@ -104,19 +104,6 @@ public class S3Config {
     @Bean
     AmazonS3 s3Client() {
         return AmazonS3ClientBuilder.standard().withRegion(region).build();
-
-//        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withRegion(region);
-
-//        if (!isLocal()) {
-//            log.info("Building s3 client using iam role");
-//            return builder.build();
-//        }
-//
-//        log.info("Building s3 client using user access keys");
-//        final BasicAWSCredentials basicAwsCredentials = new BasicAWSCredentials(accessKeyId, accessKeySecret);
-//        return builder
-//            .withCredentials(new AWSStaticCredentialsProvider(basicAwsCredentials))
-//            .build();
     }
 
     public enum AssetType {
