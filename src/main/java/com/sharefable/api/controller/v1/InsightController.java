@@ -5,10 +5,11 @@ import com.sharefable.api.service.InsightService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,9 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class InsightController {
     private final InsightService firehoseService;
 
-    @RequestMapping(value = Routes.LOG_USER_EVENTS, method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
-    public String sendEvents(@RequestBody String userEventLogs) {
-        firehoseService.sendEventsToFirehose(userEventLogs);
-        return "ok";
+    @RequestMapping(value = Routes.LOG_USER_EVENTS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public void sendEvents(@RequestParam("sub") String encodedSub, @RequestBody String userEventLogs) {
+        String dSub = URLDecoder.decode(encodedSub, StandardCharsets.UTF_8);
+        String sub = new String(Base64.getDecoder().decode(dSub));
+        firehoseService.sendEventsToFirehose(sub, userEventLogs);
     }
 }

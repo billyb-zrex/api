@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Slf4j
 public class FirehoseConfig {
-    private String streamName;
+    private String streamPrefix;
     private String region;
 
     @Bean

@@ -25,10 +25,11 @@ public class InsightService {
         this.firehoseConfig = firehoseConfig;
     }
 
-    public void sendEventsToFirehose(String userEventLogs) {
+    public void sendEventsToFirehose(String sub, String userEventLogs) {
         try {
             PutRecordRequest putRecordRequest = new PutRecordRequest();
-            putRecordRequest.setDeliveryStreamName(firehoseConfig.getStreamName());
+            String streamName = firehoseConfig.getStreamPrefix() + sub;
+            putRecordRequest.setDeliveryStreamName(streamName);
             Record record = new Record().withData(ByteBuffer.wrap(userEventLogs.getBytes()));
             putRecordRequest.setRecord(record);
             firehoseClient.putRecord(putRecordRequest);
