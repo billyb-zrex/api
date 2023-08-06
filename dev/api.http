@@ -245,12 +245,12 @@ Content-Type: application/json
 ### log user events
 # stress test ab -p body.json -T application/json  -c 100 -n 2000 http://localhost:8080/v1/lue
 # save the following payload in body.json
-POST {{api-host}}/v1/lue
+POST https://api.service.staging.sharefable.com/v1/lue?sub=YW5uX2J0bl9jbGlja2Vk
 Content-Type: application/json
 
 {
   "id": "b6cbbe83-6b16-49ee-a709-85f15873235",
-  "event": "ANN_BTN_CLICKED",
+  "event": "ann_btn_clicked",
   "aid": "b6cbbe83-6b16-49ee-a709-85f15873a7e9",
   "sid": "d70481b0-22d8-4479-85d4-50f84ddd2c12",
   "uts": 1689258678,
