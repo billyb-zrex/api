@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2023-07-15 14:20:46.
+// Generated using typescript-generator version 2.35.1025 on 2023-08-13 13:27:33.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -157,7 +157,6 @@ export interface RespScreen extends ResponseBase {
     url: string;
     icon: string;
     responsive: boolean;
-    tour?: RespTour;
     type: ScreenType;
     uploadUrl?: string;
 }

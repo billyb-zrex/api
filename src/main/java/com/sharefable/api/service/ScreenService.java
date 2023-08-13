@@ -169,20 +169,29 @@ public class ScreenService extends ServiceBase {
             S3Config.AssetType.Screen,
             sourceScreen.getAssetPrefixHash(),
             S3Config.getEntityFiles().editFile().filename());
+        AssetFilePath fromImgScreenFilePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.Screen,
+            sourceScreen.getAssetPrefixHash(),
+            S3Config.getEntityFiles().imgFile().filename());
 
         AssetFilePath toScreenFilePath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().dataFile().filename());
         AssetFilePath toThumbnailPath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Common, UUID.randomUUID().toString());
+        AssetFilePath toImgScreenFilePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
 
         Callable<AssetFilePath> screenFileCopier = () -> s3Service.copy(fromScreenFilePath, toScreenFilePath);
         Callable<AssetFilePath> thumbnailCopier = () -> s3Service.copy(fromThumbnailPath, toThumbnailPath);
+        Callable<AssetFilePath> imgFileCopier = () -> s3Service.copy(fromImgScreenFilePath, toImgScreenFilePath);
         Callable<AssetFilePath> editFileCopier = Utils.isParentScreen(sourceScreen)
             ? () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT)
             : () -> copyDataFileToS3(fromScreenEditFilePath, prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
 
         try {
-            List<AssetFilePath> assetFiles = Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileCopier);
+            List<AssetFilePath> assetFiles = sourceScreen.getType() == ScreenType.SerDom
+                ? Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileCopier)
+                : Utils.runInParallel(screenFileCopier, thumbnailCopier, imgFileCopier);
             AssetFilePath thumbnailFile = assetFiles.get(1);
 
             Screen screen = Screen.builder()
@@ -259,7 +268,7 @@ public class ScreenService extends ServiceBase {
         Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
         Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), user);
 
-        Set<Tour> tours = new HashSet<>();
+        Set<Tour> tours = screen.getTours();
         tours.add(tour);
         screen.setTours(tours);
         Screen storedScreen = screenRepo.save(screen);

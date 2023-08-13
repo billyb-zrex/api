@@ -3,7 +3,10 @@ package com.sharefable.api.entity;
 import com.sharefable.api.transport.ScreenType;
 import com.sharefable.api.transport.resp.RespScreen;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.util.Set;
@@ -14,7 +17,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespScreen.class)
 public class Screen extends EntityBaseWithOwnership {
@@ -46,13 +48,7 @@ public class Screen extends EntityBaseWithOwnership {
     @Column(nullable = false)
     private ScreenType type;
 
-    // NOTE Although screen <-> tour is defined as many-to-many relationship in database, from logical standpoint
-    //      this is a many-one relationship (for the time being). The reason we kept it as many-to-many relationship
-    //      in persistent layer is because we initially thought that one screen can be part of many tours, while that
-    //      is logically sound, it has its own implication in UX.
-    //      We might need many-to-many relationship down the line once we introduce the concept of a single screen
-    //      sharing multiple tour with better UX.
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "screens_tours_join",
         joinColumns = @JoinColumn(name = "screen_id"),

@@ -33,23 +33,12 @@ public class RespScreen extends ResponseBase {
     private String url;
     private String icon;
     private Boolean responsive;
-    private Optional<RespTour> tour;
     private ScreenType type;
     private Optional<String> uploadUrl;
 
     public static RespScreen from(Screen screen) {
         try {
-            RespScreen resp = (RespScreen) Utils.fromEntityToTransportObject(screen);
-            // `fromEntityToTransportObject` can't convert collection<type> to collection<resp_type>
-            // hence this explicit conversion is necessary
-            // Also although screen <-> tour is saved as many-many relationship in db / jpa, it's
-            // logically stored as many-one relationship
-            if (screen.getTours() == null) {
-                resp.setTour(Optional.empty());
-            } else {
-                resp.setTour(screen.getTours().stream().findFirst().map(RespTour::from));
-            }
-            return resp;
+            return (RespScreen) Utils.fromEntityToTransportObject(screen);
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
