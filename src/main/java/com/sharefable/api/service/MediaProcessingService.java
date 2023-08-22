@@ -1,8 +1,5 @@
 package com.sharefable.api.service;
 
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageResult;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.Job;
 import com.sharefable.api.repo.JobRepo;
@@ -22,14 +19,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class MediaProcessingService {
     private final JobRepo repo;
-    private final AmazonSQS sqsClient;
     private final QMsgService qMsgService;
     private final EntityHoldingService entityHoldingService;
 
     @Autowired
-    public MediaProcessingService(JobRepo repo, AmazonSQS sqsClient, QMsgService qMsgService, EntityHoldingService entityHoldingService) {
+    public MediaProcessingService(JobRepo repo, QMsgService qMsgService, EntityHoldingService entityHoldingService) {
         this.repo = repo;
-        this.sqsClient = sqsClient;
         this.qMsgService = qMsgService;
         this.entityHoldingService = entityHoldingService;
     }
@@ -52,9 +47,7 @@ public class MediaProcessingService {
             .build();
         Job savedJob = repo.save(job);
 
-        SendMessageRequest msgReq = qMsgService.getProducibleMsg(jobInfo.getType(), jobInfo);
-        SendMessageResult sendMessageResult = sqsClient.sendMessage(msgReq);
-        log.debug("Message {} posted in sqs", sendMessageResult.getMessageId());
+        qMsgService.sendSqsMessage(jobInfo.getType(), jobInfo);
         return savedJob;
     }
 

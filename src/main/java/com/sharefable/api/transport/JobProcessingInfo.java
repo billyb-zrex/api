@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sharefable.api.common.ExcludeEmailDomain;
+import com.sharefable.api.common.MapSerializable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
@@ -31,7 +31,7 @@ import java.util.Random;
 @Data
 @GenerateTSDef
 @SuperBuilder(toBuilder = true)
-public abstract class JobProcessingInfo implements ExcludeEmailDomain.MapSerializable {
+public abstract class JobProcessingInfo implements MapSerializable {
     @JsonIgnore
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Long __id = new Random().nextLong() & 0xffffffffL;

@@ -261,3 +261,16 @@ Content-Type: application/json
   "payload_btn_type": "next",
   "fam": "ue"
 }
+
+
+### NF HOOK
+POST {{api-host}}/v1/nfhook
+Content-Type: application/json
+
+{
+  "eventName": "EBOOK_DOWNLOAD",
+  "payload": {
+    "firstName": "Test",
+    "email": "test@test.com"
+  }
+}

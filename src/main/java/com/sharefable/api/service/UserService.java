@@ -6,6 +6,8 @@ import com.sharefable.api.common.ExcludeEmailDomain;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.UserRepo;
+import com.sharefable.api.transport.NfEvents;
+import com.sharefable.api.transport.resp.RespOrg;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,6 +26,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepo userRepo;
+    private final WorkspaceService workspaceService;
+    private final NfHookService nfHookService;
+
     ObjectMapper objectMapper = new ObjectMapper();
 
     // used from AuthUser annotation
@@ -48,9 +55,18 @@ public class UserService {
             .lastName(StringUtils.substring(user.familyName, 0, 49))
             .domainBlacklisted(ExcludeEmailDomain.NOT_ALLOWED.contains(emailDomain))
             .build();
+        sendNotificationToSlack(user.email());
         return userRepo.save(newUser);
     }
 
-    record UserClaimFromAuth0(String picture, String email, String familyName, String givenName) {
+    private void sendNotificationToSlack(String userEmail) {
+        List<RespOrg> org = workspaceService.getOrgByEmail(userEmail);
+        Map<String, String> eventInfo = new HashMap<>();
+        eventInfo.put("emailId", userEmail);
+        eventInfo.put("orgStatus", org.isEmpty() ? "created_the_org" : "joined_the_org");
+        nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP, eventInfo);
+    }
+
+    public record UserClaimFromAuth0(String picture, String email, String familyName, String givenName) {
     }
 }

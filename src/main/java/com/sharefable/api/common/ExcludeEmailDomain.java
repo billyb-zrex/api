@@ -1,7 +1,5 @@
 package com.sharefable.api.common;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.Set;
 
 public class ExcludeEmailDomain {
@@ -107,8 +105,4 @@ public class ExcludeEmailDomain {
         "aim.com",
         "bigpond.net.au"
     );
-
-    public interface MapSerializable extends Serializable {
-        Map<String, String> toMap();
-    }
 }

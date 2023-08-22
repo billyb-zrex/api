@@ -9,6 +9,7 @@ public interface Routes {
     String GET_SCREEN = "/screen";
     String GET_TOUR = "/tour";
     String LOG_USER_EVENTS = "/lue";
+    String NF_HOOK = "/nfhook";
 
     /* === Routes with authentication === */
     String __BEHIND_LOGIN__ = "/f"; // f => behind spring security [F]ilters for authentication
