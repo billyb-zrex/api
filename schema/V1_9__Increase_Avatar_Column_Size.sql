@@ -1,3 +1,4 @@
+-- from 255 to unlimited
 ALTER TABLE fable_tour_app.user
     MODIFY avatar TEXT;
 
