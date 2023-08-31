@@ -164,6 +164,15 @@ Content-Type: application/json
   "rid": "untitled-4n0193hgecfkf2qn"
 }
 
+### delete tour
+POST {{api-host}}/v1/f/deltour
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "tourRid": "untitled-etxa2y6h1fw0tkh2"
+}
+
 ### get tour by rid
 GET {{api-host}}/v1/tour?rid=default-tour-xq4eulkm
 Content-Type: application/json
@@ -219,11 +228,11 @@ Content-Type: application/json
 }
 
 ### video transcoding
-POST {{api-host}}/v1/vdt
+POST {{api-host}}/v1/f/vdt
 Content-Type: application/json
 
 {
-  "path": "https://proxy-assets-staging.s3.ap-south-1.amazonaws.com/ip/f98c03d5c9b246f2b8c4461bf0747c30",
+  "path": "https://fable-tour-app-gamma.s3.ap-south-1.amazonaws.com/akashgoswami/job_test/8b892ccba9b445559f93e30d77a6161e",
   "assn": {
     "entityRid": "untitled-zq5chiy51agttmh0",
     "entityType": 1
@@ -231,17 +240,16 @@ Content-Type: application/json
 }
 
 ### img resizing
-POST {{api-host}}/v1/rzeimg
+POST {{api-host}}/v1/f/rzeimg
 Content-Type: application/json
 
 {
-  "path": "https://proxy-assets-staging.s3.ap-south-1.amazonaws.com/ip/Rancho_Cucamonga_Tree_16.png",
+  "path": "https://fable-tour-app-gamma.s3.ap-south-1.amazonaws.com/akashgoswami/job_test/test_img_3.png",
   "assn": {
     "entityRid": "untitled-zq5chiy51agttmh0",
     "entityType": 1
   }
 }
-
 ### log user events
 # stress test ab -p body.json -T application/json  -c 100 -n 2000 http://localhost:8080/v1/lue
 # save the following payload in body.json

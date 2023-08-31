@@ -9,10 +9,7 @@ import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
-import com.sharefable.api.transport.req.ReqDuplicateTour;
-import com.sharefable.api.transport.req.ReqNewTour;
-import com.sharefable.api.transport.req.ReqRecordEdit;
-import com.sharefable.api.transport.req.ReqRenameGeneric;
+import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +28,6 @@ public class TourService extends ServiceBase {
     private final TourRepo tourRepo;
     private final S3Config s3Config;
     private final ScreenService screenService;
-
 
     @Autowired
     public TourService(TourRepo tourRepo, AppSettings settings, S3Service s3Service, S3Config s3Config, ScreenRepo screenRepo, ScreenService screenService) {
@@ -194,5 +190,12 @@ public class TourService extends ServiceBase {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "");
         }
         */
+    }
+
+    @Transactional
+    public List<RespTour> removeTour(ReqTourRid body, User userEntity) {
+        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
+        tourRepo.delete(tour);
+        return getAllToursForOrg(userEntity.getBelongsToOrg());
     }
 }

@@ -46,7 +46,7 @@ public abstract class ServiceBase {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    Optional<AssetFilePath> uploadBase64ImageToS3(String imageData, S3Config.AssetType assetType) {
+    public Optional<AssetFilePath> uploadBase64ImageToS3(String imageData, S3Config.AssetType assetType) {
         Pair<byte[], ImageType> imgDataAndType = Utils.getImageDataFromBase64Str(imageData);
 
         if (imgDataAndType.getValue1() == ImageType.Unknown) {
@@ -69,7 +69,7 @@ public abstract class ServiceBase {
         return Optional.ofNullable(assetFilePath);
     }
 
-    protected TemplateFile getTemplateFileLocFor(DATA_FILE_TYPE type) {
+    public TemplateFile getTemplateFileLocFor(DATA_FILE_TYPE type) {
         String schemaVersion = settings.currentSchemaVersion().toValue();
         return switch (type) {
             case TOUR_INDEX -> new TemplateFile(
@@ -88,14 +88,14 @@ public abstract class ServiceBase {
 
 
     @Transactional(propagation = Propagation.MANDATORY)
-    AssetFilePath copyDataFileToS3(AssetFilePath fromEntityDataFile, String prefixHash, DATA_FILE_TYPE type) {
+    public AssetFilePath copyDataFileToS3(AssetFilePath fromEntityDataFile, String prefixHash, DATA_FILE_TYPE type) {
         TemplateFile tFile = getTemplateFileLocFor(type);
         AssetFilePath toEntityDataFile = s3Config.getQualifiedPathFor(tFile.type, prefixHash, tFile.toFile().filename());
         return s3Service.copy(fromEntityDataFile, toEntityDataFile);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    protected AssetFilePath uploadTemplateFileToS3(String prefixHash, DATA_FILE_TYPE type) {
+    public AssetFilePath uploadTemplateFileToS3(String prefixHash, DATA_FILE_TYPE type) {
         TemplateFile tFile = getTemplateFileLocFor(type);
         try (InputStream resourceAsStream = getClass().getResourceAsStream(tFile.fromPath())) {
             if (resourceAsStream == null) {
@@ -112,7 +112,7 @@ public abstract class ServiceBase {
 
 
     @Transactional(propagation = Propagation.MANDATORY)
-    AssetFilePath uploadDataFileToS3(String content, String prefixHash, S3Config.FileConfig config, S3Config.AssetType assetType) {
+    public AssetFilePath uploadDataFileToS3(String content, String prefixHash, S3Config.FileConfig config, S3Config.AssetType assetType) {
         AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, config.filename());
         Map<String, String> userDefinedMetadata = new HashMap<>(1);
         userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);

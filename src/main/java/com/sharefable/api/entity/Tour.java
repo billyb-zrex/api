@@ -29,7 +29,7 @@ public class Tour extends EntityBaseWithOwnership {
 
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "screens_tours_join",
         joinColumns = @JoinColumn(name = "tour_id"),

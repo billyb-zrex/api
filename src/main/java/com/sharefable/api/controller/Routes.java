@@ -26,6 +26,7 @@ public interface Routes {
     String ASSOCIATE_SCREEN_TO_TOUR = __BEHIND_LOGIN__ + "/astsrntotour";
     String GET_ALL_TOURS = __BEHIND_LOGIN__ + "/tours";
     String NEW_TOUR = __BEHIND_LOGIN__ + "/newtour";
+    String DELETE_TOUR = __BEHIND_LOGIN__ + "/deltour";
     String UPLOAD_LINK = __BEHIND_LOGIN__ + "/getuploadlink";
     String RECORD_EL_EDIT = __BEHIND_LOGIN__ + "/recordeledit";
     String RECORD_TOUR_EDIT = __BEHIND_LOGIN__ + "/recordtredit";

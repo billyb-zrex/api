@@ -5,10 +5,7 @@ import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
-import com.sharefable.api.transport.req.ReqDuplicateTour;
-import com.sharefable.api.transport.req.ReqNewTour;
-import com.sharefable.api.transport.req.ReqRecordEdit;
-import com.sharefable.api.transport.req.ReqRenameGeneric;
+import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import lombok.RequiredArgsConstructor;
@@ -73,4 +70,12 @@ public class TourController {
         RespTourWithScreens resp = tourService.duplicateTour(nBody, user);
         return ApiResp.<RespTourWithScreens>builder().data(resp).build();
     }
+
+    @RequestMapping(value = Routes.DELETE_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+    public ApiResp<RespTour[]> deleteTour(@RequestBody ReqTourRid body, @AuthUser User user) {
+        List<RespTour> allTours = tourService.removeTour(body, user);
+        return ApiResp.<RespTour[]>builder().status(ApiResp.ResponseStatus.Success).data(allTours.toArray(RespTour[]::new)).build();
+    }
+
 }
