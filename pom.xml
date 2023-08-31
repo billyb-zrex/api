@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.sharefable</groupId>
     <artifactId>api</artifactId>
-    <version>1.1.9</version>
+    <version>1.2.0</version>
     <name>api</name>
     <description>Fable API server</description>
 
@@ -113,6 +113,11 @@
             <groupId>org.javatuples</groupId>
             <artifactId>javatuples</artifactId>
             <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.chargebee</groupId>
+            <artifactId>chargebee-java</artifactId>
+            <version>3.8.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

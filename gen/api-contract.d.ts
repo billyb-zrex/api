@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2023-08-22 07:21:29.
+// Generated using typescript-generator version 2.35.1025 on 2023-08-31 04:38:40.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -32,11 +32,19 @@ export interface MediaTypeEntityHolding extends EntityHoldingInfoBase {
     deletable: boolean;
 }
 
+export interface PaymentTerms {
+}
+
 export interface VideoTranscodingJobInfo extends JobProcessingInfo {
     sourceFilePath: string;
     processedFilePath: string;
     sub: VideoProcessingSub;
     meta: string;
+}
+
+export interface ReqActivateOrDeactivateUser {
+    userId: number;
+    shouldActivate: boolean;
 }
 
 export interface ReqCopyScreen {
@@ -104,8 +112,17 @@ export interface ReqScreenTour {
     tourRid: string;
 }
 
+export interface ReqSubscriptionInfo {
+    pricingPlan: Plan;
+    pricingInterval: Interval;
+}
+
 export interface ReqThumbnailCreation {
     screenRid: string;
+}
+
+export interface ReqTourRid {
+    tourRid: string;
 }
 
 export interface ReqUpdateScreenProperty {
@@ -166,6 +183,14 @@ export interface RespScreen extends ResponseBase {
     uploadUrl?: string;
 }
 
+export interface RespSubscription extends ResponseBase {
+    paymentPlan: Plan;
+    paymentInterval: Interval;
+    status: Status;
+    trialStartedOn: Date;
+    trialEndsOn: Date;
+}
+
 export interface RespTour extends ResponseBase {
     id: number;
     rid: string;
@@ -193,8 +218,8 @@ export interface RespUser extends ResponseBase {
     email: string;
     avatar: string;
     personalEmail: boolean;
-    belongsToOrg: number;
     orgAssociation: UserOrgAssociation;
+    active: boolean;
 }
 
 export interface Serializable {
@@ -223,6 +248,7 @@ export const enum JobProcessingStatus {
 export const enum JobType {
     TRANSCODE_VIDEO = "TRANSCODE_VIDEO",
     RESIZE_IMG = "RESIZE_IMG",
+    DELETE_ASSET = "DELETE_ASSET",
 }
 
 export const enum SchemaVersion {
@@ -258,6 +284,26 @@ export const enum ErrorCode {
 export const enum NfEvents {
     NEW_USER_SIGNUP = "NEW_USER_SIGNUP",
     EBOOK_DOWNLOAD = "EBOOK_DOWNLOAD",
+}
+
+export const enum Plan {
+    PRO = "PRO",
+    BUSINESS = "BUSINESS",
+}
+
+export const enum Interval {
+    MONTHLY = "MONTHLY",
+    YEARLY = "YEARLY",
+}
+
+export const enum Status {
+    FUTURE = "FUTURE",
+    IN_TRIAL = "IN_TRIAL",
+    ACTIVE = "ACTIVE",
+    NON_RENEWING = "NON_RENEWING",
+    PAUSED = "PAUSED",
+    CANCELLED = "CANCELLED",
+    _UNKNOWN = "_UNKNOWN",
 }
 
 export const enum UserOrgAssociation {

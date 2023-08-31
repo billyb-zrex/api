@@ -24,8 +24,8 @@ public class RespUser extends ResponseBase {
     private String email;
     private String avatar;
     private Boolean personalEmail;
-    private Long belongsToOrg;
     private UserOrgAssociation orgAssociation;
+    private Boolean active;
 
     public static RespUser from(User user) {
         try {

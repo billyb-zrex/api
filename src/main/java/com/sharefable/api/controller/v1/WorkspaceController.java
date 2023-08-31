@@ -7,6 +7,7 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.ObjectValidationResult;
+import com.sharefable.api.transport.req.ReqActivateOrDeactivateUser;
 import com.sharefable.api.transport.req.ReqNewOrg;
 import com.sharefable.api.transport.req.ReqUpdateUser;
 import com.sharefable.api.transport.resp.RespCommonConfig;
@@ -49,12 +50,6 @@ public class WorkspaceController {
         return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
     }
 
-    @RequestMapping(value = Routes.GET_ORG_FOR_USER, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<List<RespOrg>> getOrgForUser(@AuthUser User user) {
-        List<RespOrg> org = wsService.getOrgByEmail(user.getEmail());
-        return ApiResp.<List<RespOrg>>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
-    }
-
     @RequestMapping(value = Routes.ASSIGN_IMPLICIT_USER_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespUser> assignDefaultOrgForUserUsingDomain(@AuthUser User user) {
         RespUser updatedUser = wsService.assignUserToImplicitOrg(user);
@@ -83,7 +78,6 @@ public class WorkspaceController {
         return ApiResp.<RespCommonConfig>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 
-
     @PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
     @RequestMapping(value = Routes.UPLOAD_LINK, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespUploadUrl> getPresignedUrl(
@@ -93,5 +87,23 @@ public class WorkspaceController {
         String contentType = new String(org.springframework.util.Base64Utils.decodeFromString(contentTypeEncoded), StandardCharsets.UTF_8);
         RespUploadUrl resp = wsService.getPreSignedUrlToUploadFile(user, contentType, maybeExtension);
         return ApiResp.<RespUploadUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.GET_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespOrg> updateUserName(@RequestParam("if") Integer implicitFetch, @AuthUser User user) {
+        RespOrg org = implicitFetch == 1 ? wsService.getOrgByEmail(user.getEmail()) : wsService.getOrgForUser(user);
+        return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(org).build();
+    }
+
+    @RequestMapping(value = Routes.GET_ALL_USER_IN_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespUser[]> updateUserName(@AuthUser User user) {
+        List<RespUser> users = wsService.getAllUsersInOrg(user.getBelongsToOrg());
+        return ApiResp.<RespUser[]>builder().status(ApiResp.ResponseStatus.Success).data(users.toArray(RespUser[]::new)).build();
+    }
+
+    @RequestMapping(value = Routes.ACTIVATE_OR_DEACTIVATE_USER, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespUser> updateUserName(@RequestBody ReqActivateOrDeactivateUser body, @AuthUser User user) {
+        RespUser changedUser = wsService.activateOrDeactivateUser(body.userId(), body.shouldActivate(), user);
+        return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(changedUser).build();
     }
 }

@@ -7,7 +7,6 @@ import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.UserRepo;
 import com.sharefable.api.transport.NfEvents;
-import com.sharefable.api.transport.resp.RespOrg;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +15,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -26,8 +24,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepo userRepo;
-    private final WorkspaceService workspaceService;
     private final NfHookService nfHookService;
+    private final SubscriptionService subService;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -38,7 +36,19 @@ public class UserService {
         String userDetailsClaimStr = objectMapper.writeValueAsString(userDetailsClaim);
         UserClaimFromAuth0 userClaimFromAuth0 = objectMapper.readValue(userDetailsClaimStr, UserClaimFromAuth0.class);
         Optional<User> maybeUser = this.userRepo.findUserByEmail(userClaimFromAuth0.email());
-        return maybeUser.orElseGet(() -> createNewUserIfNotExist(userClaimFromAuth0, jwt.getSubject()));
+        User user = maybeUser.orElseGet(() -> createNewUserIfNotExist(userClaimFromAuth0, jwt.getSubject()));
+        // If the user is deactivated any new auth attempt would mark the user as active.
+        // This is not ideal but for the timebeing this would do.
+        // Ideally any nonactive user has zero role based permission.
+        return setUserActiveOrInactive(user, true);
+    }
+
+    User setUserActiveOrInactive(User user, Boolean isActive) {
+        if (isActive == user.getActive()) return user;
+        user.setActive(isActive);
+        User changedUser = userRepo.save(user);
+        subService.updateNoOfSeatInSubscription(user.getBelongsToOrg());
+        return changedUser;
     }
 
     public User createNewUserIfNotExist(UserClaimFromAuth0 user, String authId) {
@@ -60,10 +70,8 @@ public class UserService {
     }
 
     private void sendNotificationToSlack(String userEmail) {
-        List<RespOrg> org = workspaceService.getOrgByEmail(userEmail);
         Map<String, String> eventInfo = new HashMap<>();
         eventInfo.put("emailId", userEmail);
-        eventInfo.put("orgStatus", org.isEmpty() ? "created_the_org" : "joined_the_org");
         nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP, eventInfo);
     }
 

@@ -152,12 +152,12 @@ public class ScreenService extends ServiceBase {
 
 
     @Transactional(propagation = Propagation.MANDATORY)
-    Screen cloneScreen(Screen sourceScreen, User user, Tour tour) {
+    public Screen cloneScreen(Screen sourceScreen, User user, Tour tour) {
         return cloneScreen(sourceScreen.getDisplayName(), sourceScreen, user, tour);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    Screen cloneScreen(String displayName, Screen sourceScreen, User user, Tour tour) {
+    public Screen cloneScreen(String displayName, Screen sourceScreen, User user, Tour tour) {
         String prefixHash = Utils.createUuidWord();
         AssetFilePath fromScreenFilePath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Screen,

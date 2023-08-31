@@ -19,11 +19,14 @@ import com.sharefable.api.transport.resp.RespUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,15 +37,17 @@ public class WorkspaceService extends ServiceBase {
     private final OrgRepo orgRepo;
     private final S3Config s3Config;
     private final UserRepo userRepo;
+    private final UserService userService;
     private final S3Service s3Service;
 
     @Autowired
-    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo) {
+    public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo, UserService userService) {
         super(settings, s3Service, s3Config, screenRepo, tourRepo);
         this.orgRepo = orgRepo;
         this.userRepo = userRepo;
         this.s3Config = s3Config;
         this.s3Service = s3Service;
+        this.userService = userService;
     }
 
     @Transactional
@@ -51,14 +56,17 @@ public class WorkspaceService extends ServiceBase {
 
         // For now only one org per domain is allowed
         Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
-        if (orgs.size() > 0) {
+        if (!orgs.isEmpty()) {
             log.error("Org for domain is already present but still requested by {}", user);
             return RespOrg.from(orgs.iterator().next());
         }
 
         String displayName = body.displayName();
         String rid = Utils.createReadableId(displayName);
-        Org.OrgBuilder orgBuilder = Org.builder().displayName(displayName).domain(emailDomain).rid(rid);
+        Org.OrgBuilder orgBuilder = Org.builder()
+            .displayName(displayName)
+            .domain(emailDomain)
+            .rid(rid);
         if (StringUtils.isNotBlank(body.thumbnail())) {
             Optional<AssetFilePath> assetFilePath = uploadBase64ImageToS3(body.thumbnail(), S3Config.AssetType.Common);
             assetFilePath.ifPresent(filePath -> orgBuilder.thumbnail(filePath.getFilePath()));
@@ -86,23 +94,25 @@ public class WorkspaceService extends ServiceBase {
     }
 
     @Transactional(readOnly = true)
-    public RespOrg getOrgByRId(String id) {
-        Optional<Org> org = orgRepo.findFirstByRid(id);
+    public RespOrg getOrgForUser(User user) {
+        if (user.getBelongsToOrg() == null) return RespOrg.Empty();
+        Optional<Org> org = orgRepo.findById(user.getBelongsToOrg());
         return org.map(RespOrg::from).orElse(RespOrg.Empty());
     }
 
     @Transactional(readOnly = true)
-    public List<RespOrg> getOrgByEmail(String email) {
+    public RespOrg getOrgByEmail(String email) {
         String emailDomain = Utils.getDomainFromEmail(email);
         Set<Org> org = orgRepo.findOrgByDomain(emailDomain);
-        return org.stream().map(RespOrg::from).collect(Collectors.toList());
+        return org.isEmpty() ? RespOrg.Empty() : RespOrg.from(org.iterator().next());
+
     }
 
     @Transactional
     public RespUser assignUserToImplicitOrg(User user) {
         String emailDomain = Utils.getDomainFromEmail(user.getEmail());
         Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
-        if (orgs.size() > 0) {
+        if (!orgs.isEmpty()) {
             Org org = orgs.iterator().next();
             user.setBelongsToOrg(org.getId());
             userRepo.save(user);
@@ -156,4 +166,22 @@ public class WorkspaceService extends ServiceBase {
             .build();
     }
 
+    public List<RespUser> getAllUsersInOrg(Long orgId) {
+        Set<User> users = userRepo.getUsersByBelongsToOrgAndActiveIsTrue(orgId);
+        Set<User> inactiveUsers = userRepo.getUsersByBelongsToOrgAndActiveIsFalse(orgId);
+        users.addAll(inactiveUsers);
+
+        return users.stream().map(RespUser::from).collect(Collectors.toList());
+    }
+
+    public RespUser activateOrDeactivateUser(Long targetUserId, Boolean activate, User reqByUser) {
+        Optional<User> maybeUser = userRepo.findById(targetUserId);
+        if (maybeUser.isEmpty()) return null;
+        User targetUser = maybeUser.get();
+        if (!Objects.equals(targetUser.getBelongsToOrg(), reqByUser.getBelongsToOrg()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Users not from same org");
+
+        User changedUser = userService.setUserActiveOrInactive(targetUser, activate);
+        return RespUser.from(changedUser);
+    }
 }

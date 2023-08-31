@@ -1,5 +1,9 @@
 package com.sharefable.api.common;
 
+import com.chargebee.Environment;
+import com.chargebee.Result;
+import com.chargebee.models.Customer;
+import com.chargebee.models.Subscription;
 import com.sharefable.api.entity.EntityBase;
 import com.sharefable.api.entity.TransportObjRef;
 import com.sharefable.api.transport.resp.ResponseBase;
@@ -14,8 +18,79 @@ import java.time.Instant;
 class UtilsTest {
     @Test
     void test() {
-        String readableId = Utils.createReadableId("Inbox (23) - hustleag6969@gmail.com - Gmail");
-        System.out.println(readableId);
+        try {
+//            Result result = HostedPage
+//                .checkoutNewForItems()
+//                .subscriptionItemItemPriceId(0, "business-USD-Monthly")
+//                .subscriptionItemQuantity(0, 1)
+//                .customerFirstName("TestFN")
+//                .customerLastName("LastFN")
+//                .customerCompany("TestOrg")
+//                .customerEmail("akash@sharefable.com")
+//                .request(new Environment("fable-test", "test_PVyQEHcqmvLv3FT3Nw6AY7P94qkL0FAw"));
+//
+//            HostedPage hostedPage = result.hostedPage();
+//            System.out.println(hostedPage.toJson());
+
+
+            /*
+             * Create a customer
+             */
+//            Result result = Customer.create()
+//                .firstName("Test")
+//                .lastName("User")
+//                .email("testuser@fableacme.com")
+//                .locale("fr-CA")
+//                .request(new Environment("fable-test", "test_PVyQEHcqmvLv3FT3Nw6AY7P94qkL0FAw"));
+//            Customer customer = result.customer();
+//            System.out.println(customer.toJson());
+
+
+            String id = "169ltnTo2iKtI6prq";
+
+            /*
+             * Update customer
+             */
+//            Result result = Customer.update(id)
+//                .firstName("Test2")
+//                .lastName("User2")
+//                .email("test2user2@fableacme.com")
+//                .company("fableacme")
+//                .request(new Environment("fable-test", "test_PVyQEHcqmvLv3FT3Nw6AY7P94qkL0FAw"));
+//            Customer customer = result.customer();
+//            System.out.println(customer.toJson());
+
+
+
+            /*
+             * Create subscription for customer
+             */
+
+            Result result = Subscription.createWithItems(id)
+                .subscriptionItemItemPriceId(0, "business-USD-Monthly")
+                .subscriptionItemQuantity(0, 3)
+                .request(new Environment("fable-test", "test_PVyQEHcqmvLv3FT3Nw6AY7P94qkL0FAw"));
+
+            Subscription subscription = result.subscription();
+            Customer customer = result.customer();
+            System.out.println(">>>> subscription <<<");
+            System.out.println(subscription.toJson());
+            System.out.println(">>>> customer <<<");
+            System.out.println(customer.toJson());
+
+
+//            Result request = Subscription.retrieve("Azz5iETo19aDu5xAU")
+//                .request(new Environment("fable-test", "test_PVyQEHcqmvLv3FT3Nw6AY7P94qkL0FAw"));
+//
+//            System.out.println(request.jsonResponse().toString(2));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+
+//        String readableId = Utils.createReadableId("Inbox (23) - hustleag6969@gmail.com - Gmail");
+//        System.out.println(readableId);
     }
 
     @SneakyThrows

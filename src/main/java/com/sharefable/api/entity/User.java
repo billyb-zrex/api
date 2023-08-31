@@ -30,4 +30,7 @@ public class User extends EntityBase {
     private Boolean domainBlacklisted;
 
     private Long belongsToOrg;
+
+    @Column(nullable = false)
+    private Boolean active = true;
 }
