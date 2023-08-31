@@ -38,7 +38,7 @@ public class SubscriptionController {
     }
 
     @RequestMapping(value = Routes.GET_SUBSCRIPTION, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespSubscription> createOrUpdateSubscription(@AuthUser User user) {
+    public ApiResp<RespSubscription> getSubscription(@AuthUser User user) {
         RespSubscription subs = subsService.getSubscriptionForUser(user);
         return ApiResp.<RespSubscription>builder().status(ApiResp.ResponseStatus.Success).data(subs).build();
     }

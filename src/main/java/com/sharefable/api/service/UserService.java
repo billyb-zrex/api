@@ -64,6 +64,7 @@ public class UserService {
             .firstName(StringUtils.substring(user.givenName, 0, 49))
             .lastName(StringUtils.substring(user.familyName, 0, 49))
             .domainBlacklisted(ExcludeEmailDomain.NOT_ALLOWED.contains(emailDomain))
+            .active(true)
             .build();
         sendNotificationToSlack(user.email());
         return userRepo.save(newUser);
