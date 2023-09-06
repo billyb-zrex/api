@@ -5,6 +5,7 @@ import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
+import com.sharefable.api.transport.EditTour;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
@@ -50,7 +51,14 @@ public class TourController {
     @RequestMapping(value = Routes.RECORD_TOUR_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
     public ApiResp<RespTour> recordEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
-        RespTour resp = tourService.updateEditForTour(body, user);
+        RespTour resp = tourService.updateEditForTour(body, user, EditTour.INDEX);
+        return ApiResp.<RespTour>builder().data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.RECORD_TOUR_LOADER_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+    public ApiResp<RespTour> recordLoaderEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
+        RespTour resp = tourService.updateEditForTour(body, user, EditTour.LOADER);
         return ApiResp.<RespTour>builder().data(resp).build();
     }
 

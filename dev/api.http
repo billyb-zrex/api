@@ -227,6 +227,16 @@ Content-Type: application/json
   "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"entities\": {}}"
 }
 
+### update loader file of tour
+POST {{api-host}}/v1/f/recordtrloaderedit
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "rid": "new-tour-ld9v520e24qq1wqe",
+  "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"logo\": { \"url\": \"https://s3.amazonaws.com/app.sharefable.com/favicon.png\"}, \"loader\": { \"url\": \"https://sample.com\", \"type\": \"gif\"}}"
+}
+
 ### video transcoding
 POST {{api-host}}/v1/f/vdt
 Content-Type: application/json
@@ -250,6 +260,7 @@ Content-Type: application/json
     "entityType": 1
   }
 }
+
 ### log user events
 # stress test ab -p body.json -T application/json  -c 100 -n 2000 http://localhost:8080/v1/lue
 # save the following payload in body.json

@@ -1,0 +1,12 @@
+{
+  "version": "2023-01-10",
+  "lastUpdatedAtUtc": -1,
+  "logo": {
+    "url": "https://s3.amazonaws.com/app.sharefable.com/favicon.png"
+  },
+  "loader": {
+    "url": "",
+    "type": ""
+  },
+  "loadingText": "Creating an interactive tour for you"
+}

@@ -29,6 +29,7 @@ import java.util.*;
 @Slf4j
 public abstract class ServiceBase {
     private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX = "/data-schema/v=%s/tour/index.json";
+    private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_LOADER = "/data-schema/v=%s/tour/loader.json";
     private static final String PATH_TO_SCHEMA_FILE_FOR_SCREEN_EDIT = "/data-schema/v=%s/screen/edits.json";
 
     private final S3Service s3Service;
@@ -76,6 +77,12 @@ public abstract class ServiceBase {
                 String.format(PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX, schemaVersion),
                 S3Config.AssetType.Tour,
                 S3Config.getEntityFiles().dataFile()
+            );
+
+            case TOUR_LOADER -> new TemplateFile(
+                String.format(PATH_TO_SCHEMA_FILE_FOR_TOUR_LOADER, schemaVersion),
+                S3Config.AssetType.Tour,
+                S3Config.getEntityFiles().loaderFile()
             );
 
             case SCREEN_EDIT -> new TemplateFile(
@@ -150,6 +157,7 @@ public abstract class ServiceBase {
 
     public enum DATA_FILE_TYPE {
         TOUR_INDEX,
+        TOUR_LOADER,
         SCREEN_EDIT
     }
 

@@ -9,6 +9,7 @@ import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
+import com.sharefable.api.transport.EditTour;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
@@ -46,6 +47,7 @@ public class TourService extends ServiceBase {
     public RespTour createNewTour(ReqNewTour req, User createdByUser) {
         String prefixHash = Utils.createUuidWord();
         uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
+        uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
 
         Tour tour = Tour.builder()
             .createdBy(createdByUser)
@@ -77,15 +79,14 @@ public class TourService extends ServiceBase {
     }
 
     @Transactional
-    public RespTour updateEditForTour(ReqRecordEdit body, User userEntity) {
+    public RespTour updateEditForTour(ReqRecordEdit body, User userEntity, EditTour fileTobeEdited) {
         Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
 
         uploadDataFileToS3(
             body.editData(),
             tour.getAssetPrefixHash(),
-            S3Config.getEntityFiles().dataFile(),
+            fileTobeEdited == EditTour.INDEX ? S3Config.getEntityFiles().dataFile() : S3Config.getEntityFiles().loaderFile(),
             S3Config.AssetType.Tour);
-
 
         tour.setUpdatedAt(Utils.getCurrentUtcTimestamp());
         Tour updatedTour = tourRepo.save(tour);
@@ -104,13 +105,18 @@ public class TourService extends ServiceBase {
     @Transactional
     public RespTourWithScreens duplicateTour(ReqDuplicateTour body, User user) {
         Tour fromTour = getEntityByRIdWithAuthValidation(Tour.class, body.fromTourRid(), user);
-        AssetFilePath fromTourFilePath = s3Config.getQualifiedPathFor(
+        AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Tour,
             fromTour.getAssetPrefixHash(),
             S3Config.getEntityFiles().dataFile().filename());
+        AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.Tour,
+            fromTour.getAssetPrefixHash(),
+            S3Config.getEntityFiles().loaderFile().filename());
 
         String prefixHash = Utils.createUuidWord();
-        copyDataFileToS3(fromTourFilePath, prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
+        copyDataFileToS3(fromTourDataFilePath, prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
+        copyDataFileToS3(fromTourLoaderFilePath, prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
 
         String rid = Utils.createReadableId(body.duplicateTourName());
         Tour tour = Tour.builder()

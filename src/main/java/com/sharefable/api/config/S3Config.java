@@ -23,6 +23,7 @@ import org.springframework.core.env.Environment;
 public class S3Config {
     private static final String DATA_FILE_NAME = "index.json";
     private static final String EDIT_FILE_NAME = "edits.json";
+    private static final String LOADER_FILE_NAME = "loader.json";
     private static final String IMAGE_FILE_NAME = "index.img";
     private static final String PATH_FOR_COMMON_ASSET = "/cmn";
     private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
@@ -43,6 +44,7 @@ public class S3Config {
             //      for tour data file need not be cached
             new FileConfig(DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
             new FileConfig(EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
+            new FileConfig(LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
             new FileConfig(IMAGE_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
     }
 
@@ -125,6 +127,7 @@ public class S3Config {
     public record FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
     }
 
-    public record EntityFilesConfig(FileConfig dataFile, FileConfig editFile, FileConfig imgFile) {
+    public record EntityFilesConfig(FileConfig dataFile, FileConfig editFile, FileConfig loaderFile,
+                                    FileConfig imgFile) {
     }
 }

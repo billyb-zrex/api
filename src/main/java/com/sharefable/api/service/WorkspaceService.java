@@ -147,6 +147,7 @@ public class WorkspaceService extends ServiceBase {
             .screenAssetPath(pathConfig.screenAsset())
             .tourAssetPath(pathConfig.tourAsset())
             .dataFileName(entityFilesConfig.dataFile().filename())
+            .loaderFileName(entityFilesConfig.loaderFile().filename())
             .editFileName(entityFilesConfig.editFile().filename());
     }
 
