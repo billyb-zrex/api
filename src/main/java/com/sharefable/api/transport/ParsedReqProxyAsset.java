@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.transport.req.ReqProxyAsset;
+import io.sentry.Sentry;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,7 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
             parsedReq.setOriginParsed(originParsed);
         } catch (MalformedURLException e) {
             log.error("Could not parse url because of error {}", e.getMessage());
-            e.printStackTrace();
+            Sentry.captureException(e);
             return Optional.empty();
         }
 
@@ -56,7 +57,7 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
             parsedReq.setUserAgent(map.get("ua"));
         } catch (JsonProcessingException e) {
             log.error("Could not parse clientInfo from body. {}", e.getMessage());
-            e.printStackTrace();
+            Sentry.captureException(e);
             return Optional.empty();
         }
 
@@ -81,7 +82,7 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
             return Optional.of(parsedReq);
         } catch (MalformedURLException | URISyntaxException e) {
             log.error("Could not parse url because of error {}", e.getMessage());
-            e.printStackTrace();
+            Sentry.captureException(e);
             return Optional.empty();
         }
     }

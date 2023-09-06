@@ -105,7 +105,6 @@ public abstract class ServiceBase {
             String fileContent = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
             return uploadDataFileToS3(fileContent, prefixHash, tFile.toFile(), tFile.type());
         } catch (IOException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

@@ -2,6 +2,7 @@ package com.sharefable.api.controller;
 
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.transport.resp.RespHealth;
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,7 +27,7 @@ public class HealthController {
             throw new RuntimeException("Forced exception");
         } catch (Exception e) {
             log.error("Caught excpetion {}", e.getMessage());
-            e.printStackTrace();
+            Sentry.captureException(e);
         }
         return "ok";
     }

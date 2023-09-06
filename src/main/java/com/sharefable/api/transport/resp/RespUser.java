@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.transport.GenerateTSDef;
+import io.sentry.Sentry;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +36,7 @@ public class RespUser extends ResponseBase {
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
-            e.printStackTrace();
+            Sentry.captureException(e);
             return Empty();
         }
     }

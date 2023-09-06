@@ -85,7 +85,6 @@ public class SubscriptionService {
             return RespSubscription.from(subs);
         } catch (Exception e) {
             log.error("Can't create account subscription for user {}.  Error: {}", user.getEmail(), e.getMessage());
-            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating subscription");
         }
     }
@@ -109,7 +108,6 @@ public class SubscriptionService {
             return RespSubscription.from(updatedSub);
         } catch (Exception e) {
             log.error("Can't update {} subscription plan to {}", subs.getCbSubscriptionId(), planId);
-            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while updating subscription");
         }
     }
@@ -150,7 +148,6 @@ public class SubscriptionService {
             return hostedPage.toJson();
         } catch (Exception e) {
             log.error("Can't complete payment request for {}", user.getEmail());
-            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please try again");
         }
     }

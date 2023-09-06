@@ -4,6 +4,7 @@ import com.sharefable.api.entity.EntityBase;
 import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.TransportObjRef;
 import com.sharefable.api.transport.resp.ResponseBase;
+import io.sentry.Sentry;
 import jakarta.xml.bind.DatatypeConverter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -136,7 +137,9 @@ public interface Utils {
 
                 Method setterFromTransport = transportCls.getMethod(setterMethodNameFromFieldName(f.getName()), type);
                 setterFromTransport.invoke(transportObj, valueFromEntity);
-            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) { /* noop */}
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                Sentry.captureException(e);
+            }
         }
 
         return transportObj;

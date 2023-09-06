@@ -34,7 +34,6 @@ public class InsightService {
             putRecordRequest.setRecord(record);
             firehoseClient.putRecord(putRecordRequest);
         } catch (Exception e) {
-            e.printStackTrace();
             log.warn("Something wrong while sending data to firehose");
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while sending data to firehose");
         }

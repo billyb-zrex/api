@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.transport.GenerateTSDef;
+import io.sentry.Sentry;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,7 @@ public class RespOrg extends ResponseBase {
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
                  InvocationTargetException e) {
             log.error("Can't convert entity to transport object. Error: " + e.getMessage());
-            e.printStackTrace();
+            Sentry.captureException(e);
             return Empty();
         }
     }

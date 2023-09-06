@@ -7,6 +7,7 @@ import com.sharefable.api.entity.ProxyAsset;
 import com.sharefable.api.repo.ProxyAssetRepo;
 import com.sharefable.api.transport.ParsedReqProxyAsset;
 import com.sharefable.api.transport.resp.RespProxyAsset;
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -58,7 +59,7 @@ public class ProxyAssetService {
             }
         } catch (MalformedURLException e) {
             log.error("Could not match with ignore list as the url {} could not be parsed to URL.", origin);
-            e.printStackTrace();
+            Sentry.captureException(e);
         }
 
         Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
@@ -153,11 +154,11 @@ public class ProxyAssetService {
 
         } catch (HttpStatusCodeException ex) {
             log.error("Cannot get asset {} [Status: {}, resp from server: {}]", origin, ex.getStatusCode(), ex.getResponseBodyAsString());
-            ex.printStackTrace();
+            Sentry.captureException(ex);
             return RespProxyAsset.Empty();
         } catch (Exception ex) {
             log.error("Cannot get asset {} error {}", origin, ex.getMessage());
-            ex.printStackTrace();
+            Sentry.captureException(ex);
             return RespProxyAsset.Empty();
         }
     }

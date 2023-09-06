@@ -91,11 +91,9 @@ public class ScreenService extends ServiceBase {
                 return respScreen;
             } catch (JsonProcessingException e) {
                 log.error("Something went wrong when updating image location on serialized json. Message: {}", e.getMessage());
-                e.printStackTrace();
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
             } catch (Exception e) {
                 log.error("Something went wrong when saving a image screen. Message: {}", e.getMessage());
-                e.printStackTrace();
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
             }
         }
@@ -120,7 +118,6 @@ public class ScreenService extends ServiceBase {
             return RespScreen.from(storedScreen);
         } catch (Exception e) {
             log.error("Error while uploading file to s3. Message: {}", e.getMessage());
-            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
         }
     }
@@ -212,7 +209,6 @@ public class ScreenService extends ServiceBase {
             return screenRepo.save(screen);
         } catch (Exception e) {
             log.error("Error while copying file from parent screen to child screen. Message: {}", e.getMessage());
-            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
         }
     }
@@ -254,11 +250,9 @@ public class ScreenService extends ServiceBase {
             return RespScreen.from(storedScreen);
         } catch (IOException e) {
             log.error("Something is wrong while getting the image from s3{}", e.getMessage());
-            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating thumbnail");
         } catch (Exception e) {
             log.error("Something is wrong while resizing the image {}", e.getMessage());
-            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating thumbnail");
         }
     }
