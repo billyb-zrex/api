@@ -16,6 +16,9 @@ public class CorsConfig implements WebMvcConfigurer {
 //                "https://app.sharefable.com",
 //                "chrome-extension://**"
 //            )
-            .allowedOrigins("*");
+            .allowedOrigins("*")
+            .allowedMethods("GET", "POST")
+            .allowCredentials(false)
+            .maxAge(3600);
     }
 }
