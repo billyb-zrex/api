@@ -71,7 +71,6 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
 
     public Optional<ParsedReqProxyAsset> updateUrl(String assetUrl) {
         try {
-            assetUrl = URLDecoder.decode(assetUrl, StandardCharsets.UTF_8);
             URL originParsed = Utils.convertRelativeUrlToAbsoluteUrlIfRequired(assetUrl, this.originParsed);
             ParsedReqProxyAsset parsedReq = new ParsedReqProxyAsset();
             parsedReq.setOriginParsed(originParsed);

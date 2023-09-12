@@ -60,6 +60,7 @@ public class ProxyAssetService {
         } catch (MalformedURLException e) {
             log.error("Could not match with ignore list as the url {} could not be parsed to URL.", origin);
             Sentry.captureException(e);
+            return RespProxyAsset.from(origin);
         }
 
         Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
