@@ -2,6 +2,10 @@
 # @name=health
 GET {{api-host}}/health
 
+### cconfig
+# @name=cconfig
+GET {{api-host}}/v1/cconfig
+
 
 ### get user
 GET {{api-host}}/v1/f/iam
@@ -292,4 +296,13 @@ Content-Type: application/json
     "firstName": "Test",
     "email": "test@test.com"
   }
+}
+
+### Publish tour
+POST {{api-host}}/v1/f/tpub
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "tourRid": "publish-test-zt33uweystk4wzwa"
 }

@@ -1,5 +1,7 @@
 package com.sharefable.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
@@ -21,14 +23,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class TourService extends ServiceBase {
+    private final static ObjectMapper objectMapper = new ObjectMapper();
     private final TourRepo tourRepo;
     private final S3Config s3Config;
     private final ScreenService screenService;
+    private final S3Service s3Service;
 
     @Autowired
     public TourService(TourRepo tourRepo, AppSettings settings, S3Service s3Service, S3Config s3Config, ScreenRepo screenRepo, ScreenService screenService) {
@@ -36,6 +41,7 @@ public class TourService extends ServiceBase {
         this.tourRepo = tourRepo;
         this.s3Config = s3Config;
         this.screenService = screenService;
+        this.s3Service = s3Service;
     }
 
     @Transactional
@@ -95,11 +101,27 @@ public class TourService extends ServiceBase {
 
     public RespTour renameTour(ReqRenameGeneric body, User userEntity) {
         Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
+        String oldRid = tour.getRid();
         String newName = body.newName();
         tour.setDisplayName(newName);
         tour.setRid(Utils.createReadableId(newName));
         Tour updatedTour = tourRepo.save(tour);
+        if (tour.getLastPublishedDate() != null) {
+            modifyPublishedTourEntityPath(oldRid, tour.getRid());
+        }
         return RespTour.from(updatedTour);
+    }
+
+    public void modifyPublishedTourEntityPath(String oldRid, String newRid) {
+        AssetFilePath fromPubTourEntityFile = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.PublishedTour,
+            oldRid,
+            S3Config.getEntityFiles().publishedTourEntityFile().filename());
+        AssetFilePath toPubTourEntityFile = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.PublishedTour,
+            newRid,
+            S3Config.getEntityFiles().publishedTourEntityFile().filename());
+        s3Service.copy(fromPubTourEntityFile, toPubTourEntityFile);
     }
 
     @Transactional
@@ -203,5 +225,58 @@ public class TourService extends ServiceBase {
         Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
         tourRepo.delete(tour);
         return getAllToursForOrg(userEntity.getBelongsToOrg());
+    }
+
+    @Transactional
+    public void publishTour(ReqTourRid body, User userEntity) {
+        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
+        Set<Screen> screens = tour.getScreens();
+
+        try {
+            RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour);
+            ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
+            String tourResp = objectMapper.writeValueAsString(apiResp);
+            AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
+                S3Config.AssetType.Tour,
+                tour.getAssetPrefixHash(),
+                S3Config.getEntityFiles().dataFile().filename());
+            AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
+                S3Config.AssetType.Tour,
+                tour.getAssetPrefixHash(),
+                S3Config.getEntityFiles().loaderFile().filename());
+
+            AssetFilePath toTourDataFilePath = s3Config.getQualifiedPathFor(
+                S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedDataFile().filename());
+            AssetFilePath toTourLoaderFilePath = s3Config.getQualifiedPathFor(
+                S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedLoaderFile().filename());
+
+            List<Callable<AssetFilePath>> tourInfoCopier = new ArrayList<>();
+            Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(fromTourDataFilePath, toTourDataFilePath);
+            Callable<AssetFilePath> tourLoaderCopier = () -> s3Service.copy(fromTourLoaderFilePath, toTourLoaderFilePath);
+            Callable<AssetFilePath> uploadTourResp = () -> uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
+            tourInfoCopier.add(tourDataCopier);
+            tourInfoCopier.add(tourLoaderCopier);
+            tourInfoCopier.add(uploadTourResp);
+
+            for (Screen screen : screens) {
+                AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
+                    S3Config.AssetType.Screen,
+                    screen.getAssetPrefixHash(),
+                    S3Config.getEntityFiles().editFile().filename());
+                AssetFilePath toScreenEditFilePath = s3Config.getQualifiedPathFor(
+                    S3Config.AssetType.Screen,
+                    screen.getAssetPrefixHash(),
+                    S3Config.getEntityFiles().publishedEditFile().filename());
+
+                Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath);
+                tourInfoCopier.add(screenEditCopier);
+            }
+            Utils.runInParallel(tourInfoCopier.toArray(new Callable[0]));
+            tour.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
+            tourRepo.save(tour);
+        } catch (Exception e) {
+            log.error("Error while trying to publish tour {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish tour");
+        }
     }
 }

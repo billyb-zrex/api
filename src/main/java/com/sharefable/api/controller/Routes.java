@@ -43,4 +43,5 @@ public interface Routes {
     String GET_ALL_USER_IN_ORG = __BEHIND_LOGIN__ + "/users";
     String ACTIVATE_OR_DEACTIVATE_USER = __BEHIND_LOGIN__ + "/aodusr";
     String GEN_CHECKOUT_URL = __BEHIND_LOGIN__ + "/genchckouturl";
+    String PUBLISH_TOUR = __BEHIND_LOGIN__ + "/tpub";
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.sql.Timestamp;
 import java.util.Set;
 
 @Entity
@@ -28,6 +29,8 @@ public class Tour extends EntityBaseWithOwnership {
     private User createdBy;
 
     private String description;
+
+    private Timestamp lastPublishedDate;
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(

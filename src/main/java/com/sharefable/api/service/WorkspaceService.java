@@ -146,9 +146,14 @@ public class WorkspaceService extends ServiceBase {
             .commonAssetPath(pathConfig.commonAsset())
             .screenAssetPath(pathConfig.screenAsset())
             .tourAssetPath(pathConfig.tourAsset())
+            .pubTourAssetPath(pathConfig.tourPublishedAsset())
             .dataFileName(entityFilesConfig.dataFile().filename())
             .loaderFileName(entityFilesConfig.loaderFile().filename())
-            .editFileName(entityFilesConfig.editFile().filename());
+            .editFileName(entityFilesConfig.editFile().filename())
+            .pubDataFileName(entityFilesConfig.publishedDataFile().filename())
+            .pubLoaderFileName(entityFilesConfig.publishedLoaderFile().filename())
+            .pubEditFileName(entityFilesConfig.publishedEditFile().filename())
+            .pubTourEntityFileName(entityFilesConfig.publishedTourEntityFile().filename());
     }
 
     public RespUploadUrl getPreSignedUrlToUploadFile(User user, String contentType, Optional<String> extension) {
