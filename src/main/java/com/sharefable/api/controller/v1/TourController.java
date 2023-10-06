@@ -87,8 +87,8 @@ public class TourController {
     }
 
     @RequestMapping(value = Routes.PUBLISH_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<String> publishTour(@RequestBody ReqTourRid body, @AuthUser User user) {
-        tourService.publishTour(body, user);
-        return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
+    public ApiResp<RespTour> publishTour(@RequestBody ReqTourRid body, @AuthUser User user) {
+        RespTour resp = tourService.publishTour(body, user);
+        return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 }

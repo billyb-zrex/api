@@ -228,7 +228,7 @@ public class TourService extends ServiceBase {
     }
 
     @Transactional
-    public void publishTour(ReqTourRid body, User userEntity) {
+    public RespTour publishTour(ReqTourRid body, User userEntity) {
         Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
         Set<Screen> screens = tour.getScreens();
 
@@ -273,7 +273,8 @@ public class TourService extends ServiceBase {
             }
             Utils.runInParallel(tourInfoCopier.toArray(new Callable[0]));
             tour.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
-            tourRepo.save(tour);
+            Tour savedTour = tourRepo.save(tour);
+            return RespTour.from(savedTour);
         } catch (Exception e) {
             log.error("Error while trying to publish tour {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish tour");
