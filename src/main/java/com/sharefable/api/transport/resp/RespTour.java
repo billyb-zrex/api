@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
-import java.util.Optional;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +25,7 @@ public class RespTour extends ResponseBase {
     private String assetPrefixHash;
     private String displayName;
     private String description;
-    private Optional<Timestamp> lastPublishedDate;
+    private Timestamp lastPublishedDate;
     private RespUser createdBy;
 
     public static RespTour from(Tour tour) {
