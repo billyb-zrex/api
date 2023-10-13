@@ -12,6 +12,7 @@ import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.EditTour;
+import com.sharefable.api.transport.ScreenType;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
@@ -259,17 +260,19 @@ public class TourService extends ServiceBase {
             tourInfoCopier.add(uploadTourResp);
 
             for (Screen screen : screens) {
-                AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
-                    S3Config.AssetType.Screen,
-                    screen.getAssetPrefixHash(),
-                    S3Config.getEntityFiles().editFile().filename());
-                AssetFilePath toScreenEditFilePath = s3Config.getQualifiedPathFor(
-                    S3Config.AssetType.Screen,
-                    screen.getAssetPrefixHash(),
-                    S3Config.getEntityFiles().publishedEditFile().filename());
+                if (screen.getType() != ScreenType.Img) {
+                    AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
+                        S3Config.AssetType.Screen,
+                        screen.getAssetPrefixHash(),
+                        S3Config.getEntityFiles().editFile().filename());
+                    AssetFilePath toScreenEditFilePath = s3Config.getQualifiedPathFor(
+                        S3Config.AssetType.Screen,
+                        screen.getAssetPrefixHash(),
+                        S3Config.getEntityFiles().publishedEditFile().filename());
 
-                Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath);
-                tourInfoCopier.add(screenEditCopier);
+                    Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath);
+                    tourInfoCopier.add(screenEditCopier);
+                }
             }
             Utils.runInParallel(tourInfoCopier.toArray(new Callable[0]));
             tour.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
