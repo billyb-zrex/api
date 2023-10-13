@@ -1,6 +1,7 @@
 package com.sharefable.api.service;
 
 import com.sharefable.api.common.AssetFilePath;
+import com.sharefable.api.common.DefaultThumbnail;
 import com.sharefable.api.common.ImageType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
@@ -13,6 +14,7 @@ import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
-public abstract class ServiceBase {
+public abstract class ServiceBase implements DefaultThumbnail {
     private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX = "/data-schema/v=%s/tour/index.json";
     private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_LOADER = "/data-schema/v=%s/tour/loader.json";
     private static final String PATH_TO_SCHEMA_FILE_FOR_SCREEN_EDIT = "/data-schema/v=%s/screen/edits.json";
@@ -48,6 +50,9 @@ public abstract class ServiceBase {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<AssetFilePath> uploadBase64ImageToS3(String imageData, S3Config.AssetType assetType) {
+        if (StringUtils.isBlank(imageData)) {
+            imageData = THUMBNAIL_DATA;
+        }
         Pair<byte[], ImageType> imgDataAndType = Utils.getImageDataFromBase64Str(imageData);
 
         if (imgDataAndType.getValue1() == ImageType.Unknown) {
