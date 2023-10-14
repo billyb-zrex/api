@@ -51,6 +51,7 @@ public class TourService extends ServiceBase {
         return tours.stream().map(RespTour::from).collect(Collectors.toList());
     }
 
+    @Transactional
     public RespTour createNewTour(ReqNewTour req, User createdByUser) {
         String prefixHash = Utils.createUuidWord();
         uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_INDEX);

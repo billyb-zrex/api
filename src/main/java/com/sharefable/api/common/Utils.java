@@ -19,9 +19,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -171,10 +169,7 @@ public interface Utils {
     }
 
     static Timestamp getCurrentUtcTimestamp() {
-        LocalDateTime ldt = LocalDateTime.now();
-        ZonedDateTime zdt = ZonedDateTime.of(ldt, ZoneId.systemDefault());
-        ZonedDateTime gmt = zdt.withZoneSameInstant(ZoneId.of("GMT"));
-        return Timestamp.valueOf(gmt.toLocalDateTime());
+        return Timestamp.from(Instant.now());
     }
 
     static URL convertRelativeUrlToAbsoluteUrlIfRequired(String url, URL origin) throws URISyntaxException, MalformedURLException {
