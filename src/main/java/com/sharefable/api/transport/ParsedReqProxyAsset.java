@@ -34,6 +34,7 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
         ParsedReqProxyAsset parsedReq = new ParsedReqProxyAsset();
         parsedReq.setOrigin(req.getOrigin());
         parsedReq.setClientInfo(req.getClientInfo());
+        parsedReq.setBody(Optional.of(req.getBody().orElse(false)));
         try {
             URL originParsed = new URL(req.getOrigin());
             parsedReq.setOriginParsed(originParsed);
@@ -74,6 +75,7 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
             parsedReq.setUserAgent(this.getUserAgent());
             parsedReq.setOrigin(originParsed.toString());
             parsedReq.setClientInfo(this.getClientInfo());
+            parsedReq.setBody(this.getBody());
             return Optional.of(parsedReq);
         } catch (MalformedURLException | URISyntaxException e) {
             log.error("Could not parse url because of error {}", e.getMessage());

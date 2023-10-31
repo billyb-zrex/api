@@ -23,6 +23,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -68,23 +69,36 @@ public class ProxyAssetService {
             return RespProxyAsset.from(origin);
         }
 
-        Optional<ProxyAsset> proxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
-        if (proxyAsset.isPresent()) {
-            return RespProxyAsset.from(proxyAsset.get(), s3Config);
+        Optional<ProxyAsset> maybeProxyAsset = proxyAssetRepo.findProxyAssetByRid(hashedOrigin);
+        if (maybeProxyAsset.isPresent()) {
+            ProxyAsset proxyAsset = maybeProxyAsset.get();
+            RespProxyAsset respProxyAsset = RespProxyAsset.from(proxyAsset, s3Config);
+            if (body.getBody().get()) {
+                String proxyUri = proxyAsset.getProxyUri();
+                AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, proxyUri);
+                try {
+                    byte[] content = s3Service.getObjectContent(assetFilePath);
+                    respProxyAsset.setContent(Optional.of(new String(content)));
+                } catch (IOException e) {
+                    log.error("Something went wrong while getting content from s3 for origin {} {}", origin, e.getMessage());
+                    Sentry.captureException(e);
+                    return RespProxyAsset.Empty();
+                }
+            }
+            return respProxyAsset;
         }
-
-        HttpHeaders headers = new HttpHeaders();
-        if (!StringUtils.isBlank(body.getCookie())) {
-            headers.add(HttpHeaders.COOKIE, body.getCookie());
-        }
-        if (!StringUtils.isBlank(body.getUserAgent())) {
-            headers.add(HttpHeaders.USER_AGENT, body.getUserAgent());
-        }
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
         try {
-            ResponseEntity<byte[]> resp = this.restClient.exchange(origin, HttpMethod.GET, entity, byte[].class);
 
+            HttpHeaders headers = new HttpHeaders();
+            if (!StringUtils.isBlank(body.getCookie())) {
+                headers.add(HttpHeaders.COOKIE, body.getCookie());
+            }
+            if (!StringUtils.isBlank(body.getUserAgent())) {
+                headers.add(HttpHeaders.USER_AGENT, body.getUserAgent());
+            }
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<byte[]> resp = this.restClient.exchange(origin, HttpMethod.GET, entity, byte[].class);
             // if css then convert the body to string and parse the body for further urls and process those again
             // if not then continue with previous code
 
@@ -150,9 +164,11 @@ public class ProxyAssetService {
                     .build();
 
                 ProxyAsset savedAsset = proxyAssetRepo.save(asset);
-                return RespProxyAsset.from(savedAsset, s3Config);
-
-
+                RespProxyAsset respProxyAsset = RespProxyAsset.from(savedAsset, s3Config);
+                if (body.getBody().get()) {
+                    respProxyAsset.setContent(Optional.of(new String(resp.getBody())));
+                }
+                return respProxyAsset;
             } else {
                 log.error("Cannot get asset {} . Empty body or not okay status. Status = {}", origin, status);
                 return RespProxyAsset.Empty();

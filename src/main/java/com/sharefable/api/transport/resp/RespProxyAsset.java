@@ -1,5 +1,6 @@
 package com.sharefable.api.transport.resp;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
@@ -10,6 +11,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -18,9 +20,11 @@ import java.lang.reflect.InvocationTargetException;
 @AllArgsConstructor
 @Builder
 @Slf4j
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @GenerateTSDef
 public class RespProxyAsset extends ResponseBase {
     private String proxyUri;
+    private Optional<String> content;
 
     public static RespProxyAsset from(ProxyAsset asset, S3Config pathConfig) {
         try {
