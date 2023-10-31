@@ -13,8 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -33,8 +31,6 @@ public class ParsedReqProxyAsset extends ReqProxyAsset {
 
     @SuppressWarnings("removal")
     public static Optional<ParsedReqProxyAsset> from(ReqProxyAsset req) {
-        req.setOrigin(URLDecoder.decode(req.getOrigin(), StandardCharsets.UTF_8));
-
         ParsedReqProxyAsset parsedReq = new ParsedReqProxyAsset();
         parsedReq.setOrigin(req.getOrigin());
         parsedReq.setClientInfo(req.getClientInfo());

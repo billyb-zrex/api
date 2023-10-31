@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -45,6 +46,10 @@ public class ProxyAssetService {
         this.restClient = restClient;
         this.s3Service = s3Service;
         this.s3Config = s3Config;
+
+        DefaultUriBuilderFactory defaultUriBuilderFactory = new DefaultUriBuilderFactory();
+        defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+        this.restClient.setUriTemplateHandler(defaultUriBuilderFactory);
     }
 
     @Transactional
@@ -164,7 +169,8 @@ public class ProxyAssetService {
         }
     }
 
-    private String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body) {
+    @Transactional
+    public String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body) {
         String respbody = content;
         ArrayList<Pair<String, String>> nestedUrls = new ArrayList<>();
         // format of url(...) or url("...") or url('...')
@@ -201,7 +207,11 @@ public class ProxyAssetService {
             Optional<ParsedReqProxyAsset> nestedParsedReqBody = body.updateUrl(url);
             if (nestedParsedReqBody.isEmpty()) continue;
             RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get());
-            respbody = respbody.replace(replaceTarget, "url(" + nestedProxyUri.getProxyUri() + ")");
+            if (!StringUtils.isBlank(nestedProxyUri.getProxyUri())) {
+                respbody = respbody.replace(replaceTarget, "url(" + nestedProxyUri.getProxyUri() + ")");
+            } else {
+                log.warn("Can't resolve nested proxy for {}", url);
+            }
         }
         return respbody;
     }
