@@ -3,7 +3,7 @@ package com.sharefable.api.transport;
 @GenerateTSDef
 public class PaymentTerms {
     public enum Plan {
-        PRO,
+        STARTUP,
         BUSINESS
     }
 

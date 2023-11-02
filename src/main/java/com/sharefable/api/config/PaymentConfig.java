@@ -20,15 +20,15 @@ import java.util.Map;
 @Slf4j
 public class PaymentConfig {
     private static final Map<PaymentTerms.Plan, Map<PaymentTerms.Interval, String>> PAYMENT_TERMS_PLAN = Map.of(
-        PaymentTerms.Plan.PRO,
+        PaymentTerms.Plan.STARTUP,
         Map.of(
-            PaymentTerms.Interval.MONTHLY, "pro-USD-Monthly",
-            PaymentTerms.Interval.YEARLY, "pro-USD-Yearly"
+            PaymentTerms.Interval.MONTHLY, "startup-1-USD-Monthly",
+            PaymentTerms.Interval.YEARLY, "startup-1-USD-Yearly"
         ),
         PaymentTerms.Plan.BUSINESS,
         Map.of(
-            PaymentTerms.Interval.MONTHLY, "business-USD-Monthly",
-            PaymentTerms.Interval.YEARLY, "business-USD-Yearly"
+            PaymentTerms.Interval.MONTHLY, "business-2-USD-Monthly",
+            PaymentTerms.Interval.YEARLY, "business-2-USD-Yearly"
         )
     );
 

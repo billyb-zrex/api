@@ -107,7 +107,8 @@ public class SubscriptionService {
             Subscription updatedSub = repo.save(subs);
             return RespSubscription.from(updatedSub);
         } catch (Exception e) {
-            log.error("Can't update {} subscription plan to {}", subs.getCbSubscriptionId(), planId);
+            log.error("Can't update {} subscription plan to {} with error {}", subs.getCbSubscriptionId(), planId, e.getMessage());
+            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while updating subscription");
         }
     }
@@ -147,7 +148,8 @@ public class SubscriptionService {
             HostedPage hostedPage = result.hostedPage();
             return hostedPage.toJson();
         } catch (Exception e) {
-            log.error("Can't complete payment request for {}", user.getEmail());
+            log.error("Can't complete payment request for {} with error {}", user.getEmail(), e.getMessage());
+            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please try again");
         }
     }
