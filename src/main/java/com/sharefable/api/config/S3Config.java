@@ -29,6 +29,7 @@ public class S3Config {
     private static final String PUBLISHED_EDIT_FILE_NAME = "0_edits.json";
     private static final String PUBLISHED_LOADER_FILE_NAME = "0_loader.json";
     private static final String PUBLISHED_TOUR_ENTITY_FILE_NAME = "0_d_data.json";
+    private static final String MANIFEST_FILE = "manifest.json";
     private static final String PATH_FOR_COMMON_ASSET = "/cmn";
     private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
     private static final String PATH_FOR_PUBLISHED_TOUR_ASSET = "/ptour/%s";
@@ -54,7 +55,8 @@ public class S3Config {
             new FileConfig(PUBLISHED_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
             new FileConfig(PUBLISHED_EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
             new FileConfig(PUBLISHED_LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-            new FileConfig(PUBLISHED_TOUR_ENTITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
+            new FileConfig(PUBLISHED_TOUR_ENTITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
+            new FileConfig(MANIFEST_FILE, DATA_FILE_CACHE_POLICY.NoCache));
     }
 
     private String getPathForAssetType(AssetType type) {
@@ -104,16 +106,6 @@ public class S3Config {
         return assetFilePath;
     }
 
-    private boolean isLocal() {
-        String[] activeProfiles = env.getActiveProfiles();
-        for (String activeProfile : activeProfiles) {
-            if (StringUtils.equalsIgnoreCase(activeProfile, "dev")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Bean
     AmazonS3 s3Client() {
         return AmazonS3ClientBuilder.standard().withRegion(region).build();
@@ -151,6 +143,7 @@ public class S3Config {
         FileConfig publishedDataFile,
         FileConfig publishedEditFile,
         FileConfig publishedLoaderFile,
-        FileConfig publishedTourEntityFile) {
+        FileConfig publishedTourEntityFile,
+        FileConfig manifestFile) {
     }
 }

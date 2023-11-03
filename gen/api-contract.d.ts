@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2023-10-26 13:21:07.
+// Generated using typescript-generator version 2.35.1025 on 2023-11-02 16:51:39.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -33,6 +33,20 @@ export interface MediaTypeEntityHolding extends EntityHoldingInfoBase {
 }
 
 export interface PaymentTerms {
+}
+
+export interface ScreenAssets {
+    thumbnail: string;
+    name: string;
+    url: string;
+    icon: string;
+}
+
+export interface TourManifest {
+    version: number;
+    name: string;
+    url: string;
+    screenAssets: ScreenAssets[];
 }
 
 export interface VideoTranscodingJobInfo extends JobProcessingInfo {
@@ -95,6 +109,7 @@ export interface ReqNfHook {
 export interface ReqProxyAsset {
     origin: string;
     clientInfo: string;
+    body?: boolean;
 }
 
 export interface ReqRecordEdit {
@@ -148,6 +163,7 @@ export interface RespCommonConfig extends ResponseBase {
     pubLoaderFileName: string;
     pubEditFileName: string;
     pubTourEntityFileName: string;
+    manifestFileName: string;
     latestSchemaVersion: SchemaVersion;
 }
 
@@ -172,6 +188,7 @@ export interface RespOrg extends ResponseBase {
 
 export interface RespProxyAsset extends ResponseBase {
     proxyUri: string;
+    content?: string;
 }
 
 export interface RespScreen extends ResponseBase {

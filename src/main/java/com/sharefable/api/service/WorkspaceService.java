@@ -153,7 +153,8 @@ public class WorkspaceService extends ServiceBase {
             .pubDataFileName(entityFilesConfig.publishedDataFile().filename())
             .pubLoaderFileName(entityFilesConfig.publishedLoaderFile().filename())
             .pubEditFileName(entityFilesConfig.publishedEditFile().filename())
-            .pubTourEntityFileName(entityFilesConfig.publishedTourEntityFile().filename());
+            .pubTourEntityFileName(entityFilesConfig.publishedTourEntityFile().filename())
+            .manifestFileName(entityFilesConfig.manifestFile().filename());
     }
 
     public RespUploadUrl getPreSignedUrlToUploadFile(User user, String contentType, Optional<String> extension) {

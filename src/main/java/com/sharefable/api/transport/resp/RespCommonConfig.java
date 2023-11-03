@@ -24,5 +24,6 @@ public class RespCommonConfig extends ResponseBase {
     private String pubLoaderFileName;
     private String pubEditFileName;
     private String pubTourEntityFileName;
+    private String manifestFileName;
     private SchemaVersion latestSchemaVersion;
 }

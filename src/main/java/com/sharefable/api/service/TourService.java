@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.config.AppConfig;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Screen;
@@ -12,14 +13,18 @@ import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.EditTour;
+import com.sharefable.api.transport.ScreenAssets;
 import com.sharefable.api.transport.ScreenType;
+import com.sharefable.api.transport.TourManifest;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -35,14 +40,23 @@ public class TourService extends ServiceBase {
     private final S3Config s3Config;
     private final ScreenService screenService;
     private final S3Service s3Service;
+    private final AppConfig appConfig;
 
     @Autowired
-    public TourService(TourRepo tourRepo, AppSettings settings, S3Service s3Service, S3Config s3Config, ScreenRepo screenRepo, ScreenService screenService) {
+    public TourService(
+        TourRepo tourRepo,
+        AppSettings settings,
+        S3Service s3Service,
+        S3Config s3Config,
+        ScreenRepo screenRepo,
+        ScreenService screenService,
+        AppConfig appConfig) {
         super(settings, s3Service, s3Config, screenRepo, tourRepo);
         this.tourRepo = tourRepo;
         this.s3Config = s3Config;
         this.screenService = screenService;
         this.s3Service = s3Service;
+        this.appConfig = appConfig;
     }
 
     @Transactional
@@ -101,20 +115,29 @@ public class TourService extends ServiceBase {
         return RespTour.from(updatedTour);
     }
 
+    @Transactional
     public RespTour renameTour(ReqRenameGeneric body, User userEntity) {
         Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
         String oldRid = tour.getRid();
         String newName = body.newName();
         tour.setDisplayName(newName);
         tour.setRid(Utils.createReadableId(newName));
-        Tour updatedTour = tourRepo.save(tour);
-        if (tour.getLastPublishedDate() != null) {
-            modifyPublishedTourEntityPath(oldRid, tour.getRid());
+
+        try {
+            Tour updatedTour = tourRepo.save(tour);
+            if (tour.getLastPublishedDate() != null) {
+                uploadTourManifestToS3(updatedTour);
+                modifyPublishedTourEntityPath(oldRid, tour.getRid());
+            }
+            return RespTour.from(updatedTour);
+        } catch (Exception e) {
+            log.error("Error while trying to publish tour {}", e.getMessage());
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to rename the tour");
         }
-        return RespTour.from(updatedTour);
     }
 
-    public void modifyPublishedTourEntityPath(String oldRid, String newRid) {
+    private void modifyPublishedTourEntityPath(String oldRid, String newRid) {
         AssetFilePath fromPubTourEntityFile = s3Config.getQualifiedPathFor(
             S3Config.AssetType.PublishedTour,
             oldRid,
@@ -235,6 +258,7 @@ public class TourService extends ServiceBase {
         Set<Screen> screens = tour.getScreens();
 
         try {
+            uploadTourManifestToS3(tour);
             RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour);
             ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
             String tourResp = objectMapper.writeValueAsString(apiResp);
@@ -281,7 +305,37 @@ public class TourService extends ServiceBase {
             return RespTour.from(savedTour);
         } catch (Exception e) {
             log.error("Error while trying to publish tour {}", e.getMessage());
+            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish tour");
+        }
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void uploadTourManifestToS3(Tour tour) {
+        TourManifest tourManifest = TourManifest.builder()
+            .version(1)
+            .name(tour.getDisplayName())
+            .url(appConfig.getUrlForDemo() + "/" + tour.getRid())
+            .build();
+        List<ScreenAssets> screenAssets = new ArrayList<>();
+        try {
+            S3Config.PathConfigForClient pathConfigForClient = s3Config.getPathConfigForClient();
+            String commonAssetPath = pathConfigForClient.commonAsset();
+            for (Screen screen : tour.getScreens()) {
+                if (StringUtils.isBlank(screen.getThumbnail())) continue;
+                ScreenAssets screenAsset = ScreenAssets.builder()
+                    .name(screen.getDisplayName())
+                    .url(screen.getUrl())
+                    .thumbnail(commonAssetPath + screen.getThumbnail())
+                    .icon(screen.getIcon())
+                    .build();
+                screenAssets.add(screenAsset);
+            }
+            tourManifest.setScreenAssets(screenAssets);
+            String tourScreenInfoAsString = objectMapper.writeValueAsString(tourManifest);
+            uploadDataFileToS3(tourScreenInfoAsString, tour.getRid(), S3Config.getEntityFiles().manifestFile(), S3Config.AssetType.PublishedTour);
+        } catch (Exception e) {
+            throw new RuntimeException("Something went wrong while sending tour screen info to s3 " + e.getMessage());
         }
     }
 }
