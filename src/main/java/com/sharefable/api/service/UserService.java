@@ -31,16 +31,21 @@ public class UserService {
 
     // used from AuthUser annotation
     public User getOrCreateUserFromJwt(Jwt jwt) throws JsonProcessingException {
-        Map<String, Object> claims = jwt.getClaims();
-        Object userDetailsClaim = claims.get("https://identity.sharefable.com/user");
-        String userDetailsClaimStr = objectMapper.writeValueAsString(userDetailsClaim);
-        UserClaimFromAuth0 userClaimFromAuth0 = objectMapper.readValue(userDetailsClaimStr, UserClaimFromAuth0.class);
+        UserClaimFromAuth0 userClaimFromAuth0 = getUserClaimsFromAuth0(jwt);
         Optional<User> maybeUser = this.userRepo.findUserByEmail(userClaimFromAuth0.email());
         User user = maybeUser.orElseGet(() -> createNewUserIfNotExist(userClaimFromAuth0, jwt.getSubject()));
         // If the user is deactivated any new auth attempt would mark the user as active.
         // This is not ideal but for the timebeing this would do.
         // Ideally any nonactive user has zero role based permission.
         return setUserActiveOrInactive(user, true);
+    }
+
+    public UserClaimFromAuth0 getUserClaimsFromAuth0(Jwt jwt) throws JsonProcessingException {
+        Map<String, Object> claims = jwt.getClaims();
+        Object userDetailsClaim = claims.get("https://identity.sharefable.com/user");
+        String userDetailsClaimStr = objectMapper.writeValueAsString(userDetailsClaim);
+        UserClaimFromAuth0 userClaimFromAuth0 = objectMapper.readValue(userDetailsClaimStr, UserClaimFromAuth0.class);
+        return userClaimFromAuth0;
     }
 
     User setUserActiveOrInactive(User user, Boolean isActive) {
