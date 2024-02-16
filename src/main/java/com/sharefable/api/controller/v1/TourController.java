@@ -91,4 +91,10 @@ public class TourController {
         RespTour resp = tourService.publishTour(body, user);
         return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
+
+    @RequestMapping(value = Routes.ONBOADING_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<RespTourWithScreens[]> getOnboardingTours(@AuthUser User user) {
+        List<RespTourWithScreens> allOnboardingTours = tourService.createOnboardingTourInUserAccount(user);
+        return ApiResp.<RespTourWithScreens[]>builder().status(ApiResp.ResponseStatus.Success).data(allOnboardingTours.toArray(RespTourWithScreens[]::new)).build();
+    }
 }

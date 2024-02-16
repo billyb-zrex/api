@@ -32,6 +32,9 @@ public class Tour extends EntityBaseWithOwnership {
 
     private Timestamp lastPublishedDate;
 
+    @Column(nullable = false)
+    private Boolean onboarding;
+
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
         name = "screens_tours_join",

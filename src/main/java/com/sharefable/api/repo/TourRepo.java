@@ -12,4 +12,6 @@ public interface TourRepo extends CrudRepository<Tour, Long> {
     List<Tour> findAllByBelongsToOrgOrderByUpdatedAtDesc(Long belongsToOrgId);
 
     Optional<Tour> findByRid(String rid);
+
+    List<Tour> findAllByIdIn(List<Long> id);
 }

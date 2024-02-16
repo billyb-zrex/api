@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sharefable.api.common.AssetFilePath;
+import com.sharefable.api.common.FnScreenBuilder;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
@@ -59,16 +60,16 @@ public class ScreenService extends ServiceBase {
     public RespScreen createNewScreen(ReqNewScreen req, User createdByUser) {
         String prefixHash = Utils.createUuidWord();
         Screen screen = Screen.builder()
-            .rid(Utils.createReadableId(req.name()))
-            .createdBy(createdByUser)
-            .url(req.url().orElse(""))
-            .displayName(req.name())
-            .assetPrefixHash(prefixHash)
-            .belongsToOrg(createdByUser.getBelongsToOrg())
-            .icon(req.favIcon().orElse(""))
-            .responsive(false)
-            .parentScreenId(req.normalizedParentId())
-            .build();
+                .rid(Utils.createReadableId(req.name()))
+                .createdBy(createdByUser)
+                .url(req.url().orElse(""))
+                .displayName(req.name())
+                .assetPrefixHash(prefixHash)
+                .belongsToOrg(createdByUser.getBelongsToOrg())
+                .icon(req.favIcon().orElse(""))
+                .responsive(false)
+                .parentScreenId(req.normalizedParentId())
+                .build();
 
         if (req.type() == ScreenType.Img) {
             AssetFilePath assetFilePathForImgFile = s3Config.getQualifiedPathFor(S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
@@ -99,10 +100,10 @@ public class ScreenService extends ServiceBase {
         }
 
         Callable<Optional<AssetFilePath>> screenFileUploader =
-            () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, S3Config.getEntityFiles().dataFile(), S3Config.AssetType.Screen));
+                () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, S3Config.getEntityFiles().dataFile(), S3Config.AssetType.Screen));
 
         Callable<Optional<AssetFilePath>> thumbnailUploader =
-            () -> uploadBase64ImageToS3(req.thumbnail().orElse(""), S3Config.AssetType.Common);
+                () -> uploadBase64ImageToS3(req.thumbnail().orElse(""), S3Config.AssetType.Common);
 
         try {
             List<Optional<AssetFilePath>> assetFiles = Utils.runInParallel(screenFileUploader, thumbnailUploader);
@@ -143,69 +144,69 @@ public class ScreenService extends ServiceBase {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Tour with id %s not found", tourRid));
         }
 
-        Screen clonedScreen = cloneScreen(maybeScreen.get(), userEntity, maybeTour.get());
+        Screen clonedScreen = cloneScreen(newScreen -> newScreen, maybeScreen.get(), userEntity, maybeTour.get());
         return RespScreen.from(clonedScreen);
     }
 
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public Screen cloneScreen(Screen sourceScreen, User user, Tour tour) {
-        return cloneScreen(sourceScreen.getDisplayName(), sourceScreen, user, tour);
+    public Screen cloneScreen(FnScreenBuilder screenBuilder, Screen sourceScreen, User user, Tour tour) {
+        return cloneScreen(screenBuilder, sourceScreen, user, tour, user.getBelongsToOrg());
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public Screen cloneScreen(String displayName, Screen sourceScreen, User user, Tour tour) {
+    public Screen cloneScreen(FnScreenBuilder fnScreenBuilder, Screen sourceScreen, User user, Tour tour, Long belongsToOrg) {
         String prefixHash = Utils.createUuidWord();
         AssetFilePath fromScreenFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Screen,
-            sourceScreen.getAssetPrefixHash(),
-            S3Config.getEntityFiles().dataFile().filename());
+                S3Config.AssetType.Screen,
+                sourceScreen.getAssetPrefixHash(),
+                S3Config.getEntityFiles().dataFile().filename());
         AssetFilePath fromThumbnailPath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Common, sourceScreen.getThumbnail());
+                S3Config.AssetType.Common, sourceScreen.getThumbnail());
         AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Screen,
-            sourceScreen.getAssetPrefixHash(),
-            S3Config.getEntityFiles().editFile().filename());
+                S3Config.AssetType.Screen,
+                sourceScreen.getAssetPrefixHash(),
+                S3Config.getEntityFiles().editFile().filename());
         AssetFilePath fromImgScreenFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Screen,
-            sourceScreen.getAssetPrefixHash(),
-            S3Config.getEntityFiles().imgFile().filename());
+                S3Config.AssetType.Screen,
+                sourceScreen.getAssetPrefixHash(),
+                S3Config.getEntityFiles().imgFile().filename());
 
         AssetFilePath toScreenFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().dataFile().filename());
+                S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().dataFile().filename());
         AssetFilePath toThumbnailPath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Common, UUID.randomUUID().toString());
+                S3Config.AssetType.Common, UUID.randomUUID().toString());
         AssetFilePath toImgScreenFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
+                S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
 
         Callable<AssetFilePath> screenFileCopier = () -> s3Service.copy(fromScreenFilePath, toScreenFilePath);
         Callable<AssetFilePath> thumbnailCopier = () -> s3Service.copy(fromThumbnailPath, toThumbnailPath);
         Callable<AssetFilePath> imgFileCopier = () -> s3Service.copy(fromImgScreenFilePath, toImgScreenFilePath);
         Callable<AssetFilePath> editFileCopier = Utils.isParentScreen(sourceScreen)
-            ? () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT)
-            : () -> copyDataFileToS3(fromScreenEditFilePath, prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
+                ? () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT)
+                : () -> copyDataFileToS3(fromScreenEditFilePath, prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
 
         try {
             List<AssetFilePath> assetFiles = sourceScreen.getType() == ScreenType.SerDom
-                ? Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileCopier)
-                : Utils.runInParallel(screenFileCopier, thumbnailCopier, imgFileCopier);
+                    ? Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileCopier)
+                    : Utils.runInParallel(screenFileCopier, thumbnailCopier, imgFileCopier);
             AssetFilePath thumbnailFile = assetFiles.get(1);
 
-            Screen screen = Screen.builder()
-                .rid(Utils.createReadableId(displayName))
-                .createdBy(user)
-                .url(sourceScreen.getUrl())
-                .displayName(displayName)
-                .assetPrefixHash(prefixHash)
-                .belongsToOrg(user.getBelongsToOrg())
-                .icon(sourceScreen.getIcon())
-                .responsive(sourceScreen.getResponsive())
-                .thumbnail(thumbnailFile.getFilePath())
-                .tours(Set.of(tour))
-                .parentScreenId(Utils.isParentScreen(sourceScreen) ? sourceScreen.getId() : sourceScreen.getParentScreenId())
-                .type(sourceScreen.getType())
-                .build();
-
+            Screen.ScreenBuilder<?, ?> screenBuilder = Screen.builder()
+                    .rid(Utils.createReadableId(sourceScreen.getDisplayName()))
+                    .createdBy(user)
+                    .url(sourceScreen.getUrl())
+                    .displayName(sourceScreen.getDisplayName())
+                    .assetPrefixHash(prefixHash)
+                    .belongsToOrg(belongsToOrg)
+                    .icon(sourceScreen.getIcon())
+                    .responsive(sourceScreen.getResponsive())
+                    .thumbnail(thumbnailFile.getFilePath())
+                    .tours(Set.of(tour))
+                    .parentScreenId(Utils.isParentScreen(sourceScreen) ? sourceScreen.getId() : sourceScreen.getParentScreenId())
+                    .type(sourceScreen.getType());
+            screenBuilder = fnScreenBuilder.apply(screenBuilder);
+            Screen screen = screenBuilder.build();
             return screenRepo.save(screen);
         } catch (Exception e) {
             log.error("Error while copying file from parent screen to child screen. Message: {}", e.getMessage());
@@ -286,10 +287,10 @@ public class ScreenService extends ServiceBase {
         Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
 
         uploadDataFileToS3(
-            body.editData(),
-            screen.getAssetPrefixHash(),
-            S3Config.getEntityFiles().editFile(),
-            S3Config.AssetType.Screen);
+                body.editData(),
+                screen.getAssetPrefixHash(),
+                S3Config.getEntityFiles().editFile(),
+                S3Config.AssetType.Screen);
 
         // Updates the updatedAt
         screen.setUpdatedAt(Utils.getCurrentUtcTimestamp());

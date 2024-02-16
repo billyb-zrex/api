@@ -47,7 +47,7 @@ public class Main {
             hm.put(setting.getK(), setting.getV());
         }
         return new AppSettings(
-            SchemaVersion.of(hm.get("CURRENT_SCHEMA_VERSION"))
+            SchemaVersion.of(hm.get("CURRENT_SCHEMA_VERSION")), hm.getOrDefault("ONBOARDING_TOUR_IDS", "")
         );
     }
 }
