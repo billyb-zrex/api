@@ -208,7 +208,7 @@ public class TourService extends ServiceBase {
         for (Screen sourceScreen : sourceScreens) {
             Screen clonedScreen = screenService.cloneScreen(newSourceScreen ->
                     newSourceScreen.parentScreenId(
-                            shouldCloneParentScreens ? oldAndNewParentScreenMap.get(sourceScreen.getParentScreenId())
+                            sourceScreen.getType() != ScreenType.SerDom ? 0L : shouldCloneParentScreens ? oldAndNewParentScreenMap.get(sourceScreen.getParentScreenId())
                                     : sourceScreen.getParentScreenId()), sourceScreen, user, savedTour, tour.getBelongsToOrg());
             clonedScreens.add(clonedScreen);
             sourceAndClonedScreenIdMap.put(Long.toString(sourceScreen.getId()), Long.toString(clonedScreen.getId()));
