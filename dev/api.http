@@ -12,6 +12,9 @@ GET {{api-host}}/v1/f/iam
 Authorization: {{auth-header}}
 Content-Type: application/json
 
+### refresh settings
+POST {{api-host}}/v1/refreshsettings
+Content-Type: application/json
 
 ### update user
 POST {{api-host}}/v1/f/updateuserprop
@@ -321,4 +324,13 @@ Content-Type: application/json
 {
   "duplicateTourName": "Copy of tour",
   "fromTourRid": "my-first-tour-google-c-uko1xzaxzb5k6a0b"
+}
+
+### Update tour progress property
+POST {{api-host}}/v1/f/updtrprop
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "tourRid": "onbording-1-jwfxoj8ycp4nzi0r"
 }

@@ -35,10 +35,9 @@ public class Tour extends EntityBaseWithOwnership {
     @Column(nullable = false)
     private Boolean onboarding;
 
+    private Boolean inProgress;
+
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(
-        name = "screens_tours_join",
-        joinColumns = @JoinColumn(name = "tour_id"),
-        inverseJoinColumns = @JoinColumn(name = "screen_id"))
+    @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))
     private Set<Screen> screens;
 }

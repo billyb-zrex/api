@@ -18,6 +18,7 @@ import com.sharefable.api.transport.resp.RespUploadUrl;
 import com.sharefable.api.transport.resp.RespUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -52,7 +53,8 @@ public class WorkspaceService extends ServiceBase {
 
     @Transactional
     public RespOrg createNewOrgAndAssignUserToIt(ReqNewOrg body, User user) {
-        String emailDomain = Utils.getDomainFromEmail(user.getEmail());
+        Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.getEmail());
+        String emailDomain = domainInf.getValue0();
 
         // For now only one org per domain is allowed
         Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
@@ -102,7 +104,8 @@ public class WorkspaceService extends ServiceBase {
 
     @Transactional(readOnly = true)
     public RespOrg getOrgByEmail(String email) {
-        String emailDomain = Utils.getDomainFromEmail(email);
+        Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(email);
+        String emailDomain = domainInf.getValue0();
         Set<Org> org = orgRepo.findOrgByDomain(emailDomain);
         return org.isEmpty() ? RespOrg.Empty() : RespOrg.from(org.iterator().next());
 
@@ -110,7 +113,8 @@ public class WorkspaceService extends ServiceBase {
 
     @Transactional
     public RespUser assignUserToImplicitOrg(User user) {
-        String emailDomain = Utils.getDomainFromEmail(user.getEmail());
+        Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.getEmail());
+        String emailDomain = domainInf.getValue0();
         Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
         if (!orgs.isEmpty()) {
             Org org = orgs.iterator().next();
@@ -127,9 +131,11 @@ public class WorkspaceService extends ServiceBase {
         RespUser respUser = RespUser.from(user);
         // No DB operation should happen if the user is part of an org already.
         if (user.getBelongsToOrg() == null) {
+            Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.getEmail());
+            String emailDomain = domainInf.getValue0();
             // If user is not part of an org then find out is there implicit org that is present as part of user's
             // email domain
-            Set<Org> orgs = orgRepo.findOrgByDomain(Utils.getDomainFromEmail(user.getEmail()));
+            Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
             respUser.setOrgAssociation(!orgs.isEmpty()
                 ? RespUser.UserOrgAssociation.Implicit
                 : RespUser.UserOrgAssociation.NA);

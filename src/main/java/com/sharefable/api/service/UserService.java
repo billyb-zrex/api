@@ -2,14 +2,16 @@ package com.sharefable.api.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sharefable.api.common.ExcludeEmailDomain;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.repo.OrgRepo;
 import com.sharefable.api.repo.UserRepo;
 import com.sharefable.api.transport.NfEvents;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -24,6 +27,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepo userRepo;
+    private final OrgRepo orgRepo;
+    //    private final WorkspaceService workspaceService;
     private final NfHookService nfHookService;
     private final SubscriptionService subService;
 
@@ -44,8 +49,7 @@ public class UserService {
         Map<String, Object> claims = jwt.getClaims();
         Object userDetailsClaim = claims.get("https://identity.sharefable.com/user");
         String userDetailsClaimStr = objectMapper.writeValueAsString(userDetailsClaim);
-        UserClaimFromAuth0 userClaimFromAuth0 = objectMapper.readValue(userDetailsClaimStr, UserClaimFromAuth0.class);
-        return userClaimFromAuth0;
+        return objectMapper.readValue(userDetailsClaimStr, UserClaimFromAuth0.class);
     }
 
     User setUserActiveOrInactive(User user, Boolean isActive) {
@@ -57,21 +61,43 @@ public class UserService {
     }
 
     public User createNewUserIfNotExist(UserClaimFromAuth0 user, String authId) {
-        String emailDomain = Utils.getDomainFromEmail(user.email());
+        Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.email());
+        String emailDomain = domainInf.getValue0();
+        Boolean isWorkEmail = domainInf.getValue1();
+
         if (StringUtils.isBlank(emailDomain)) {
             log.error("Can't find domain from email {}", user.email());
             throw new IllegalStateException("Can't create user");
         }
+
         User newUser = User.builder()
             .email(user.email())
             .avatar(user.picture())
             .authId(authId)
             .firstName(StringUtils.substring(user.givenName, 0, 49))
             .lastName(StringUtils.substring(user.familyName, 0, 49))
-            .domainBlacklisted(ExcludeEmailDomain.NOT_ALLOWED.contains(emailDomain))
+            .domainBlacklisted(!isWorkEmail)
             .active(true)
             .build();
         sendNotificationToSlack(user.email());
+
+        if (!isWorkEmail) {
+            Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
+            if (orgs.isEmpty()) {
+                String rid = Utils.createReadableId(emailDomain);
+                Org.OrgBuilder orgBuilder = Org.builder()
+                    .displayName(emailDomain)
+                    .domain(emailDomain)
+                    .rid(rid);
+                Org org = orgBuilder.build();
+                Org savedOrg = orgRepo.save(org);
+                newUser.setBelongsToOrg(savedOrg.getId());
+                return userRepo.save(newUser);
+            } else {
+                log.error("Organisation already present for {}", newUser.getEmail());
+                throw new IllegalStateException("Can't create user");
+            }
+        }
         return userRepo.save(newUser);
     }
 

@@ -27,6 +27,7 @@ public class RespTour extends ResponseBase {
     private String description;
     private Timestamp lastPublishedDate;
     private Boolean onboarding;
+    private Boolean inProgress;
     private RespUser createdBy;
 
     public static RespTour from(Tour tour) {

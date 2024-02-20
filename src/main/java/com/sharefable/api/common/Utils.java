@@ -209,4 +209,13 @@ public interface Utils {
         return "";
     }
 
+    static Pair<String, Boolean> getDomainFromEmailForRespectiveEmail(String email) {
+        String domain = getDomainFromEmail(email);
+        if (ExcludeEmailDomain.NOT_ALLOWED.contains(domain)) {
+            domain = email.replaceAll("\\W", "").toLowerCase();
+            if (domain.length() > 250) domain = domain.substring(0, 250);
+            return Pair.with(domain + ".com", false);
+        }
+        return Pair.with(domain, true);
+    }
 }

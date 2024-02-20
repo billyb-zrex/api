@@ -76,7 +76,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
     }
 
     public TemplateFile getTemplateFileLocFor(DATA_FILE_TYPE type) {
-        String schemaVersion = settings.currentSchemaVersion().toValue();
+        String schemaVersion = settings.getCurrentSchemaVersion().toValue();
         return switch (type) {
             case TOUR_INDEX -> new TemplateFile(
                 String.format(PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX, schemaVersion),

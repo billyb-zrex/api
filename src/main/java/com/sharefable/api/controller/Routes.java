@@ -10,6 +10,7 @@ public interface Routes {
     String GET_TOUR = "/tour";
     String LOG_USER_EVENTS = "/lue";
     String NF_HOOK = "/nfhook";
+    String REFRESH_SETTINGS = "/refreshsettings";
     String CHARGEBEE_WEBHOOK = "/wh/cb";
 
     /* === Routes with authentication === */
@@ -28,6 +29,7 @@ public interface Routes {
     String GET_ALL_TOURS = __BEHIND_LOGIN__ + "/tours";
     String NEW_TOUR = __BEHIND_LOGIN__ + "/newtour";
     String DELETE_TOUR = __BEHIND_LOGIN__ + "/deltour";
+    String UPDATE_TOUR_PROPERTY = __BEHIND_LOGIN__ + "/updtrprop";
     String UPLOAD_LINK = __BEHIND_LOGIN__ + "/getuploadlink";
     String RECORD_EL_EDIT = __BEHIND_LOGIN__ + "/recordeledit";
     String RECORD_TOUR_EDIT = __BEHIND_LOGIN__ + "/recordtredit";

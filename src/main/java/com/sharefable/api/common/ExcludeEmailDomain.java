@@ -5,6 +5,7 @@ import java.util.Set;
 public class ExcludeEmailDomain {
     public static Set<String> NOT_ALLOWED = Set.of(
         "gmail.com",
+        "proton.me",
         "yahoo.com",
         "hotmail.com",
         "aol.com",

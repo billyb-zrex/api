@@ -17,7 +17,6 @@ import com.sharefable.api.transport.resp.RespUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
@@ -73,12 +72,18 @@ public class WorkspaceController {
     public ApiResp<RespCommonConfig> getCommonConfig() {
         RespCommonConfig.RespCommonConfigBuilder builder = RespCommonConfig.builder();
         wsService.getCommonConfig(builder);
-        builder.latestSchemaVersion(settings.currentSchemaVersion());
+        builder.latestSchemaVersion(settings.getCurrentSchemaVersion());
         RespCommonConfig resp = builder.build();
         return ApiResp.<RespCommonConfig>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 
-    @PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+    @RequestMapping(value = Routes.REFRESH_SETTINGS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<String> refreshSettings() {
+        settings.load();
+        return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
+    }
+
+    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
     @RequestMapping(value = Routes.UPLOAD_LINK, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResp<RespUploadUrl> getPresignedUrl(
         @RequestParam("te") String contentTypeEncoded,
