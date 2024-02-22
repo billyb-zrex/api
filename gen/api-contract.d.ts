@@ -9,6 +9,11 @@ export interface ApiResp<T> {
     errCode: ErrorCode;
 }
 
+export interface ButtonClicks {
+    btnId: string;
+    totalClicks: number;
+}
+
 export interface EntityHoldingInfoBase extends Serializable {
     __id: number;
     type: string;
@@ -38,6 +43,22 @@ export interface PaymentTerms {
 export interface ReqTourPropUpdate {
     tourRid: string;
     inProgress?: boolean;
+}
+
+export interface TotalVisitorsByYmd {
+    totalViews: number;
+    ymd: string;
+}
+
+export interface TourAnnViewsWithPercentile {
+    annId: string;
+    totalViews: number;
+    percentile50: number;
+}
+
+export interface TourAnnWithViews {
+    annId: string;
+    totalViews: number;
 }
 
 export interface ScreenAssets {
@@ -173,6 +194,11 @@ export interface RespCommonConfig extends ResponseBase {
     latestSchemaVersion: SchemaVersion;
 }
 
+export interface RespConversion {
+    tourId: number;
+    buttonsWithTotalClicks: ButtonClicks[];
+}
+
 export interface RespHealth extends ResponseBase {
     status: string;
 }
@@ -230,6 +256,21 @@ export interface RespTour extends ResponseBase {
     onboarding: boolean;
     inProgress: boolean;
     createdBy: RespUser;
+}
+
+export interface RespTourAnnViews {
+    tourId: number;
+    tourAnnWithViews: TourAnnWithViews[];
+}
+
+export interface RespTourAnnWithPercentile {
+    tourAnnInfo: TourAnnViewsWithPercentile[];
+}
+
+export interface RespTourView {
+    tourId: number;
+    totalViews: number;
+    totalVisitorsByYmd: TotalVisitorsByYmd[];
 }
 
 export interface RespTourWithScreens extends RespTour {

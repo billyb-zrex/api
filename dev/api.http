@@ -186,7 +186,7 @@ GET {{api-host}}/v1/tour?rid=default-tour-xq4eulkm
 Content-Type: application/json
 
 ### get tour by rid with screens
-GET {{api-host}}/v1/tour?rid=my-first-tour-google-c-4fa5jpioriohse1b&s=1
+GET {{api-host}}/v1/tour?rid=untitled-4n0193hgecfkf2qn&s=1
 Content-Type: application/json
 
 
@@ -334,3 +334,24 @@ Content-Type: application/json
 {
   "tourRid": "onbording-1-jwfxoj8ycp4nzi0r"
 }
+
+### Total Visitors
+GET {{api-host}}/v1/f/totalviews?rid=publish&d=30
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### Funnel data
+GET {{api-host}}/v1/f/annviews?rid=publish-test&d=30
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+
+### steps visited
+GET {{api-host}}/v1/f/stpsvis?rid=publish-test-i&d=30
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### Conversion
+GET {{api-host}}/v1/f/convrsn?rid=publish-test&d=30
+Authorization: {{auth-header}}
+Content-Type: application/json

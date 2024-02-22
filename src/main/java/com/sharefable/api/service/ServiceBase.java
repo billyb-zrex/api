@@ -148,12 +148,12 @@ public abstract class ServiceBase implements DefaultThumbnail {
         }
 
         if (maybeEntity.isEmpty()) {
-            log.error("Can't update edit for {} {} as it's not found", entityType, rid);
+            log.error("Can't update edit or retrieve analytics for {} {} as it's not found", entityType, rid);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "");
         }
         EntityBaseWithOwnership entity = maybeEntity.get();
         if (!Objects.equals(entity.getBelongsToOrg(), user.getBelongsToOrg())) {
-            log.error("Can't update edit for {} {} as it's belong to different org. Requested by user {}, belongs to org {}",
+            log.error("Can't update edit or retrieve analytics for {} {} as it's belong to different org. Requested by user {}, belongs to org {}",
                 entityType, rid, user.getId(), entity.getBelongsToOrg());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not enough permission");
         }

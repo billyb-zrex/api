@@ -20,6 +20,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -218,4 +221,12 @@ public interface Utils {
         }
         return Pair.with(domain, true);
     }
+    static String calculateParticularUtcDateFromCurrentUtc(Integer numberOfDays) {
+        Instant currentUTC = Instant.now();
+        Instant specificDateFromCurrentUTC = currentUTC.minus(java.time.Period.ofDays(numberOfDays));
+        LocalDateTime particularUTCLocalDateTime = LocalDateTime.ofInstant(specificDateFromCurrentUTC, ZoneId.of("UTC"));
+        String particularDate = particularUTCLocalDateTime.toLocalDate().toString();
+        return particularDate.replace("-", "");
+    }
+
 }
