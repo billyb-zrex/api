@@ -92,6 +92,11 @@ public class WorkspaceService extends ServiceBase {
         user.setFirstName(body.firstName());
         user.setLastName(body.lastName());
         User savedUser = userRepo.save(user);
+
+        if (StringUtils.isNotBlank(savedUser.getFirstName())) {
+            userService.sendUserNf(savedUser.getEmail(), savedUser.getFirstName(), savedUser.getLastName());
+        }
+
         return RespUser.from(savedUser);
     }
 

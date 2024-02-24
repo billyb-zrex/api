@@ -79,7 +79,7 @@ public class UserService {
             .domainBlacklisted(!isWorkEmail)
             .active(true)
             .build();
-        sendNotificationToSlack(user.email());
+        sendUserNf(user.email(), newUser.getFirstName(), newUser.getLastName());
 
         if (!isWorkEmail) {
             Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
@@ -101,9 +101,17 @@ public class UserService {
         return userRepo.save(newUser);
     }
 
-    private void sendNotificationToSlack(String userEmail) {
+    public void sendUserNf(String userEmail, String firstName, String lastName) {
         Map<String, String> eventInfo = new HashMap<>();
+
+        if (StringUtils.isBlank(userEmail) || StringUtils.isBlank(firstName)) {
+            log.warn("Didn't send message as one of userEmail=[{}] or firstName=[{}] is blank", userEmail, firstName);
+            return;
+        }
+
         eventInfo.put("emailId", userEmail);
+        eventInfo.put("firstName", firstName);
+        if (!StringUtils.isBlank(lastName)) eventInfo.put("lastName", lastName);
         nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP, eventInfo);
     }
 
