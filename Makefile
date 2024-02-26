@@ -31,6 +31,7 @@ env:
 
 	@if [ "$(staging)" ]; then \
         cp env.staging env.now; \
+        sed -r 's/^export[[:space:]]+//' env.staging > env.idea; \
         echo "[staging]"; \
     elif [ "$(dev)" ]; then \
         sed -r 's/^export[[:space:]]+//' env.dev > env.idea; \

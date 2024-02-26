@@ -17,4 +17,7 @@ import lombok.experimental.SuperBuilder;
 public class TourAnnWithViews {
     private String annId;
     private Long totalViews;
+    private Double p50;
+    private Double p75;
+    private Double p95;
 }

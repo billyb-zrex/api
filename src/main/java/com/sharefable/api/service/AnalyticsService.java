@@ -1,5 +1,6 @@
 package com.sharefable.api.service;
 
+import com.sharefable.api.common.SumViews;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.*;
 import com.sharefable.api.repo.AnalyticsAnnClickRepo;
@@ -45,11 +46,11 @@ public class AnalyticsService {
             return RespTourView.Empty();
         }
         String dateBeforeCertainDays = Utils.calculateParticularUtcDateFromCurrentUtc(days);
-        Long totalViews = analyticsMetricsRepo.findSumOfAllVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
+        SumViews sumViews = analyticsMetricsRepo.findSumOfAllVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
         List<TotalVisitorsByYmd> totalVisitorsByYmd = analyticsMetricsRepo.findTotalVisitorsByYmd(tour.getId(), dateBeforeCertainDays);
         return RespTourView.builder()
             .tourId(tour.getId())
-            .totalViews(totalViews)
+            .totalViews(sumViews)
             .totalVisitorsByYmd(totalVisitorsByYmd)
             .build();
     }

@@ -29,14 +29,14 @@ public class AnalyticsController {
         return ApiResp.<RespTourView>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 
-    @RequestMapping(value = Routes.ANN_VIEW, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = Routes.ANN_VIEWS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 //    @PreAuthorize("hasAuthority(@Perm.VIEW_ANALYTICS)")
     public ApiResp<RespTourAnnViews> getAnnViewInfo(@RequestParam(name = "rid") String rid, @RequestParam(name = "d") Integer days, @AuthUser User user) {
         RespTourAnnViews resp = analyticsService.getAnnViews(rid, days, user);
         return ApiResp.<RespTourAnnViews>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
     }
 
-    @RequestMapping(value = Routes.STEPS_VISITED, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = Routes.STEPS_DURATION, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 //    @PreAuthorize("hasAuthority(@Perm.VIEW_ANALYTICS)")
     public ApiResp<RespTourAnnWithPercentile> getStepsVisited(@RequestParam(name = "rid") String rid, @RequestParam(name = "d") Integer days, @AuthUser User user) {
         RespTourAnnWithPercentile resp = analyticsService.getTimeSpentForEachAnnotation(rid, days, user);

@@ -48,7 +48,7 @@ public interface Routes {
     String GEN_CHECKOUT_URL = __BEHIND_LOGIN__ + "/genchckouturl";
     String PUBLISH_TOUR = __BEHIND_LOGIN__ + "/tpub";
     String TOTAL_VIEWS = __BEHIND_LOGIN__ + "/totalviews";
-    String ANN_VIEW = __BEHIND_LOGIN__ + "/annviews";
-    String STEPS_VISITED = __BEHIND_LOGIN__ + "/stpsvis";
+    String ANN_VIEWS = __BEHIND_LOGIN__ + "/annviews";
+    String STEPS_DURATION = __BEHIND_LOGIN__ + "/stpsdur";
     String CONVERSION = __BEHIND_LOGIN__ + "/convrsn";
 }

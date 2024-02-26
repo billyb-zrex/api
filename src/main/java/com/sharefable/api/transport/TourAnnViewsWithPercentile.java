@@ -19,5 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 public class TourAnnViewsWithPercentile {
     private String annId;
     private Long totalViews;
-    private Double percentile50;
+    private Double p1;
+    private Double p5;
+    private Double p10;
+    private Double p25;
+    private Double p50;
+    private Double p75;
+    private Double p90;
+    private Double p95;
+    private Double p99;
 }
