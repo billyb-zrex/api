@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
     schema:
-        image: flyway/flyway
+        image: flyway/flyway@sha256:be37029d12403cb198d4cbb5cec0e94068f8abcdecc3e03aa419309fa806e9a5
         container_name: fable-db-flyway
         command: -url=${DB_CONN_URL_DOCKER} -schemas=migration -user=${DB_USER} -password=${DB_PWD} -connectRetries=60 migrate
         volumes:
