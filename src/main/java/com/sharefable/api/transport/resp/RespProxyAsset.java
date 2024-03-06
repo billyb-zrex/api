@@ -25,6 +25,7 @@ import java.util.Optional;
 public class RespProxyAsset extends ResponseBase {
     private String proxyUri;
     private Optional<String> content;
+    private Optional<Boolean> hasErr;
 
     public static RespProxyAsset from(ProxyAsset asset, S3Config pathConfig) {
         try {
@@ -48,5 +49,12 @@ public class RespProxyAsset extends ResponseBase {
 
     public static RespProxyAsset Empty() {
         return new RespProxyAsset();
+    }
+
+    public static RespProxyAsset WithError(String originalUrl) {
+        RespProxyAsset proxyAsset = new RespProxyAsset();
+        proxyAsset.setProxyUri(originalUrl);
+        proxyAsset.setHasErr(Optional.of(true));
+        return proxyAsset;
     }
 }

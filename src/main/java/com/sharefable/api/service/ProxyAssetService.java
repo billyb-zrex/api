@@ -82,7 +82,7 @@ public class ProxyAssetService {
                 } catch (IOException e) {
                     log.error("Something went wrong while getting content from s3 for origin {} {}", origin, e.getMessage());
                     Sentry.captureException(e);
-                    return RespProxyAsset.Empty();
+                    return RespProxyAsset.WithError(origin);
                 }
             }
             return respProxyAsset;
@@ -122,13 +122,13 @@ public class ProxyAssetService {
                     Optional<ParsedReqProxyAsset> redirectProxyAsset = body.updateUrl(redirectTo);
                     if (redirectProxyAsset.isEmpty()) {
                         log.error("Cant form redirect url {}", redirectTo);
-                        return RespProxyAsset.Empty();
+                        return RespProxyAsset.WithError(origin);
                     } else {
                         return createProxyAsset(redirectProxyAsset.get());
                     }
                 } else {
                     log.error("Asset returns redirection status {} but location not found", status);
-                    return RespProxyAsset.Empty();
+                    return RespProxyAsset.WithError(origin);
                 }
             } else if (resp.getBody() != null && isValidResponse) {
                 String fileName = Utils.createUuidWord();
@@ -157,11 +157,11 @@ public class ProxyAssetService {
                 assetFilePath = s3Service.upload(assetFilePath, contentBody, metadata);
 
                 ProxyAsset asset = ProxyAsset.builder()
-                    .rid(hashedOrigin)
-                    .fullOriginUrl(origin)
-                    .proxyUri(assetFilePath.getFilePath())
-                    .httpStatus(status)
-                    .build();
+                        .rid(hashedOrigin)
+                        .fullOriginUrl(origin)
+                        .proxyUri(assetFilePath.getFilePath())
+                        .httpStatus(status)
+                        .build();
 
                 ProxyAsset savedAsset = proxyAssetRepo.save(asset);
                 RespProxyAsset respProxyAsset = RespProxyAsset.from(savedAsset, s3Config);
@@ -171,17 +171,17 @@ public class ProxyAssetService {
                 return respProxyAsset;
             } else {
                 log.error("Cannot get asset {} . Empty body or not okay status. Status = {}", origin, status);
-                return RespProxyAsset.Empty();
+                return RespProxyAsset.WithError(origin);
             }
 
         } catch (HttpStatusCodeException ex) {
             log.error("Cannot get asset {} [Status: {}, resp from server: {}]", origin, ex.getStatusCode(), ex.getResponseBodyAsString());
             Sentry.captureException(ex);
-            return RespProxyAsset.Empty();
+            return RespProxyAsset.WithError(origin);
         } catch (Exception ex) {
             log.error("Cannot get asset {} error {}", origin, ex.getMessage());
             Sentry.captureException(ex);
-            return RespProxyAsset.Empty();
+            return RespProxyAsset.WithError(origin);
         }
     }
 
@@ -205,8 +205,8 @@ public class ProxyAssetService {
                 l--;
             }
             if (StringUtils.isBlank(url)
-                || StringUtils.startsWithIgnoreCase(url, "data:")
-                || StringUtils.startsWithIgnoreCase(url, "#")) {
+                    || StringUtils.startsWithIgnoreCase(url, "data:")
+                    || StringUtils.startsWithIgnoreCase(url, "#")) {
                 continue;
             }
             url = url.trim();
