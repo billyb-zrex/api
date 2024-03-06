@@ -1,6 +1,7 @@
 package com.sharefable.api.transport;
 
-public enum EntryDuratinType {
+@GenerateTSDef
+public enum EntryDurationType {
     CURRENT,
     DAILY,
     LIFETIME

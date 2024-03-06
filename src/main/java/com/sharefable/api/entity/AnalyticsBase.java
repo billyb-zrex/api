@@ -1,6 +1,6 @@
 package com.sharefable.api.entity;
 
-import com.sharefable.api.transport.EntryDuratinType;
+import com.sharefable.api.transport.EntryDurationType;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -25,5 +25,5 @@ public class AnalyticsBase extends EntityBase {
 
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
-    private EntryDuratinType entryDurationType;
+    private EntryDurationType entryDurationType;
 }

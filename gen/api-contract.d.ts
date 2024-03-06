@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-02-26 06:22:01.
+// Generated using typescript-generator version 2.35.1025 on 2024-03-05 16:47:06.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -327,6 +327,12 @@ export const enum EntityType {
     Tour = 1,
 }
 
+export const enum EntryDurationType {
+    CURRENT = "CURRENT",
+    DAILY = "DAILY",
+    LIFETIME = "LIFETIME",
+}
+
 export const enum JobProcessingStatus {
     Failed = 0,
     Touched = 1,
@@ -338,6 +344,16 @@ export const enum JobType {
     TRANSCODE_VIDEO = "TRANSCODE_VIDEO",
     RESIZE_IMG = "RESIZE_IMG",
     DELETE_ASSET = "DELETE_ASSET",
+    REFRESH_CRAWLER = "REFRESH_CRAWLER",
+    REFRESH_CRAWLER_FOR_ANN_USER_ASSIGN = "REFRESH_CRAWLER_FOR_ANN_USER_ASSIGN",
+    REFRESH_TOUR_ANN_CLICK = "REFRESH_TOUR_ANN_CLICK",
+    REFRESH_TOUR_CONVERSION = "REFRESH_TOUR_CONVERSION",
+    REFRESH_TOUR_METRICS = "REFRESH_TOUR_METRICS",
+    REFRESH_USER_AID_MAPPING = "REFRESH_USER_AID_MAPPING",
+    REFRESH_AID_SID_MAPPING = "REFRESH_AID_SID_MAPPING",
+    ROLLUP_METRICS_CURRENT_TO_DAILY = "ROLLUP_METRICS_CURRENT_TO_DAILY",
+    ROLLUP_CONVERSION_CURRENT_TO_DAILY = "ROLLUP_CONVERSION_CURRENT_TO_DAILY",
+    ROLLUP_ANN_CLICK_CURRENT_TO_DAILY = "ROLLUP_ANN_CLICK_CURRENT_TO_DAILY",
 }
 
 export const enum SchemaVersion {
