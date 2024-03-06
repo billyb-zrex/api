@@ -5,6 +5,12 @@ on:
         branches: [ develop, master ]
         paths:
             - 'schema/**'
+    workflow_dispatch:
+        inputs:
+          deploy_env:
+            type: environment
+            description: Deployment environment?
+            required: true
 
 env:
     DEPLOY_ENV: ${{ github.ref_name == 'master' && 'prod' ||  github.ref_name == 'develop' && 'staging' || 'na' }}
