@@ -355,3 +355,23 @@ Content-Type: application/json
 GET {{api-host}}/v1/f/convrsn?rid=publish-test&d=30
 Authorization: {{auth-header}}
 Content-Type: application/json
+
+### get all tour leads
+GET {{api-host}}/v1/f/gettrleads?rid=img-tour-gnn21p5cjvz5szay&d=30
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### lead activity data file s3 url
+GET {{api-host}}/v1/f/getleadactvitydatafile?rid=img-tour-gnn21p5cjvz5szay&aid=075149f5d4434a86bd8eafc1cbecfae1
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### Upload lead level activity to s3
+POST {{api-host}}/v1/updleadanalytics
+Content-Type: application/json
+
+{
+  "tourId": 260,
+  "aid": "075149f5d4434a86bd8eafc1cbecfae1",
+  "data": ""
+}

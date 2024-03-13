@@ -23,4 +23,6 @@ public class AnalyticsUserAidMapping extends EntityBase {
 
     @Column(nullable = false)
     private String email;
+    @Column(nullable = false)
+    private String dateYmd;
 }

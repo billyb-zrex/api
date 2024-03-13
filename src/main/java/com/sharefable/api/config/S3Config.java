@@ -25,6 +25,7 @@ public class S3Config {
     private static final String EDIT_FILE_NAME = "edits.json";
     private static final String LOADER_FILE_NAME = "loader.json";
     private static final String IMAGE_FILE_NAME = "index.img";
+    private static final String LEAD_ACTIVITY_FILE_NAME = "ule.json";
     private static final String PUBLISHED_DATA_FILE_NAME = "0_index.json";
     private static final String PUBLISHED_EDIT_FILE_NAME = "0_edits.json";
     private static final String PUBLISHED_LOADER_FILE_NAME = "0_loader.json";
@@ -36,6 +37,7 @@ public class S3Config {
     private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
     private static final String PATH_FOR_TOUR_ASSET = "/tour/%s";
     private static final String PATH_FOR_USER_UPLOADED_ASSET = "/usr/org/%s";
+    private static final String PATH_FOR_LEAD_LEVEL_ANALYTICS = "/ula/%s";
     private String region;
     private String rootQualifier;
     private String assetBucketName;
@@ -56,7 +58,8 @@ public class S3Config {
             new FileConfig(PUBLISHED_EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
             new FileConfig(PUBLISHED_LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
             new FileConfig(PUBLISHED_TOUR_ENTITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-            new FileConfig(MANIFEST_FILE, DATA_FILE_CACHE_POLICY.NoCache));
+            new FileConfig(MANIFEST_FILE, DATA_FILE_CACHE_POLICY.NoCache),
+            new FileConfig(LEAD_ACTIVITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
     }
 
     private String getPathForAssetType(AssetType type) {
@@ -67,6 +70,7 @@ public class S3Config {
             case Common -> PATH_FOR_COMMON_ASSET;
             case PublishedTour -> PATH_FOR_PUBLISHED_TOUR_ASSET;
             case UserGenerated -> PATH_FOR_USER_UPLOADED_ASSET;
+            case Analytics -> PATH_FOR_LEAD_LEVEL_ANALYTICS;
         };
     }
 
@@ -80,7 +84,8 @@ public class S3Config {
             AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Common, "") + "/").getS3UriToFile(),
             AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Screen, "")).getS3UriToFile(),
             AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Tour, "")).getS3UriToFile(),
-            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.PublishedTour, "")).getS3UriToFile()
+            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.PublishedTour, "")).getS3UriToFile(),
+            AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Analytics, "")).getS3UriToFile()
         );
     }
 
@@ -117,7 +122,8 @@ public class S3Config {
         Tour,
         Common,
         UserGenerated,
-        PublishedTour
+        PublishedTour,
+        Analytics
     }
 
     public enum DATA_FILE_CACHE_POLICY {
@@ -129,7 +135,8 @@ public class S3Config {
         String commonAsset,
         String screenAsset,
         String tourAsset,
-        String tourPublishedAsset) {
+        String tourPublishedAsset,
+        String leadAnalytics) {
     }
 
     public record FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
@@ -144,6 +151,7 @@ public class S3Config {
         FileConfig publishedEditFile,
         FileConfig publishedLoaderFile,
         FileConfig publishedTourEntityFile,
-        FileConfig manifestFile) {
+        FileConfig manifestFile,
+        FileConfig leadActivityDataFile) {
     }
 }

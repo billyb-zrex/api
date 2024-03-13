@@ -51,4 +51,7 @@ public interface Routes {
     String ANN_VIEWS = __BEHIND_LOGIN__ + "/annviews";
     String STEPS_DURATION = __BEHIND_LOGIN__ + "/stpsdur";
     String CONVERSION = __BEHIND_LOGIN__ + "/convrsn";
+    String GET_ALL_TOUR_LEADS = __BEHIND_LOGIN__ + "/gettrleads";
+    String UPLOAD_LEAD_LEVEL_ANALYTICS = "/updleadanalytics";
+    String GET_LEAD_ACTIVITY_DATA_FILE = __BEHIND_LOGIN__ + "/getleadactvitydatafile";
 }
