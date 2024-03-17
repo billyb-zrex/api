@@ -55,8 +55,8 @@ public class SecurityConfig {
             .permitAll()
             .and()
             .httpBasic(Customizer.withDefaults())
-            .oauth2ResourceServer().jwt().decoder(jwtDecoder())
-            .jwtAuthenticationConverter(makePermissionsConverter());
+            .oauth2ResourceServer().jwt().decoder(jwtDecoder());
+//      .jwtAuthenticationConverter(makePermissionsConverter());
         return http.build();
     }
 

@@ -28,7 +28,6 @@ import java.util.Set;
 public class UserService {
     private final UserRepo userRepo;
     private final OrgRepo orgRepo;
-    //    private final WorkspaceService workspaceService;
     private final NfHookService nfHookService;
     private final SubscriptionService subService;
 
