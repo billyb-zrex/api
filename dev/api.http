@@ -375,3 +375,20 @@ Content-Type: application/json
   "aid": "075149f5d4434a86bd8eafc1cbecfae1",
   "data": ""
 }
+
+### log user events direclty to db
+POST {{api-host}}/v1/lue?sub=Y3RhX2NsaWNrZWQ%3D
+Content-Type: application/json
+
+{
+  "email": "random@gmail.com",
+  "event": "cta_clicked",
+  "ctaFrom": "annotation",
+  "btnId": "17090963582f5b18a96d04d",
+  "url": "https://stackoverflow.com/questions/10260151/undo-a-mistake-made-while-squashing-the-commits-in-git",
+  "tourId": 292,
+  "aid": "075149f5d4434a86bd8eafc1cbecfae1",
+  "sid": "abd050f630b449be93c90a46410b82ae",
+  "uts": 1710847525,
+  "tz": "-330"
+}

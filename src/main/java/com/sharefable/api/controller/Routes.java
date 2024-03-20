@@ -9,6 +9,7 @@ public interface Routes {
     String GET_SCREEN = "/screen";
     String GET_TOUR = "/tour";
     String LOG_USER_EVENTS = "/lue";
+    String LOG_USER_EVENTS_DIRECT = "/lued";
     String NF_HOOK = "/nfhook";
     String REFRESH_SETTINGS = "/refreshsettings";
     String CHARGEBEE_WEBHOOK = "/wh/cb";

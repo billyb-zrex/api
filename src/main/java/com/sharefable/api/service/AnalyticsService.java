@@ -1,5 +1,6 @@
 package com.sharefable.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.SumViews;
 import com.sharefable.api.common.Utils;
@@ -23,10 +24,14 @@ import java.util.List;
 @Service
 @Slf4j
 public class AnalyticsService extends ServiceBase {
+    private static final String TABLE_NAME = "analytics_cta_clicked";
+    private static String TABLE_PREFIX = "analytics_";
+    private final ObjectMapper mapper = new ObjectMapper();
     private final AnalyticsMetricsRepo analyticsMetricsRepo;
     private final AnalyticsAnnClickRepo analyticsAnnClickRepo;
     private final AnalyticsConversionRepo analyticsConversionRepo;
     private final AnalyticsUserAidMappingRepo analyticsUserAidMappingRepo;
+    private final AnalyticsCtaClickedRepo analyticsCtaClickedRepo;
     private final TourService tourService;
     private final S3Config s3Config;
 
@@ -37,6 +42,7 @@ public class AnalyticsService extends ServiceBase {
         AnalyticsConversionRepo analyticsConversionRepo,
         TourService tourService,
         AnalyticsUserAidMappingRepo analyticsUserAidMappingRepo,
+        AnalyticsCtaClickedRepo analyticsCtaClickedRepo,
         TourRepo tourRepo,
         AppSettings settings,
         S3Service s3Service,
@@ -47,6 +53,7 @@ public class AnalyticsService extends ServiceBase {
         this.analyticsAnnClickRepo = analyticsAnnClickRepo;
         this.analyticsConversionRepo = analyticsConversionRepo;
         this.analyticsUserAidMappingRepo = analyticsUserAidMappingRepo;
+        this.analyticsCtaClickedRepo = analyticsCtaClickedRepo;
         this.tourService = tourService;
         this.s3Config = s3Config;
     }
@@ -184,6 +191,19 @@ public class AnalyticsService extends ServiceBase {
         AssetFilePath qualifiedPathFor = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Analytics, prefixHash, S3Config.getEntityFiles().leadActivityDataFile().filename());
         return Pair.with(prefixHash, qualifiedPathFor.getS3UriToFile());
+    }
+
+    public void logUserEvents(String sub, String userEventLogs) {
+        try {
+            String tableName = TABLE_PREFIX + sub;
+            if (tableName.equals(TABLE_NAME)) {
+                AnalyticsCtaClicked analyticsCtaClicked = mapper.readValue(userEventLogs, AnalyticsCtaClicked.class);
+                analyticsCtaClickedRepo.save(analyticsCtaClicked);
+            }
+        } catch (Exception e) {
+            log.warn("Something wrong while sending {} events to database", sub, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something wrong while sending events to database");
+        }
     }
 
 }

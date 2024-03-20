@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 @RestController
 @RequestMapping(Routes.API_V1)
 @RequiredArgsConstructor
@@ -64,5 +68,13 @@ public class AnalyticsController {
     public ApiResp<RespLeadActivityUrl> getLeadActivityDataFile(@RequestParam(name = "rid") String rid, @RequestParam(name = "aid") String aid, @AuthUser User user) {
         RespLeadActivityUrl resp = analyticsService.getLeadActivityDataFile(rid, aid, user);
         return ApiResp.<RespLeadActivityUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+    }
+
+    @RequestMapping(value = Routes.LOG_USER_EVENTS_DIRECT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResp<String> logEvents(@RequestParam("sub") String encodedSub, @RequestBody String userEventLogs) {
+        String dSub = URLDecoder.decode(encodedSub, StandardCharsets.UTF_8);
+        String sub = new String(Base64.getDecoder().decode(dSub));
+        analyticsService.logUserEvents(sub, userEventLogs);
+        return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
     }
 }
