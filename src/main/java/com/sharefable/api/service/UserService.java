@@ -80,25 +80,29 @@ public class UserService {
             .build();
         sendUserNf(user.email(), newUser.getFirstName(), newUser.getLastName());
 
-        if (!isWorkEmail) {
-            Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
-            if (orgs.isEmpty()) {
-                String rid = Utils.createReadableId(emailDomain);
-                Org.OrgBuilder orgBuilder = Org.builder()
-                    .displayName(emailDomain)
-                    .domain(emailDomain)
-                    .rid(rid);
-                Org org = orgBuilder.build();
-                Org savedOrg = orgRepo.save(org);
-                newUser.setBelongsToOrg(savedOrg.getId());
-                return userRepo.save(newUser);
-            } else {
-                log.error("Organisation already present for {}", newUser.getEmail());
-                throw new IllegalStateException("Can't create user");
-            }
-        }
+    if (!isWorkEmail) {
+      Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
+      if (orgs.isEmpty()) {
+        String rid = Utils.createReadableId(emailDomain);
+        Org.OrgBuilder orgBuilder = Org.builder()
+          .displayName(emailDomain)
+          .domain(emailDomain)
+          .rid(rid);
+        Org org = orgBuilder.build();
+        Org savedOrg = orgRepo.save(org);
+        newUser.setBelongsToOrg(savedOrg.getId());
+
+        nfHookService.sendNotification(NfEvents.NEW_ORG_CREATED, Map.of("id", savedOrg.getId().toString()));
+
         return userRepo.save(newUser);
+      } else {
+        log.error("Organisation already present for {}", newUser.getEmail());
+        throw new IllegalStateException("Can't create user");
+      }
     }
+
+    return userRepo.save(newUser);
+  }
 
     public void sendUserNf(String userEmail, String firstName, String lastName) {
         Map<String, String> eventInfo = new HashMap<>();

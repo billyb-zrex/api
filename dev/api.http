@@ -392,3 +392,80 @@ Content-Type: application/json
   "uts": 1710847525,
   "tz": "-330"
 }
+
+### get token for linked account
+GET {{api-host}}/v1/f/vr/ct/tknlnkdacc
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### get applications for linked account
+GET {{api-host}}/v1/f/vr/ct/lstapp
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### post event
+POST {{api-host}}/v1/vr/ct/evnt?rid=1234
+Content-Type: application/json
+
+{
+  "event": "Register user sample",
+  "payload": {
+    "first_name": "Test",
+    "last_name": "Test",
+    "phone": "",
+    "email": "test@test.com"
+  }
+}
+
+### lead info mapping with 360 init
+POST {{api-host}}/v1/ldinf
+Content-Type: application/json
+
+{
+  "tourId": 182,
+  "emailId": "akash@acme.com",
+  "value": "abcd",
+  "key": "HUBSPOT_CONTACT_ID"
+}
+
+### lead info mapping with 360 init
+GET {{api-host}}/v1/trasstpath?id=188
+Content-Type: application/json
+
+### get house lead info
+GET {{api-host}}/v1/hldinf?org_id=55&email=real@1com
+Content-Type: application/json
+
+### update lead 360
+POST {{api-host}}/v1/poplead
+Content-Type: application/json
+
+{
+  "orgId": 55,
+  "leadEmailId": "fahumitha@real.com",
+  "info360": [
+    {
+      "tourId": 187,
+      "demoVisited": 1,
+      "sessionsCreated": 3,
+      "timeSpentSec": 4,
+      "lastInteractedAt": null,
+      "completionPercentage": 50,
+      "ctaClickRate": 1
+    },
+    {
+      "tourId": 187,
+      "demoVisited": 1,
+      "sessionsCreated": 3,
+      "timeSpentSec": 4,
+      "lastInteractedAt": null,
+      "completionPercentage": 50,
+      "ctaClickRate": 1
+    }
+  ]
+}
+
+### list all linked apps
+GET {{api-host}}/v1/f/vr/ct/lstapp
+Authorization: {{auth-header}}
+Content-Type: application/json

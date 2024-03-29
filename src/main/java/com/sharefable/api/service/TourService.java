@@ -34,191 +34,191 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class TourService extends ServiceBase {
-    private final static ObjectMapper objectMapper = new ObjectMapper();
-    private final static String ONBOARDING_ERR_NO_TOUR_IDS = "This error is occurring because there may be no onboarding tour ids present in db while trying to create onboarding tours for an organisation";
-    private final TourRepo tourRepo;
-    private final S3Config s3Config;
-    private final ScreenService screenService;
-    private final S3Service s3Service;
-    private final AppConfig appConfig;
-    private final AppSettings settings;
-    private final ScreenRepo screenRepo;
+  private final static ObjectMapper objectMapper = new ObjectMapper();
+  private final static String ONBOARDING_ERR_NO_TOUR_IDS = "This error is occurring because there may be no onboarding tour ids present in db while trying to create onboarding tours for an organisation";
+  private final TourRepo tourRepo;
+  private final S3Config s3Config;
+  private final ScreenService screenService;
+  private final S3Service s3Service;
+  private final AppConfig appConfig;
+  private final AppSettings settings;
+  private final ScreenRepo screenRepo;
 
-    @Autowired
-    public TourService(
-        TourRepo tourRepo,
-        AppSettings settings,
-        S3Service s3Service,
-        S3Config s3Config,
-        ScreenRepo screenRepo,
-        ScreenService screenService,
-        AppConfig appConfig) {
-        super(settings, s3Service, s3Config, screenRepo, tourRepo);
-        this.tourRepo = tourRepo;
-        this.s3Config = s3Config;
-        this.screenService = screenService;
-        this.s3Service = s3Service;
-        this.appConfig = appConfig;
-        this.settings = settings;
-        this.screenRepo = screenRepo;
+  @Autowired
+  public TourService(
+    TourRepo tourRepo,
+    AppSettings settings,
+    S3Service s3Service,
+    S3Config s3Config,
+    ScreenRepo screenRepo,
+    ScreenService screenService,
+    AppConfig appConfig) {
+    super(settings, s3Service, s3Config, screenRepo, tourRepo);
+    this.tourRepo = tourRepo;
+    this.s3Config = s3Config;
+    this.screenService = screenService;
+    this.s3Service = s3Service;
+    this.appConfig = appConfig;
+    this.settings = settings;
+    this.screenRepo = screenRepo;
+  }
+
+  @Transactional
+  public List<RespTour> getAllToursForOrg(Long orgId) {
+    List<Tour> tours = tourRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
+    return tours.stream().map(RespTour::from).collect(Collectors.toList());
+  }
+
+  @Transactional
+  public RespTour createNewTour(ReqNewTour req, User createdByUser) {
+    String prefixHash = Utils.createUuidWord();
+    uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
+    uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
+
+    Tour tour = Tour.builder()
+      .createdBy(createdByUser)
+      .displayName(req.name())
+      .description(req.description().orElse(""))
+      .rid(Utils.createReadableId(req.name()))
+      .inProgress(false)
+      .assetPrefixHash(prefixHash)
+      .belongsToOrg(createdByUser.getBelongsToOrg())
+      .onboarding(false)
+      .build();
+
+    Tour storedTour = tourRepo.save(tour);
+    return RespTour.from(storedTour);
+  }
+
+  @Transactional(readOnly = true)
+  public RespTour getTourByRid(String rid, boolean shouldGetScreens) {
+    Optional<Tour> maybeTour = tourRepo.findByRid(rid);
+    if (maybeTour.isEmpty()) {
+      log.error("Can't get tour by rid {}", rid);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
+    }
+    if (shouldGetScreens) {
+      Tour tour = maybeTour.get();
+      Set<Screen> screens = tour.getScreens();
+      tour.setScreens(screens);
+      return RespTourWithScreens.from(tour);
+    }
+    return RespTour.from(maybeTour.get());
+  }
+
+  @Transactional
+  public RespTour updateEditForTour(ReqRecordEdit body, User userEntity, EditTour fileTobeEdited) {
+    Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
+
+    uploadDataFileToS3(
+      body.editData(),
+      tour.getAssetPrefixHash(),
+      fileTobeEdited == EditTour.INDEX ? S3Config.getEntityFiles().dataFile() : S3Config.getEntityFiles().loaderFile(),
+      S3Config.AssetType.Tour);
+
+    tour.setUpdatedAt(Utils.getCurrentUtcTimestamp());
+    Tour updatedTour = tourRepo.save(tour);
+    return RespTour.from(updatedTour);
+  }
+
+  @Transactional
+  public RespTour renameTour(ReqRenameGeneric body, User userEntity) {
+    Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
+    String oldRid = tour.getRid();
+    String newName = body.newName();
+    tour.setDisplayName(newName);
+    tour.setDescription(body.description().isPresent() ? body.description().get() : tour.getDescription());
+    tour.setRid(Utils.createReadableId(newName));
+
+    try {
+      Tour updatedTour = tourRepo.save(tour);
+      if (tour.getLastPublishedDate() != null) {
+        uploadTourManifestToS3(updatedTour);
+        modifyPublishedTourEntityPath(oldRid, tour.getRid());
+      }
+      return RespTour.from(updatedTour);
+    } catch (Exception e) {
+      log.error("Error while trying to publish tour", e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to rename the tour");
+    }
+  }
+
+  private void modifyPublishedTourEntityPath(String oldRid, String newRid) {
+    AssetFilePath fromPubTourEntityFile = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.PublishedTour,
+      oldRid,
+      S3Config.getEntityFiles().publishedTourEntityFile().filename());
+    AssetFilePath toPubTourEntityFile = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.PublishedTour,
+      newRid,
+      S3Config.getEntityFiles().publishedTourEntityFile().filename());
+    s3Service.copy(fromPubTourEntityFile, toPubTourEntityFile);
+  }
+
+  @Transactional
+  public RespTourWithScreens duplicateTour(ReqDuplicateTour body, User user) {
+    Tour fromTour = getEntityByRIdWithAuthValidation(Tour.class, body.fromTourRid(), user);
+    return this.duplicateTour(fromTour, user, tour -> tour.onboarding(false).displayName(body.duplicateTourName()).description(""), false);
+  }
+
+  @Transactional(propagation = Propagation.MANDATORY)
+  public RespTourWithScreens duplicateTour(Tour fromTour, User user, FnTourBuilder f, boolean shouldCloneParentScreens) {
+    AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Tour,
+      fromTour.getAssetPrefixHash(),
+      S3Config.getEntityFiles().dataFile().filename());
+    AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Tour,
+      fromTour.getAssetPrefixHash(),
+      S3Config.getEntityFiles().loaderFile().filename());
+
+    String prefixHash = Utils.createUuidWord();
+    copyDataFileToS3(fromTourDataFilePath, prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
+    copyDataFileToS3(fromTourLoaderFilePath, prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
+
+    String rid = Utils.createReadableId(fromTour.getDisplayName()); // TODO rid would be different
+    Tour.TourBuilder<?, ?> tourBuilder = Tour.builder()
+      .assetPrefixHash(prefixHash)
+      .belongsToOrg(fromTour.getBelongsToOrg())
+      .rid(rid)
+      .inProgress(true)
+      .displayName(fromTour.getDisplayName())
+      .description(fromTour.getDescription())
+      .onboarding(fromTour.getOnboarding())
+      .createdBy(user);
+    tourBuilder = f.apply(tourBuilder);
+    Tour tour = tourBuilder.build();
+    Tour savedTour = tourRepo.save(tour);
+
+    Set<Screen> sourceScreens = fromTour.getScreens();
+
+    Map<Long, Long> oldAndNewParentScreenMap = new HashMap<>();
+    if (shouldCloneParentScreens) {
+      Set<Long> parentScreenIds = sourceScreens.stream().map(Screen::getParentScreenId).collect(Collectors.toSet());
+      List<Screen> parentScreens = screenRepo.findAllByIdIn(parentScreenIds);
+      for (Screen parentScreen : parentScreens) {
+        Screen clonedParentScreen = screenService.cloneScreen(newParentScreen -> newParentScreen.tours(Set.of()).parentScreenId(0L), parentScreen, user, savedTour, tour.getBelongsToOrg());
+        oldAndNewParentScreenMap.put(parentScreen.getId(), clonedParentScreen.getId());
+      }
     }
 
-    @Transactional
-    public List<RespTour> getAllToursForOrg(Long orgId) {
-        List<Tour> tours = tourRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
-        return tours.stream().map(RespTour::from).collect(Collectors.toList());
+    Set<Screen> clonedScreens = new HashSet<>(sourceScreens.size());
+    Map<String, String> sourceAndClonedScreenIdMap = new HashMap<>(sourceScreens.size());
+    for (Screen sourceScreen : sourceScreens) {
+      Screen clonedScreen = screenService.cloneScreen(newSourceScreen ->
+        newSourceScreen.parentScreenId(
+          sourceScreen.getType() != ScreenType.SerDom ? 0L : shouldCloneParentScreens ? oldAndNewParentScreenMap.get(sourceScreen.getParentScreenId())
+            : sourceScreen.getParentScreenId()), sourceScreen, user, savedTour, tour.getBelongsToOrg());
+      clonedScreens.add(clonedScreen);
+      sourceAndClonedScreenIdMap.put(Long.toString(sourceScreen.getId()), Long.toString(clonedScreen.getId()));
     }
-
-    @Transactional
-    public RespTour createNewTour(ReqNewTour req, User createdByUser) {
-        String prefixHash = Utils.createUuidWord();
-        uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
-        uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
-
-        Tour tour = Tour.builder()
-            .createdBy(createdByUser)
-            .displayName(req.name())
-            .description(req.description().orElse(""))
-            .rid(Utils.createReadableId(req.name()))
-            .inProgress(false)
-            .assetPrefixHash(prefixHash)
-            .belongsToOrg(createdByUser.getBelongsToOrg())
-            .onboarding(false)
-            .build();
-
-        Tour storedTour = tourRepo.save(tour);
-        return RespTour.from(storedTour);
-    }
-
-    @Transactional(readOnly = true)
-    public RespTour getTourByRid(String rid, boolean shouldGetScreens) {
-        Optional<Tour> maybeTour = tourRepo.findByRid(rid);
-        if (maybeTour.isEmpty()) {
-            log.error("Can't get tour by rid {}", rid);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
-        }
-        if (shouldGetScreens) {
-            Tour tour = maybeTour.get();
-            Set<Screen> screens = tour.getScreens();
-            tour.setScreens(screens);
-            return RespTourWithScreens.from(tour);
-        }
-        return RespTour.from(maybeTour.get());
-    }
-
-    @Transactional
-    public RespTour updateEditForTour(ReqRecordEdit body, User userEntity, EditTour fileTobeEdited) {
-        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
-
-        uploadDataFileToS3(
-            body.editData(),
-            tour.getAssetPrefixHash(),
-            fileTobeEdited == EditTour.INDEX ? S3Config.getEntityFiles().dataFile() : S3Config.getEntityFiles().loaderFile(),
-            S3Config.AssetType.Tour);
-
-        tour.setUpdatedAt(Utils.getCurrentUtcTimestamp());
-        Tour updatedTour = tourRepo.save(tour);
-        return RespTour.from(updatedTour);
-    }
-
-    @Transactional
-    public RespTour renameTour(ReqRenameGeneric body, User userEntity) {
-        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.rid(), userEntity);
-        String oldRid = tour.getRid();
-        String newName = body.newName();
-        tour.setDisplayName(newName);
-        tour.setDescription(body.description().isPresent() ? body.description().get() : tour.getDescription());
-        tour.setRid(Utils.createReadableId(newName));
-
-        try {
-            Tour updatedTour = tourRepo.save(tour);
-            if (tour.getLastPublishedDate() != null) {
-                uploadTourManifestToS3(updatedTour);
-                modifyPublishedTourEntityPath(oldRid, tour.getRid());
-            }
-            return RespTour.from(updatedTour);
-        } catch (Exception e) {
-            log.error("Error while trying to publish tour", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to rename the tour");
-        }
-    }
-
-    private void modifyPublishedTourEntityPath(String oldRid, String newRid) {
-        AssetFilePath fromPubTourEntityFile = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.PublishedTour,
-            oldRid,
-            S3Config.getEntityFiles().publishedTourEntityFile().filename());
-        AssetFilePath toPubTourEntityFile = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.PublishedTour,
-            newRid,
-            S3Config.getEntityFiles().publishedTourEntityFile().filename());
-        s3Service.copy(fromPubTourEntityFile, toPubTourEntityFile);
-    }
-
-    @Transactional
-    public RespTourWithScreens duplicateTour(ReqDuplicateTour body, User user) {
-        Tour fromTour = getEntityByRIdWithAuthValidation(Tour.class, body.fromTourRid(), user);
-        return this.duplicateTour(fromTour, user, tour -> tour.onboarding(false).displayName(body.duplicateTourName()).description(""), false);
-    }
-
-    @Transactional(propagation = Propagation.MANDATORY)
-    public RespTourWithScreens duplicateTour(Tour fromTour, User user, FnTourBuilder f, boolean shouldCloneParentScreens) {
-        AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Tour,
-            fromTour.getAssetPrefixHash(),
-            S3Config.getEntityFiles().dataFile().filename());
-        AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
-            S3Config.AssetType.Tour,
-            fromTour.getAssetPrefixHash(),
-            S3Config.getEntityFiles().loaderFile().filename());
-
-        String prefixHash = Utils.createUuidWord();
-        copyDataFileToS3(fromTourDataFilePath, prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
-        copyDataFileToS3(fromTourLoaderFilePath, prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
-
-        String rid = Utils.createReadableId(fromTour.getDisplayName()); // TODO rid would be different
-        Tour.TourBuilder<?, ?> tourBuilder = Tour.builder()
-            .assetPrefixHash(prefixHash)
-            .belongsToOrg(fromTour.getBelongsToOrg())
-            .rid(rid)
-            .inProgress(true)
-            .displayName(fromTour.getDisplayName())
-            .description(fromTour.getDescription())
-            .onboarding(fromTour.getOnboarding())
-            .createdBy(user);
-        tourBuilder = f.apply(tourBuilder);
-        Tour tour = tourBuilder.build();
-        Tour savedTour = tourRepo.save(tour);
-
-        Set<Screen> sourceScreens = fromTour.getScreens();
-
-        Map<Long, Long> oldAndNewParentScreenMap = new HashMap<>();
-        if (shouldCloneParentScreens) {
-            Set<Long> parentScreenIds = sourceScreens.stream().map(Screen::getParentScreenId).collect(Collectors.toSet());
-            List<Screen> parentScreens = screenRepo.findAllByIdIn(parentScreenIds);
-            for (Screen parentScreen : parentScreens) {
-                Screen clonedParentScreen = screenService.cloneScreen(newParentScreen -> newParentScreen.tours(Set.of()).parentScreenId(0L), parentScreen, user, savedTour, tour.getBelongsToOrg());
-                oldAndNewParentScreenMap.put(parentScreen.getId(), clonedParentScreen.getId());
-            }
-        }
-
-        Set<Screen> clonedScreens = new HashSet<>(sourceScreens.size());
-        Map<String, String> sourceAndClonedScreenIdMap = new HashMap<>(sourceScreens.size());
-        for (Screen sourceScreen : sourceScreens) {
-            Screen clonedScreen = screenService.cloneScreen(newSourceScreen ->
-                newSourceScreen.parentScreenId(
-                    sourceScreen.getType() != ScreenType.SerDom ? 0L : shouldCloneParentScreens ? oldAndNewParentScreenMap.get(sourceScreen.getParentScreenId())
-                        : sourceScreen.getParentScreenId()), sourceScreen, user, savedTour, tour.getBelongsToOrg());
-            clonedScreens.add(clonedScreen);
-            sourceAndClonedScreenIdMap.put(Long.toString(sourceScreen.getId()), Long.toString(clonedScreen.getId()));
-        }
-        Tour.TourBuilder<?, ?> updatedTourBuilder = savedTour.toBuilder().screens(clonedScreens);
-        Tour updatedTour = updatedTourBuilder.build();
-        RespTourWithScreens resp = RespTourWithScreens.from(updatedTour);
-        resp.setIdxm(Optional.of(sourceAndClonedScreenIdMap));
+    Tour.TourBuilder<?, ?> updatedTourBuilder = savedTour.toBuilder().screens(clonedScreens);
+    Tour updatedTour = updatedTourBuilder.build();
+    RespTourWithScreens resp = RespTourWithScreens.from(updatedTour);
+    resp.setIdxm(Optional.of(sourceAndClonedScreenIdMap));
 
 
-        return resp;
+    return resp;
 
         /* =============================================================================================================
          * Tour duplication is a complex process and currently client has to play a role in it (for faster development)
@@ -272,131 +272,145 @@ public class TourService extends ServiceBase {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "");
         }
         */
-    }
+  }
 
-    @Transactional
-    public List<RespTour> removeTour(ReqTourRid body, User userEntity) {
-        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
-        tourRepo.delete(tour);
-        return getAllToursForOrg(userEntity.getBelongsToOrg());
-    }
+  @Transactional
+  public List<RespTour> removeTour(ReqTourRid body, User userEntity) {
+    Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
+    tourRepo.delete(tour);
+    return getAllToursForOrg(userEntity.getBelongsToOrg());
+  }
 
-    @Transactional
-    public RespTour publishTour(ReqTourRid body, User userEntity) {
-        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
-        Set<Screen> screens = tour.getScreens();
+  @Transactional
+  public RespTour publishTour(ReqTourRid body, User userEntity) {
+    Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
+    Set<Screen> screens = tour.getScreens();
 
-        try {
-            uploadTourManifestToS3(tour);
-            RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour);
-            ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
-            String tourResp = objectMapper.writeValueAsString(apiResp);
-            AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Tour,
-                tour.getAssetPrefixHash(),
-                S3Config.getEntityFiles().dataFile().filename());
-            AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Tour,
-                tour.getAssetPrefixHash(),
-                S3Config.getEntityFiles().loaderFile().filename());
+    try {
+      uploadTourManifestToS3(tour);
+      RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour);
+      ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
+      String tourResp = objectMapper.writeValueAsString(apiResp);
+      AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
+        S3Config.AssetType.Tour,
+        tour.getAssetPrefixHash(),
+        S3Config.getEntityFiles().dataFile().filename());
+      AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
+        S3Config.AssetType.Tour,
+        tour.getAssetPrefixHash(),
+        S3Config.getEntityFiles().loaderFile().filename());
 
-            AssetFilePath toTourDataFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedDataFile().filename());
-            AssetFilePath toTourLoaderFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedLoaderFile().filename());
+      AssetFilePath toTourDataFilePath = s3Config.getQualifiedPathFor(
+        S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedDataFile().filename());
+      AssetFilePath toTourLoaderFilePath = s3Config.getQualifiedPathFor(
+        S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedLoaderFile().filename());
 
-            List<Callable<AssetFilePath>> tourInfoCopier = new ArrayList<>();
-            Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(fromTourDataFilePath, toTourDataFilePath);
-            Callable<AssetFilePath> tourLoaderCopier = () -> s3Service.copy(fromTourLoaderFilePath, toTourLoaderFilePath);
-            Callable<AssetFilePath> uploadTourResp = () -> uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
-            tourInfoCopier.add(tourDataCopier);
-            tourInfoCopier.add(tourLoaderCopier);
-            tourInfoCopier.add(uploadTourResp);
+      List<Callable<AssetFilePath>> tourInfoCopier = new ArrayList<>();
+      Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(fromTourDataFilePath, toTourDataFilePath);
+      Callable<AssetFilePath> tourLoaderCopier = () -> s3Service.copy(fromTourLoaderFilePath, toTourLoaderFilePath);
+      Callable<AssetFilePath> uploadTourResp = () -> uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
+      tourInfoCopier.add(tourDataCopier);
+      tourInfoCopier.add(tourLoaderCopier);
+      tourInfoCopier.add(uploadTourResp);
 
-            for (Screen screen : screens) {
-                if (screen.getType() != ScreenType.Img) {
-                    AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
-                        S3Config.AssetType.Screen,
-                        screen.getAssetPrefixHash(),
-                        S3Config.getEntityFiles().editFile().filename());
-                    AssetFilePath toScreenEditFilePath = s3Config.getQualifiedPathFor(
-                        S3Config.AssetType.Screen,
-                        screen.getAssetPrefixHash(),
-                        S3Config.getEntityFiles().publishedEditFile().filename());
+      for (Screen screen : screens) {
+        if (screen.getType() != ScreenType.Img) {
+          AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.Screen,
+            screen.getAssetPrefixHash(),
+            S3Config.getEntityFiles().editFile().filename());
+          AssetFilePath toScreenEditFilePath = s3Config.getQualifiedPathFor(
+            S3Config.AssetType.Screen,
+            screen.getAssetPrefixHash(),
+            S3Config.getEntityFiles().publishedEditFile().filename());
 
-                    Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath);
-                    tourInfoCopier.add(screenEditCopier);
-                }
-            }
-            Utils.runInParallel(tourInfoCopier.toArray(new Callable[0]));
-            tour.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
-            Tour savedTour = tourRepo.save(tour);
-            return RespTour.from(savedTour);
-        } catch (Exception e) {
-            log.error("Error while trying to publish tour", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish tour");
+          Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath);
+          tourInfoCopier.add(screenEditCopier);
         }
+      }
+      Utils.runInParallel(tourInfoCopier.toArray(new Callable[0]));
+      tour.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
+      Tour savedTour = tourRepo.save(tour);
+      return RespTour.from(savedTour);
+    } catch (Exception e) {
+      log.error("Error while trying to publish tour", e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish tour");
     }
+  }
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void uploadTourManifestToS3(Tour tour) {
-        TourManifest tourManifest = TourManifest.builder()
-            .version(1)
-            .name(tour.getDisplayName())
-            .url(appConfig.getUrlForDemo() + "/" + tour.getRid())
-            .build();
-        List<ScreenAssets> screenAssets = new ArrayList<>();
-        try {
-            S3Config.PathConfigForClient pathConfigForClient = s3Config.getPathConfigForClient();
-            String commonAssetPath = pathConfigForClient.commonAsset();
-            for (Screen screen : tour.getScreens()) {
-                if (StringUtils.isBlank(screen.getThumbnail())) continue;
-                ScreenAssets screenAsset = ScreenAssets.builder()
-                    .name(screen.getDisplayName())
-                    .url(screen.getUrl())
-                    .thumbnail(commonAssetPath + screen.getThumbnail())
-                    .icon(screen.getIcon())
-                    .build();
-                screenAssets.add(screenAsset);
-            }
-            tourManifest.setScreenAssets(screenAssets);
-            String tourScreenInfoAsString = objectMapper.writeValueAsString(tourManifest);
-            uploadDataFileToS3(tourScreenInfoAsString, tour.getRid(), S3Config.getEntityFiles().manifestFile(), S3Config.AssetType.PublishedTour);
-        } catch (Exception e) {
-            throw new RuntimeException("Something went wrong while sending tour screen info to s3 " + e.getMessage());
+  @Transactional(propagation = Propagation.MANDATORY)
+  public void uploadTourManifestToS3(Tour tour) {
+    TourManifest tourManifest = TourManifest.builder()
+      .version(1)
+      .name(tour.getDisplayName())
+      .url(appConfig.getUrlForDemo() + "/" + tour.getRid())
+      .build();
+    List<ScreenAssets> screenAssets = new ArrayList<>();
+    try {
+      S3Config.PathConfigForClient pathConfigForClient = s3Config.getPathConfigForClient();
+      String commonAssetPath = pathConfigForClient.commonAsset();
+      for (Screen screen : tour.getScreens()) {
+        if (StringUtils.isBlank(screen.getThumbnail())) continue;
+        ScreenAssets screenAsset = ScreenAssets.builder()
+          .name(screen.getDisplayName())
+          .url(screen.getUrl())
+          .thumbnail(commonAssetPath + screen.getThumbnail())
+          .icon(screen.getIcon())
+          .build();
+        screenAssets.add(screenAsset);
+      }
+      tourManifest.setScreenAssets(screenAssets);
+      String tourScreenInfoAsString = objectMapper.writeValueAsString(tourManifest);
+      uploadDataFileToS3(tourScreenInfoAsString, tour.getRid(), S3Config.getEntityFiles().manifestFile(), S3Config.AssetType.PublishedTour);
+    } catch (Exception e) {
+      throw new RuntimeException("Something went wrong while sending tour screen info to s3 " + e.getMessage());
+    }
+  }
+
+  @Transactional
+  public List<RespTourWithScreens> createOnboardingTourInUserAccount(User user) {
+    List<RespTourWithScreens> respOnboardingTours = new ArrayList<>();
+    try {
+      String onboardingTourIds = settings.getOnboardingTourIds();
+      if (onboardingTourIds != null && !StringUtils.isBlank(onboardingTourIds)) {
+        List<Long> parsedOnboardingTourIds = Arrays.stream(settings.getOnboardingTourIds().trim().split(","))
+          .map(Long::valueOf)
+          .collect(Collectors.toList());
+        List<Tour> onboardingTours = tourRepo.findAllByIdIn(parsedOnboardingTourIds);
+
+        for (Tour onboardingTour : onboardingTours) {
+          respOnboardingTours.add(this.duplicateTour(onboardingTour, user,
+            newTour -> newTour.onboarding(true).belongsToOrg(user.getBelongsToOrg()), true));
         }
+      } else {
+        log.error(ONBOARDING_ERR_NO_TOUR_IDS);
+        Sentry.captureMessage(ONBOARDING_ERR_NO_TOUR_IDS);
+      }
+      return respOnboardingTours;
+    } catch (Exception e) {
+      log.error("Something went wrong while trying to create onboarding tours for an organisation", e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to create an onboarding tours for organisation");
     }
+  }
 
-    @Transactional
-    public List<RespTourWithScreens> createOnboardingTourInUserAccount(User user) {
-        List<RespTourWithScreens> respOnboardingTours = new ArrayList<>();
-        try {
-            String onboardingTourIds = settings.getOnboardingTourIds();
-            if (onboardingTourIds != null && !StringUtils.isBlank(onboardingTourIds)) {
-                List<Long> parsedOnboardingTourIds = Arrays.stream(settings.getOnboardingTourIds().trim().split(","))
-                    .map(Long::valueOf)
-                    .collect(Collectors.toList());
-                List<Tour> onboardingTours = tourRepo.findAllByIdIn(parsedOnboardingTourIds);
+  @Transactional
+  public RespTour updateTourProperty(ReqTourPropUpdate body, User userEntity) {
+    Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
+    body.inProgress().ifPresent(tour::setInProgress);
+    return RespTour.from(tour);
+  }
 
-                for (Tour onboardingTour : onboardingTours) {
-                    respOnboardingTours.add(this.duplicateTour(onboardingTour, user,
-                        newTour -> newTour.onboarding(true).belongsToOrg(user.getBelongsToOrg()), true));
-                }
-            } else {
-                log.error(ONBOARDING_ERR_NO_TOUR_IDS);
-                Sentry.captureMessage(ONBOARDING_ERR_NO_TOUR_IDS);
-            }
-            return respOnboardingTours;
-        } catch (Exception e) {
-            log.error("Something went wrong while trying to create onboarding tours for an organisation", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to create an onboarding tours for organisation");
-        }
+  @Transactional
+  public String getAssetPathForTour(Long tourId) {
+    Optional<Tour> maybeTour = tourRepo.findById(tourId);
+    if (maybeTour.isEmpty()) {
+      log.warn("Tour with id {} not found", tourId);
+      return "";
     }
-
-    @Transactional
-    public RespTour updateTourProperty(ReqTourPropUpdate body, User userEntity) {
-        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
-        body.inProgress().ifPresent(tour::setInProgress);
-        return RespTour.from(tour);
-    }
+    AssetFilePath tourAssetFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Tour,
+      maybeTour.get().getAssetPrefixHash(),
+      S3Config.getEntityFiles().dataFile().filename());
+    return tourAssetFilePath.getS3UriToFile();
+  }
 }

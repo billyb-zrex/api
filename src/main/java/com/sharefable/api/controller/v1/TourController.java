@@ -24,83 +24,89 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class TourController {
-    private final TourService tourService;
+  private final TourService tourService;
 
-    @RequestMapping(value = Routes.GET_ALL_TOURS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.READ_TOUR)")
-    public ApiResp<RespTour[]> getAllTours(@AuthUser User user) {
-        Long orgId = user.getBelongsToOrg();
-        List<RespTour> allTours = tourService.getAllToursForOrg(orgId);
-        return ApiResp.<RespTour[]>builder().status(ApiResp.ResponseStatus.Success).data(allTours.toArray(RespTour[]::new)).build();
-    }
+  @RequestMapping(value = Routes.GET_ALL_TOURS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.READ_TOUR)")
+  public ApiResp<RespTour[]> getAllTours(@AuthUser User user) {
+    Long orgId = user.getBelongsToOrg();
+    List<RespTour> allTours = tourService.getAllToursForOrg(orgId);
+    return ApiResp.<RespTour[]>builder().status(ApiResp.ResponseStatus.Success).data(allTours.toArray(RespTour[]::new)).build();
+  }
 
-    @RequestMapping(value = Routes.NEW_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-    public ApiResp<RespTour> newTour(@RequestBody ReqNewTour body, @AuthUser User user) {
-        ReqNewTour req = body.normalizeDisplayName();
-        RespTour tour = tourService.createNewTour(req, user);
-        return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(tour).build();
-    }
+  @RequestMapping(value = Routes.NEW_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespTour> newTour(@RequestBody ReqNewTour body, @AuthUser User user) {
+    ReqNewTour req = body.normalizeDisplayName();
+    RespTour tour = tourService.createNewTour(req, user);
+    return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(tour).build();
+  }
 
-    @RequestMapping(value = Routes.GET_TOUR, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespTour> getTourByRId(@RequestParam("rid") String rId, @RequestParam("s") Optional<Boolean> shouldGetScreens) {
-        RespTour tour = tourService.getTourByRid(rId, shouldGetScreens.orElse(Boolean.FALSE));
-        return ApiResp.<RespTour>builder().data(tour).build();
-    }
+  @RequestMapping(value = Routes.GET_TOUR, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespTour> getTourByRId(@RequestParam("rid") String rId, @RequestParam("s") Optional<Boolean> shouldGetScreens) {
+    RespTour tour = tourService.getTourByRid(rId, shouldGetScreens.orElse(Boolean.FALSE));
+    return ApiResp.<RespTour>builder().data(tour).build();
+  }
 
-    @RequestMapping(value = Routes.RECORD_TOUR_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-    public ApiResp<RespTour> recordEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
-        RespTour resp = tourService.updateEditForTour(body, user, EditTour.INDEX);
-        return ApiResp.<RespTour>builder().data(resp).build();
-    }
+  @RequestMapping(value = Routes.RECORD_TOUR_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespTour> recordEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
+    RespTour resp = tourService.updateEditForTour(body, user, EditTour.INDEX);
+    return ApiResp.<RespTour>builder().data(resp).build();
+  }
 
-    @RequestMapping(value = Routes.RECORD_TOUR_LOADER_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-    public ApiResp<RespTour> recordLoaderEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
-        RespTour resp = tourService.updateEditForTour(body, user, EditTour.LOADER);
-        return ApiResp.<RespTour>builder().data(resp).build();
-    }
+  @RequestMapping(value = Routes.RECORD_TOUR_LOADER_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespTour> recordLoaderEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
+    RespTour resp = tourService.updateEditForTour(body, user, EditTour.LOADER);
+    return ApiResp.<RespTour>builder().data(resp).build();
+  }
 
-    @RequestMapping(value = Routes.RENAME_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-    public ApiResp<RespTour> renameTour(@RequestBody ReqRenameGeneric body, @AuthUser User user) {
-        ReqRenameGeneric nBody = body.normalizeDisplayName();
-        RespTour resp = tourService.renameTour(nBody, user);
-        return ApiResp.<RespTour>builder().data(resp).build();
-    }
+  @RequestMapping(value = Routes.RENAME_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespTour> renameTour(@RequestBody ReqRenameGeneric body, @AuthUser User user) {
+    ReqRenameGeneric nBody = body.normalizeDisplayName();
+    RespTour resp = tourService.renameTour(nBody, user);
+    return ApiResp.<RespTour>builder().data(resp).build();
+  }
 
-    @RequestMapping(value = Routes.DUPLICATE_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-    @Transactional
-    public ApiResp<RespTourWithScreens> duplicateTour(@RequestBody ReqDuplicateTour body, @AuthUser User user) {
-        ReqDuplicateTour nBody = body.normalizeDisplayName();
-        RespTourWithScreens resp = tourService.duplicateTour(nBody, user);
-        return ApiResp.<RespTourWithScreens>builder().data(resp).build();
-    }
+  @RequestMapping(value = Routes.DUPLICATE_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  @Transactional
+  public ApiResp<RespTourWithScreens> duplicateTour(@RequestBody ReqDuplicateTour body, @AuthUser User user) {
+    ReqDuplicateTour nBody = body.normalizeDisplayName();
+    RespTourWithScreens resp = tourService.duplicateTour(nBody, user);
+    return ApiResp.<RespTourWithScreens>builder().data(resp).build();
+  }
 
-    @RequestMapping(value = Routes.DELETE_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-    public ApiResp<RespTour[]> deleteTour(@RequestBody ReqTourRid body, @AuthUser User user) {
-        List<RespTour> allTours = tourService.removeTour(body, user);
-        return ApiResp.<RespTour[]>builder().status(ApiResp.ResponseStatus.Success).data(allTours.toArray(RespTour[]::new)).build();
-    }
+  @RequestMapping(value = Routes.DELETE_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespTour[]> deleteTour(@RequestBody ReqTourRid body, @AuthUser User user) {
+    List<RespTour> allTours = tourService.removeTour(body, user);
+    return ApiResp.<RespTour[]>builder().status(ApiResp.ResponseStatus.Success).data(allTours.toArray(RespTour[]::new)).build();
+  }
 
-    @RequestMapping(value = Routes.PUBLISH_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespTour> publishTour(@RequestBody ReqTourRid body, @AuthUser User user) {
-        RespTour resp = tourService.publishTour(body, user);
-        return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
-    }
+  @RequestMapping(value = Routes.PUBLISH_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespTour> publishTour(@RequestBody ReqTourRid body, @AuthUser User user) {
+    RespTour resp = tourService.publishTour(body, user);
+    return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
 
-    @RequestMapping(value = Routes.ONBOADING_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespTourWithScreens[]> getOnboardingTours(@AuthUser User user) {
-        List<RespTourWithScreens> allOnboardingTours = tourService.createOnboardingTourInUserAccount(user);
-        return ApiResp.<RespTourWithScreens[]>builder().status(ApiResp.ResponseStatus.Success).data(allOnboardingTours.toArray(RespTourWithScreens[]::new)).build();
-    }
+  @RequestMapping(value = Routes.ONBOADING_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespTourWithScreens[]> getOnboardingTours(@AuthUser User user) {
+    List<RespTourWithScreens> allOnboardingTours = tourService.createOnboardingTourInUserAccount(user);
+    return ApiResp.<RespTourWithScreens[]>builder().status(ApiResp.ResponseStatus.Success).data(allOnboardingTours.toArray(RespTourWithScreens[]::new)).build();
+  }
 
-    @RequestMapping(value = Routes.UPDATE_TOUR_PROPERTY, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespTour> updateTourProperty(@RequestBody ReqTourPropUpdate body, @AuthUser User user) {
-        RespTour tour = tourService.updateTourProperty(body, user);
-        return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(tour).build();
-    }
+  @RequestMapping(value = Routes.UPDATE_TOUR_PROPERTY, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespTour> updateTourProperty(@RequestBody ReqTourPropUpdate body, @AuthUser User user) {
+    RespTour tour = tourService.updateTourProperty(body, user);
+    return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(tour).build();
+  }
+
+  @RequestMapping(value = Routes.GET_TOUR_ASSET_FILE_PATH, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<String> getTourAssetPath(@RequestParam("id") Long tourId) {
+    String assetPath = tourService.getAssetPathForTour(tourId);
+    return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data(assetPath).build();
+  }
 }

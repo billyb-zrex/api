@@ -1,5 +1,6 @@
 package com.sharefable.api.common;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.entity.EntityBase;
 import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.TransportObjRef;
@@ -22,16 +23,15 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public interface Utils {
+    ObjectMapper objectMapper = new ObjectMapper();
+
     static String getShortRandomId() {
         return RandomStringUtils.random(16, "0123456789abcdefghijklmnopqrstuvwxyz");
     }
@@ -221,12 +221,23 @@ public interface Utils {
         }
         return Pair.with(domain, true);
     }
+
     static String calculateParticularUtcDateFromCurrentUtc(Integer numberOfDays) {
         Instant currentUTC = Instant.now();
         Instant specificDateFromCurrentUTC = currentUTC.minus(java.time.Period.ofDays(numberOfDays));
         LocalDateTime particularUTCLocalDateTime = LocalDateTime.ofInstant(specificDateFromCurrentUTC, ZoneId.of("UTC"));
         String particularDate = particularUTCLocalDateTime.toLocalDate().toString();
         return particularDate.replace("-", "");
+    }
+
+    static Map<String, String> generateMsgPayload(String eventName, Map<String, String> payload) {
+        Map<String, String> msg = new HashMap<>();
+        msg.put("eventName", eventName);
+        Map<String, String> msgPayload = objectMapper.convertValue(payload, Map.class);
+        for (Map.Entry<String, String> entry : msgPayload.entrySet()) {
+            msg.put("payload_" + entry.getKey(), entry.getValue());
+        }
+        return msg;
     }
 
 }
