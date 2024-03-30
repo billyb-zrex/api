@@ -219,7 +219,7 @@ jobs:
             						"text": ":aws: Vault",
             						"emoji": true
             					},
-            					"url": "https://ap-southeast-1.console.aws.amazon.com/ecr/repositories/private/556055615522/fable-api?region=ap-southeast-1"
+            					"url": "https://ap-southeast-1.console.aws.amazon.com/systems-manager/parameters/?region=ap-southeast-1"
             				},
             				{
             					"type": "button",
