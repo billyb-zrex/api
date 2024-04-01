@@ -20,81 +20,90 @@ import java.util.Map;
 @Service
 public class S3Service {
 
-    private final AmazonS3 client;
+  private final AmazonS3 client;
 
-    @Autowired
-    S3Service(AmazonS3 s3) {
-        this.client = s3;
+  @Autowired
+  S3Service(AmazonS3 s3) {
+    this.client = s3;
+  }
+
+  public AssetFilePath upload(AssetFilePath filePath, byte[] content) {
+    return upload(filePath, content, new HashMap<>());
+  }
+
+  private ObjectMetadata getS3ObjectMetadata(HashMap<String, String> assetMetadata) {
+    ObjectMetadata meta = new ObjectMetadata();
+    String contentType;
+    if ((contentType = assetMetadata.get(HttpHeaders.CONTENT_TYPE)) != null) {
+      meta.setContentType(contentType);
+      assetMetadata.remove(HttpHeaders.CONTENT_TYPE);
+    }
+    String contentEncoding;
+    if ((contentEncoding = assetMetadata.get(HttpHeaders.CONTENT_ENCODING)) != null) {
+      meta.setContentEncoding(contentEncoding);
+      assetMetadata.remove(HttpHeaders.CONTENT_ENCODING);
     }
 
-    public AssetFilePath upload(AssetFilePath filePath, byte[] content) {
-        return upload(filePath, content, new HashMap<>());
+    String cacheControl;
+    if ((cacheControl = assetMetadata.get(HttpHeaders.CACHE_CONTROL)) != null) {
+      meta.setCacheControl(cacheControl);
+      assetMetadata.remove(HttpHeaders.CACHE_CONTROL);
     }
 
-    public AssetFilePath upload(AssetFilePath filePath, byte[] content, Map<String, String> assetMetadata) {
-        ObjectMetadata meta = new ObjectMetadata();
-        String contentType;
-        if ((contentType = assetMetadata.get(HttpHeaders.CONTENT_TYPE)) != null) {
-            meta.setContentType(contentType);
-            assetMetadata.remove(HttpHeaders.CONTENT_TYPE);
-        }
-        String contentEncoding;
-        if ((contentEncoding = assetMetadata.get(HttpHeaders.CONTENT_ENCODING)) != null) {
-            meta.setContentEncoding(contentEncoding);
-            assetMetadata.remove(HttpHeaders.CONTENT_ENCODING);
-        }
 
-        String cacheControl;
-        if ((cacheControl = assetMetadata.get(HttpHeaders.CACHE_CONTROL)) != null) {
-            meta.setCacheControl(cacheControl);
-            assetMetadata.remove(HttpHeaders.CACHE_CONTROL);
-        }
-
-
-        for (Map.Entry<String, String> metadata : assetMetadata.entrySet()) {
-            meta.addUserMetadata(metadata.getKey(), metadata.getValue());
-        }
-
-        PutObjectRequest req = new PutObjectRequest(
-            filePath.getBucketName(),
-            filePath.getFullQualifiedPath(),
-            new ByteArrayInputStream(content),
-            meta);
-        client.putObject(req);
-
-        return filePath;
+    for (Map.Entry<String, String> metadata : assetMetadata.entrySet()) {
+      meta.addUserMetadata(metadata.getKey(), metadata.getValue());
     }
 
-    public AssetFilePath copy(AssetFilePath fromObject, AssetFilePath toObject) {
-        CopyObjectRequest req = new CopyObjectRequest(
-            fromObject.getBucketName(),
-            fromObject.getFullQualifiedPath(),
-            toObject.getBucketName(),
-            toObject.getFullQualifiedPath());
-        client.copyObject(req);
-        return toObject;
-    }
+    return meta;
+  }
 
-    public URL preSignedUrl(AssetFilePath filePath, String contentType) {
-        GeneratePresignedUrlRequest req =
-            new GeneratePresignedUrlRequest(filePath.getBucketName(), filePath.getFullQualifiedPath());
-        Date expireAt = DateUtils.addMinutes(new Date(), 10);
-        req.setExpiration(expireAt);
-        req.setMethod(HttpMethod.PUT);
-        req.setContentType(contentType);
-        return client.generatePresignedUrl(req);
-    }
+  public AssetFilePath upload(AssetFilePath filePath, byte[] content, Map<String, String> assetMetadata) {
+    PutObjectRequest req = new PutObjectRequest(
+      filePath.getBucketName(),
+      filePath.getFullQualifiedPath(),
+      new ByteArrayInputStream(content),
+      getS3ObjectMetadata(new HashMap<>(assetMetadata)));
+    client.putObject(req);
 
-    public byte[] getObjectContent(AssetFilePath filePath) throws IOException {
-        GetObjectRequest req = new GetObjectRequest(
-            filePath.getBucketName(),
-            filePath.getFullQualifiedPath()
-        );
-        S3Object object = client.getObject(req);
-        S3ObjectInputStream content = object.getObjectContent();
-        byte[] fileAsBytes = IOUtils.toByteArray(content);
-        content.close();
-        return fileAsBytes;
-    }
+    return filePath;
+  }
+
+  public AssetFilePath copy(AssetFilePath fromObject, AssetFilePath toObject, Map<String, String> assetMetadata) {
+    CopyObjectRequest req = new CopyObjectRequest(
+      fromObject.getBucketName(),
+      fromObject.getFullQualifiedPath(),
+      toObject.getBucketName(),
+      toObject.getFullQualifiedPath());
+    if (assetMetadata != null) req.withNewObjectMetadata(getS3ObjectMetadata(new HashMap<>(assetMetadata)));
+    client.copyObject(req);
+    return toObject;
+  }
+
+  public AssetFilePath copy(AssetFilePath fromObject, AssetFilePath toObject) {
+    return copy(fromObject, toObject, null);
+  }
+
+  public URL preSignedUrl(AssetFilePath filePath, String contentType) {
+    GeneratePresignedUrlRequest req =
+      new GeneratePresignedUrlRequest(filePath.getBucketName(), filePath.getFullQualifiedPath());
+    Date expireAt = DateUtils.addMinutes(new Date(), 10);
+    req.setExpiration(expireAt);
+    req.setMethod(HttpMethod.PUT);
+    req.setContentType(contentType);
+    return client.generatePresignedUrl(req);
+  }
+
+  public byte[] getObjectContent(AssetFilePath filePath) throws IOException {
+    GetObjectRequest req = new GetObjectRequest(
+      filePath.getBucketName(),
+      filePath.getFullQualifiedPath()
+    );
+    S3Object object = client.getObject(req);
+    S3ObjectInputStream content = object.getObjectContent();
+    byte[] fileAsBytes = IOUtils.toByteArray(content);
+    content.close();
+    return fileAsBytes;
+  }
 }
 

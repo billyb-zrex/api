@@ -81,7 +81,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
       case TOUR_INDEX -> new TemplateFile(
         String.format(PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX, schemaVersion),
         S3Config.AssetType.Tour,
-        S3Config.getEntityFiles().dataFile()
+        S3Config.getEntityFiles().tourDataFile()
       );
 
       case TOUR_LOADER -> new TemplateFile(
@@ -126,9 +126,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
     AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, config.filename());
     Map<String, String> userDefinedMetadata = new HashMap<>(1);
     userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-    if (config.cachePolicy() == S3Config.DATA_FILE_CACHE_POLICY.NoCache) {
-      userDefinedMetadata.put(HttpHeaders.CACHE_CONTROL, "max-age=0");
-    }
+    userDefinedMetadata.put(HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(config.cachePolicy()));
     s3Service.upload(assetFilePath, content.getBytes(StandardCharsets.UTF_8), userDefinedMetadata);
     return assetFilePath;
   }

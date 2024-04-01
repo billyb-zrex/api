@@ -162,7 +162,10 @@ public class WorkspaceService extends ServiceBase {
       .screenAssetPath(pathConfig.screenAsset())
       .tourAssetPath(pathConfig.tourAsset())
       .pubTourAssetPath(pathConfig.tourPublishedAsset())
-      .dataFileName(entityFilesConfig.dataFile().filename())
+      // Although we have now tourDataFile and screenDataFile treated differently when it comes to cache policy,
+      // in client side we send dataFileName as index.json
+      // In this case both tourDataFile and screenDataFile is same
+      .dataFileName(entityFilesConfig.tourDataFile().filename())
       .loaderFileName(entityFilesConfig.loaderFile().filename())
       .editFileName(entityFilesConfig.editFile().filename())
       .pubDataFileName(entityFilesConfig.publishedDataFile().filename())

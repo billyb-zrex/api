@@ -41,280 +41,280 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class ScreenService extends ServiceBase {
-    private final ScreenRepo screenRepo;
-    private final S3Config s3Config;
-    private final S3Service s3Service;
-    private final TourRepo tourRepo;
-    ObjectMapper objectMapper = new ObjectMapper();
+  private final ScreenRepo screenRepo;
+  private final S3Config s3Config;
+  private final S3Service s3Service;
+  private final TourRepo tourRepo;
+  ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
-    public ScreenService(ScreenRepo screenRepo, S3Service s3Service, S3Config s3Config, TourRepo tourRepo, AppSettings settings) {
-        super(settings, s3Service, s3Config, screenRepo, tourRepo);
-        this.s3Service = s3Service;
-        this.s3Config = s3Config;
-        this.screenRepo = screenRepo;
-        this.tourRepo = tourRepo;
+  @Autowired
+  public ScreenService(ScreenRepo screenRepo, S3Service s3Service, S3Config s3Config, TourRepo tourRepo, AppSettings settings) {
+    super(settings, s3Service, s3Config, screenRepo, tourRepo);
+    this.s3Service = s3Service;
+    this.s3Config = s3Config;
+    this.screenRepo = screenRepo;
+    this.tourRepo = tourRepo;
+  }
+
+  @Transactional
+  public RespScreen createNewScreen(ReqNewScreen req, User createdByUser) {
+    String prefixHash = Utils.createUuidWord();
+    Screen screen = Screen.builder()
+      .rid(Utils.createReadableId(req.name()))
+      .createdBy(createdByUser)
+      .url(req.url().orElse(""))
+      .displayName(req.name())
+      .assetPrefixHash(prefixHash)
+      .belongsToOrg(createdByUser.getBelongsToOrg())
+      .icon(req.favIcon().orElse(""))
+      .responsive(false)
+      .parentScreenId(req.normalizedParentId())
+      .build();
+
+    if (req.type() == ScreenType.Img) {
+      AssetFilePath assetFilePathForImgFile = s3Config.getQualifiedPathFor(S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
+      if (req.contentType().isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Image screen must have information about the content-type ");
+      }
+
+      try {
+        URL presignedUrlToUploadImageScreen = s3Service.preSignedUrl(assetFilePathForImgFile, req.contentType().get());
+        screen.setType(ScreenType.Img);
+        String docTree = updateDocTree(req.body(), assetFilePathForImgFile.getS3UriToFile());
+
+        CompletableFuture<Optional<AssetFilePath>> uploadDocTree = CompletableFuture.supplyAsync(() -> Optional.ofNullable(uploadDataFileToS3(docTree, prefixHash, S3Config.getEntityFiles().screenDataFile(), S3Config.AssetType.Screen)));
+        CompletableFuture<Screen> saveScreen = CompletableFuture.supplyAsync(() -> screenRepo.save(screen));
+        CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(uploadDocTree, saveScreen);
+        combinedFuture.join();
+
+        RespScreen respScreen = RespScreen.from(saveScreen.join());
+        respScreen.setUploadUrl(Optional.ofNullable(presignedUrlToUploadImageScreen.toString()));
+        return respScreen;
+      } catch (JsonProcessingException e) {
+        log.error("Something went wrong when updating image location on serialized json. Message: {}", e.getMessage());
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
+      } catch (Exception e) {
+        log.error("Something went wrong when saving a image screen. Message: {}", e.getMessage());
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
+      }
     }
 
-    @Transactional
-    public RespScreen createNewScreen(ReqNewScreen req, User createdByUser) {
-        String prefixHash = Utils.createUuidWord();
-        Screen screen = Screen.builder()
-                .rid(Utils.createReadableId(req.name()))
-                .createdBy(createdByUser)
-                .url(req.url().orElse(""))
-                .displayName(req.name())
-                .assetPrefixHash(prefixHash)
-                .belongsToOrg(createdByUser.getBelongsToOrg())
-                .icon(req.favIcon().orElse(""))
-                .responsive(false)
-                .parentScreenId(req.normalizedParentId())
-                .build();
+    Callable<Optional<AssetFilePath>> screenFileUploader =
+      () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, S3Config.getEntityFiles().screenDataFile(), S3Config.AssetType.Screen));
 
-        if (req.type() == ScreenType.Img) {
-            AssetFilePath assetFilePathForImgFile = s3Config.getQualifiedPathFor(S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
-            if (req.contentType().isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Image screen must have information about the content-type ");
-            }
+    Callable<Optional<AssetFilePath>> thumbnailUploader =
+      () -> uploadBase64ImageToS3(req.thumbnail().orElse(""), S3Config.AssetType.Common);
 
-            try {
-                URL presignedUrlToUploadImageScreen = s3Service.preSignedUrl(assetFilePathForImgFile, req.contentType().get());
-                screen.setType(ScreenType.Img);
-                String docTree = updateDocTree(req.body(), assetFilePathForImgFile.getS3UriToFile());
+    try {
+      List<Optional<AssetFilePath>> assetFiles = Utils.runInParallel(screenFileUploader, thumbnailUploader);
+      Optional<AssetFilePath> thumbnailFile = assetFiles.get(1);
 
-                CompletableFuture<Optional<AssetFilePath>> uploadDocTree = CompletableFuture.supplyAsync(() -> Optional.ofNullable(uploadDataFileToS3(docTree, prefixHash, S3Config.getEntityFiles().dataFile(), S3Config.AssetType.Screen)));
-                CompletableFuture<Screen> saveScreen = CompletableFuture.supplyAsync(() -> screenRepo.save(screen));
-                CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(uploadDocTree, saveScreen);
-                combinedFuture.join();
+      String thumbnailFilePath = null;
+      if (thumbnailFile.isPresent()) {
+        thumbnailFilePath = thumbnailFile.get().getFilePath();
+      }
+      screen.setType(ScreenType.SerDom);
+      screen.setThumbnail(thumbnailFilePath);
+      Screen storedScreen = screenRepo.save(screen);
+      return RespScreen.from(storedScreen);
+    } catch (Exception e) {
+      log.error("Error while uploading file to s3. Message: {}", e.getMessage());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
+    }
+  }
 
-                RespScreen respScreen = RespScreen.from(saveScreen.join());
-                respScreen.setUploadUrl(Optional.ofNullable(presignedUrlToUploadImageScreen.toString()));
-                return respScreen;
-            } catch (JsonProcessingException e) {
-                log.error("Something went wrong when updating image location on serialized json. Message: {}", e.getMessage());
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
-            } catch (Exception e) {
-                log.error("Something went wrong when saving a image screen. Message: {}", e.getMessage());
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
-            }
-        }
+  private String updateDocTree(String docTree, String imageScreenUrl) throws JsonProcessingException {
+    JsonNode jsonNode = objectMapper.readTree(docTree);
+    ((ObjectNode) jsonNode.path("docTree").path("chldrn").get(2).path("chldrn").get(1).path("attrs")).put("src", imageScreenUrl);
+    return objectMapper.writeValueAsString(jsonNode);
+  }
 
-        Callable<Optional<AssetFilePath>> screenFileUploader =
-                () -> Optional.ofNullable(uploadDataFileToS3(req.body(), prefixHash, S3Config.getEntityFiles().dataFile(), S3Config.AssetType.Screen));
+  @Transactional
+  public RespScreen copyFromParentScreen(ReqCopyScreen body, User userEntity) {
+    Long parentId = body.parentId();
+    String tourRid = body.tourRid();
 
-        Callable<Optional<AssetFilePath>> thumbnailUploader =
-                () -> uploadBase64ImageToS3(req.thumbnail().orElse(""), S3Config.AssetType.Common);
+    Optional<Screen> maybeScreen = screenRepo.findById(parentId);
+    Optional<Tour> maybeTour = tourRepo.findByRid(tourRid);
 
-        try {
-            List<Optional<AssetFilePath>> assetFiles = Utils.runInParallel(screenFileUploader, thumbnailUploader);
-            Optional<AssetFilePath> thumbnailFile = assetFiles.get(1);
-
-            String thumbnailFilePath = null;
-            if (thumbnailFile.isPresent()) {
-                thumbnailFilePath = thumbnailFile.get().getFilePath();
-            }
-            screen.setType(ScreenType.SerDom);
-            screen.setThumbnail(thumbnailFilePath);
-            Screen storedScreen = screenRepo.save(screen);
-            return RespScreen.from(storedScreen);
-        } catch (Exception e) {
-            log.error("Error while uploading file to s3. Message: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while saving screen");
-        }
+    if (maybeScreen.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Screen with id %s not found", parentId));
+    }
+    if (maybeTour.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Tour with id %s not found", tourRid));
     }
 
-    private String updateDocTree(String docTree, String imageScreenUrl) throws JsonProcessingException {
-        JsonNode jsonNode = objectMapper.readTree(docTree);
-        ((ObjectNode) jsonNode.path("docTree").path("chldrn").get(2).path("chldrn").get(1).path("attrs")).put("src", imageScreenUrl);
-        return objectMapper.writeValueAsString(jsonNode);
+    Screen clonedScreen = cloneScreen(newScreen -> newScreen, maybeScreen.get(), userEntity, maybeTour.get());
+    return RespScreen.from(clonedScreen);
+  }
+
+
+  @Transactional(propagation = Propagation.MANDATORY)
+  public Screen cloneScreen(FnScreenBuilder screenBuilder, Screen sourceScreen, User user, Tour tour) {
+    return cloneScreen(screenBuilder, sourceScreen, user, tour, user.getBelongsToOrg());
+  }
+
+  @Transactional(propagation = Propagation.MANDATORY)
+  public Screen cloneScreen(FnScreenBuilder fnScreenBuilder, Screen sourceScreen, User user, Tour tour, Long belongsToOrg) {
+    String prefixHash = Utils.createUuidWord();
+    AssetFilePath fromScreenFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Screen,
+      sourceScreen.getAssetPrefixHash(),
+      S3Config.getEntityFiles().screenDataFile().filename());
+    AssetFilePath fromThumbnailPath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Common, sourceScreen.getThumbnail());
+    AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Screen,
+      sourceScreen.getAssetPrefixHash(),
+      S3Config.getEntityFiles().editFile().filename());
+    AssetFilePath fromImgScreenFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Screen,
+      sourceScreen.getAssetPrefixHash(),
+      S3Config.getEntityFiles().imgFile().filename());
+
+    AssetFilePath toScreenFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().screenDataFile().filename());
+    AssetFilePath toThumbnailPath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Common, UUID.randomUUID().toString());
+    AssetFilePath toImgScreenFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
+
+    Callable<AssetFilePath> screenFileCopier = () -> s3Service.copy(fromScreenFilePath, toScreenFilePath);
+    Callable<AssetFilePath> thumbnailCopier = () -> s3Service.copy(fromThumbnailPath, toThumbnailPath);
+    Callable<AssetFilePath> imgFileCopier = () -> s3Service.copy(fromImgScreenFilePath, toImgScreenFilePath);
+    Callable<AssetFilePath> editFileCopier = Utils.isParentScreen(sourceScreen)
+      ? () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT)
+      : () -> copyDataFileToS3(fromScreenEditFilePath, prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
+
+    try {
+      List<AssetFilePath> assetFiles = sourceScreen.getType() == ScreenType.SerDom
+        ? Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileCopier)
+        : Utils.runInParallel(screenFileCopier, thumbnailCopier, imgFileCopier);
+      AssetFilePath thumbnailFile = assetFiles.get(1);
+
+      Screen.ScreenBuilder<?, ?> screenBuilder = Screen.builder()
+        .rid(Utils.createReadableId(sourceScreen.getDisplayName()))
+        .createdBy(user)
+        .url(sourceScreen.getUrl())
+        .displayName(sourceScreen.getDisplayName())
+        .assetPrefixHash(prefixHash)
+        .belongsToOrg(belongsToOrg)
+        .icon(sourceScreen.getIcon())
+        .responsive(sourceScreen.getResponsive())
+        .thumbnail(thumbnailFile.getFilePath())
+        .tours(Set.of(tour))
+        .parentScreenId(Utils.isParentScreen(sourceScreen) ? sourceScreen.getId() : sourceScreen.getParentScreenId())
+        .type(sourceScreen.getType());
+      screenBuilder = fnScreenBuilder.apply(screenBuilder);
+      Screen screen = screenBuilder.build();
+      return screenRepo.save(screen);
+    } catch (Exception e) {
+      log.error("Error while copying file from parent screen to child screen. Message: {}", e.getMessage());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
     }
+  }
 
-    @Transactional
-    public RespScreen copyFromParentScreen(ReqCopyScreen body, User userEntity) {
-        Long parentId = body.parentId();
-        String tourRid = body.tourRid();
+  @Transactional
+  public RespScreen createThumbnailFromImage(ReqThumbnailCreation body, User user) {
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
 
-        Optional<Screen> maybeScreen = screenRepo.findById(parentId);
-        Optional<Tour> maybeTour = tourRepo.findByRid(tourRid);
+    String prefixHash = screen.getAssetPrefixHash();
+    String base64Prefix = "data:image/jpeg;base64,";
+    int newWidth = 360;
+    int newHeight = 240;
+    byte[] resizedImageBytes;
+    AssetFilePath imgScreenFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
 
-        if (maybeScreen.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Screen with id %s not found", parentId));
-        }
-        if (maybeTour.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Tour with id %s not found", tourRid));
-        }
+    try {
+      byte[] imageContent = s3Service.getObjectContent(imgScreenFilePath);
+      ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageContent);
+      BufferedImage originalImage = ImageIO.read(byteArrayInputStream);
+      byteArrayInputStream.close();
 
-        Screen clonedScreen = cloneScreen(newScreen -> newScreen, maybeScreen.get(), userEntity, maybeTour.get());
-        return RespScreen.from(clonedScreen);
+      BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
+      Graphics2D g = resizedImage.createGraphics();
+      g.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
+      g.dispose();
+
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ImageIO.write(resizedImage, "jpeg", bos);
+      resizedImageBytes = bos.toByteArray();
+      bos.close();
+
+      String base64StringOfThumbnail = base64Prefix + Base64.getEncoder().encodeToString(resizedImageBytes);
+      Optional<AssetFilePath> uploadedThumbnailPath = uploadBase64ImageToS3(base64StringOfThumbnail, S3Config.AssetType.Common);
+      if (uploadedThumbnailPath.isEmpty()) {
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Can't save thumbnail in storage");
+      }
+      screen.setThumbnail(uploadedThumbnailPath.get().getFilePath());
+      Screen storedScreen = screenRepo.save(screen);
+      return RespScreen.from(storedScreen);
+    } catch (IOException e) {
+      log.error("Something is wrong while getting the image from s3{}", e.getMessage());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating thumbnail");
+    } catch (Exception e) {
+      log.error("Something is wrong while resizing the image {}", e.getMessage());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating thumbnail");
     }
+  }
 
+  @Transactional
+  public RespScreen assignScreenToTour(ReqScreenTour body, User user) {
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
+    Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), user);
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    public Screen cloneScreen(FnScreenBuilder screenBuilder, Screen sourceScreen, User user, Tour tour) {
-        return cloneScreen(screenBuilder, sourceScreen, user, tour, user.getBelongsToOrg());
+    Set<Tour> tours = screen.getTours();
+    tours.add(tour);
+    screen.setTours(tours);
+    Screen storedScreen = screenRepo.save(screen);
+    return RespScreen.from(storedScreen);
+  }
+
+  @Transactional
+  public List<RespScreen> getAllScreensForOrg(Long orgId) {
+    List<Screen> screens = screenRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
+    return screens.stream().map(RespScreen::from).collect(Collectors.toList());
+  }
+
+  @Transactional
+  public Optional<RespScreen> getScreenByRid(String rid) {
+    Optional<Screen> maybeScreen = screenRepo.findByRid(rid);
+    return maybeScreen.map(RespScreen::from);
+  }
+
+  @Transactional
+  public RespScreen updateEditForScreen(ReqRecordEdit body, User userEntity) {
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
+
+    uploadDataFileToS3(
+      body.editData(),
+      screen.getAssetPrefixHash(),
+      S3Config.getEntityFiles().editFile(),
+      S3Config.AssetType.Screen);
+
+    // Updates the updatedAt
+    screen.setUpdatedAt(Utils.getCurrentUtcTimestamp());
+    Screen updatedScreen = screenRepo.save(screen);
+    return RespScreen.from(updatedScreen);
+  }
+
+  @Transactional
+  public RespScreen renameScreen(ReqRenameGeneric body, User userEntity) {
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
+    String newName = body.newName();
+    screen.setDisplayName(newName);
+    screen.setRid(Utils.createReadableId(newName));
+    Screen savedScreen = screenRepo.save(screen);
+    return RespScreen.from(savedScreen);
+  }
+
+  @Transactional
+  public RespScreen updateScreenProperty(ReqUpdateScreenProperty body, User userEntity) {
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
+    if (body.propName().equals("responsive")) {
+      screen.setResponsive((Boolean) body.propValue());
     }
-
-    @Transactional(propagation = Propagation.MANDATORY)
-    public Screen cloneScreen(FnScreenBuilder fnScreenBuilder, Screen sourceScreen, User user, Tour tour, Long belongsToOrg) {
-        String prefixHash = Utils.createUuidWord();
-        AssetFilePath fromScreenFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Screen,
-                sourceScreen.getAssetPrefixHash(),
-                S3Config.getEntityFiles().dataFile().filename());
-        AssetFilePath fromThumbnailPath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Common, sourceScreen.getThumbnail());
-        AssetFilePath fromScreenEditFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Screen,
-                sourceScreen.getAssetPrefixHash(),
-                S3Config.getEntityFiles().editFile().filename());
-        AssetFilePath fromImgScreenFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Screen,
-                sourceScreen.getAssetPrefixHash(),
-                S3Config.getEntityFiles().imgFile().filename());
-
-        AssetFilePath toScreenFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().dataFile().filename());
-        AssetFilePath toThumbnailPath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Common, UUID.randomUUID().toString());
-        AssetFilePath toImgScreenFilePath = s3Config.getQualifiedPathFor(
-                S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
-
-        Callable<AssetFilePath> screenFileCopier = () -> s3Service.copy(fromScreenFilePath, toScreenFilePath);
-        Callable<AssetFilePath> thumbnailCopier = () -> s3Service.copy(fromThumbnailPath, toThumbnailPath);
-        Callable<AssetFilePath> imgFileCopier = () -> s3Service.copy(fromImgScreenFilePath, toImgScreenFilePath);
-        Callable<AssetFilePath> editFileCopier = Utils.isParentScreen(sourceScreen)
-                ? () -> uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.SCREEN_EDIT)
-                : () -> copyDataFileToS3(fromScreenEditFilePath, prefixHash, DATA_FILE_TYPE.SCREEN_EDIT);
-
-        try {
-            List<AssetFilePath> assetFiles = sourceScreen.getType() == ScreenType.SerDom
-                    ? Utils.runInParallel(screenFileCopier, thumbnailCopier, editFileCopier)
-                    : Utils.runInParallel(screenFileCopier, thumbnailCopier, imgFileCopier);
-            AssetFilePath thumbnailFile = assetFiles.get(1);
-
-            Screen.ScreenBuilder<?, ?> screenBuilder = Screen.builder()
-                    .rid(Utils.createReadableId(sourceScreen.getDisplayName()))
-                    .createdBy(user)
-                    .url(sourceScreen.getUrl())
-                    .displayName(sourceScreen.getDisplayName())
-                    .assetPrefixHash(prefixHash)
-                    .belongsToOrg(belongsToOrg)
-                    .icon(sourceScreen.getIcon())
-                    .responsive(sourceScreen.getResponsive())
-                    .thumbnail(thumbnailFile.getFilePath())
-                    .tours(Set.of(tour))
-                    .parentScreenId(Utils.isParentScreen(sourceScreen) ? sourceScreen.getId() : sourceScreen.getParentScreenId())
-                    .type(sourceScreen.getType());
-            screenBuilder = fnScreenBuilder.apply(screenBuilder);
-            Screen screen = screenBuilder.build();
-            return screenRepo.save(screen);
-        } catch (Exception e) {
-            log.error("Error while copying file from parent screen to child screen. Message: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
-        }
-    }
-
-    @Transactional
-    public RespScreen createThumbnailFromImage(ReqThumbnailCreation body, User user) {
-        Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
-
-        String prefixHash = screen.getAssetPrefixHash();
-        String base64Prefix = "data:image/jpeg;base64,";
-        int newWidth = 360;
-        int newHeight = 240;
-        byte[] resizedImageBytes;
-        AssetFilePath imgScreenFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.Screen, prefixHash, S3Config.getEntityFiles().imgFile().filename());
-
-        try {
-            byte[] imageContent = s3Service.getObjectContent(imgScreenFilePath);
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageContent);
-            BufferedImage originalImage = ImageIO.read(byteArrayInputStream);
-            byteArrayInputStream.close();
-
-            BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g = resizedImage.createGraphics();
-            g.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
-            g.dispose();
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ImageIO.write(resizedImage, "jpeg", bos);
-            resizedImageBytes = bos.toByteArray();
-            bos.close();
-
-            String base64StringOfThumbnail = base64Prefix + Base64.getEncoder().encodeToString(resizedImageBytes);
-            Optional<AssetFilePath> uploadedThumbnailPath = uploadBase64ImageToS3(base64StringOfThumbnail, S3Config.AssetType.Common);
-            if (uploadedThumbnailPath.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Can't save thumbnail in storage");
-            }
-            screen.setThumbnail(uploadedThumbnailPath.get().getFilePath());
-            Screen storedScreen = screenRepo.save(screen);
-            return RespScreen.from(storedScreen);
-        } catch (IOException e) {
-            log.error("Something is wrong while getting the image from s3{}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating thumbnail");
-        } catch (Exception e) {
-            log.error("Something is wrong while resizing the image {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating thumbnail");
-        }
-    }
-
-    @Transactional
-    public RespScreen assignScreenToTour(ReqScreenTour body, User user) {
-        Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
-        Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), user);
-
-        Set<Tour> tours = screen.getTours();
-        tours.add(tour);
-        screen.setTours(tours);
-        Screen storedScreen = screenRepo.save(screen);
-        return RespScreen.from(storedScreen);
-    }
-
-    @Transactional
-    public List<RespScreen> getAllScreensForOrg(Long orgId) {
-        List<Screen> screens = screenRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
-        return screens.stream().map(RespScreen::from).collect(Collectors.toList());
-    }
-
-    @Transactional
-    public Optional<RespScreen> getScreenByRid(String rid) {
-        Optional<Screen> maybeScreen = screenRepo.findByRid(rid);
-        return maybeScreen.map(RespScreen::from);
-    }
-
-    @Transactional
-    public RespScreen updateEditForScreen(ReqRecordEdit body, User userEntity) {
-        Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
-
-        uploadDataFileToS3(
-                body.editData(),
-                screen.getAssetPrefixHash(),
-                S3Config.getEntityFiles().editFile(),
-                S3Config.AssetType.Screen);
-
-        // Updates the updatedAt
-        screen.setUpdatedAt(Utils.getCurrentUtcTimestamp());
-        Screen updatedScreen = screenRepo.save(screen);
-        return RespScreen.from(updatedScreen);
-    }
-
-    @Transactional
-    public RespScreen renameScreen(ReqRenameGeneric body, User userEntity) {
-        Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
-        String newName = body.newName();
-        screen.setDisplayName(newName);
-        screen.setRid(Utils.createReadableId(newName));
-        Screen savedScreen = screenRepo.save(screen);
-        return RespScreen.from(savedScreen);
-    }
-
-    @Transactional
-    public RespScreen updateScreenProperty(ReqUpdateScreenProperty body, User userEntity) {
-        Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
-        if (body.propName().equals("responsive")) {
-            screen.setResponsive((Boolean) body.propValue());
-        }
-        Screen updatedScreen = screenRepo.save(screen);
-        return RespScreen.from(updatedScreen);
-    }
+    Screen updatedScreen = screenRepo.save(screen);
+    return RespScreen.from(updatedScreen);
+  }
 }

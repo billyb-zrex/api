@@ -21,6 +21,7 @@ import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -113,7 +114,7 @@ public class TourService extends ServiceBase {
     uploadDataFileToS3(
       body.editData(),
       tour.getAssetPrefixHash(),
-      fileTobeEdited == EditTour.INDEX ? S3Config.getEntityFiles().dataFile() : S3Config.getEntityFiles().loaderFile(),
+      fileTobeEdited == EditTour.INDEX ? S3Config.getEntityFiles().tourDataFile() : S3Config.getEntityFiles().loaderFile(),
       S3Config.AssetType.Tour);
 
     tour.setUpdatedAt(Utils.getCurrentUtcTimestamp());
@@ -166,7 +167,7 @@ public class TourService extends ServiceBase {
     AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
       S3Config.AssetType.Tour,
       fromTour.getAssetPrefixHash(),
-      S3Config.getEntityFiles().dataFile().filename());
+      S3Config.getEntityFiles().tourDataFile().filename());
     AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
       S3Config.AssetType.Tour,
       fromTour.getAssetPrefixHash(),
@@ -294,7 +295,7 @@ public class TourService extends ServiceBase {
       AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
         S3Config.AssetType.Tour,
         tour.getAssetPrefixHash(),
-        S3Config.getEntityFiles().dataFile().filename());
+        S3Config.getEntityFiles().tourDataFile().filename());
       AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
         S3Config.AssetType.Tour,
         tour.getAssetPrefixHash(),
@@ -306,8 +307,14 @@ public class TourService extends ServiceBase {
         S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedLoaderFile().filename());
 
       List<Callable<AssetFilePath>> tourInfoCopier = new ArrayList<>();
-      Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(fromTourDataFilePath, toTourDataFilePath);
-      Callable<AssetFilePath> tourLoaderCopier = () -> s3Service.copy(fromTourLoaderFilePath, toTourLoaderFilePath);
+      Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(fromTourDataFilePath, toTourDataFilePath, Map.of(
+        HttpHeaders.CONTENT_TYPE, "application/json",
+        HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedDataFile().cachePolicy())
+      ));
+      Callable<AssetFilePath> tourLoaderCopier = () -> s3Service.copy(fromTourLoaderFilePath, toTourLoaderFilePath, Map.of(
+        HttpHeaders.CONTENT_TYPE, "application/json",
+        HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedLoaderFile().cachePolicy())
+      ));
       Callable<AssetFilePath> uploadTourResp = () -> uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
       tourInfoCopier.add(tourDataCopier);
       tourInfoCopier.add(tourLoaderCopier);
@@ -324,7 +331,10 @@ public class TourService extends ServiceBase {
             screen.getAssetPrefixHash(),
             S3Config.getEntityFiles().publishedEditFile().filename());
 
-          Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath);
+          Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath, Map.of(
+            HttpHeaders.CONTENT_TYPE, "application/json",
+            HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedLoaderFile().cachePolicy())
+          ));
           tourInfoCopier.add(screenEditCopier);
         }
       }
@@ -410,7 +420,7 @@ public class TourService extends ServiceBase {
     AssetFilePath tourAssetFilePath = s3Config.getQualifiedPathFor(
       S3Config.AssetType.Tour,
       maybeTour.get().getAssetPrefixHash(),
-      S3Config.getEntityFiles().dataFile().filename());
+      S3Config.getEntityFiles().tourDataFile().filename());
     return tourAssetFilePath.getS3UriToFile();
   }
 }
