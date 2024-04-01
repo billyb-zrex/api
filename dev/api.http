@@ -469,3 +469,11 @@ Content-Type: application/json
 GET {{api-host}}/v1/f/vr/ct/lstapp
 Authorization: {{auth-header}}
 Content-Type: application/json
+
+### creating linked account for already existing org
+POST {{api-host}}/v1/vr/ct/forcecreatelinkedaccount
+Content-Type: application/json
+
+{
+  "orgId": 52
+}

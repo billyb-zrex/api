@@ -1,10 +1,15 @@
 package com.sharefable.api.service.vendor;
 
 import com.sharefable.api.config.vendor.CobaltConfig;
+import com.sharefable.api.entity.HouseLeadInfo;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.repo.HouseLeadInfoRepo;
 import com.sharefable.api.repo.TourRepo;
+import com.sharefable.api.service.NfHookService;
+import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.req.ReqCobaltEvent;
+import com.sharefable.api.transport.req.ReqNewLinkedAccount;
 import com.sharefable.api.transport.resp.RespAccountToken;
 import com.sharefable.api.transport.resp.RespLinkedApps;
 import com.sharefable.api.transport.vendor.LinkedApps;
@@ -12,14 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,12 +31,16 @@ public class CobaltService {
   private final CobaltConfig cobaltConfig;
   private final TourRepo tourRepo;
   private final RestTemplate restClient;
+  private final HouseLeadInfoRepo houseLeadInfoRepo;
+  private final NfHookService nfHookService;
 
   @Autowired
-  public CobaltService(CobaltConfig cobaltConfig, TourRepo tourRepo, RestTemplate restClient) {
+  public CobaltService(CobaltConfig cobaltConfig, TourRepo tourRepo, RestTemplate restClient, HouseLeadInfoRepo houseLeadInfoRepo, NfHookService nfHookService) {
     this.cobaltConfig = cobaltConfig;
     this.tourRepo = tourRepo;
     this.restClient = restClient;
+    this.houseLeadInfoRepo = houseLeadInfoRepo;
+    this.nfHookService = nfHookService;
 
     DefaultUriBuilderFactory defaultUriBuilderFactory = new DefaultUriBuilderFactory();
     defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
@@ -105,6 +112,14 @@ public class CobaltService {
     headers.set(CobaltConfig.LINKED_ACCOUNT_ID, accountId);
     HttpEntity<ReqCobaltEvent> entity = new HttpEntity<>(event, headers);
     this.restClient.exchange(cobaltConfig.getAppEventUrl(), HttpMethod.POST, entity, String.class);
+  }
+
+  @Transactional
+  public void createLinkedAccountIfNotExist(ReqNewLinkedAccount body) {
+    List<HouseLeadInfo> maybeHouseLeadInfo = houseLeadInfoRepo.findHouseLeadInfoByOrgId(body.orgId());
+    if (maybeHouseLeadInfo.isEmpty()) {
+      nfHookService.sendNotification(NfEvents.NEW_ORG_CREATED, Map.of("id", body.orgId().toString()));
+    }
   }
 
   private HttpHeaders getCommonHeaders() {

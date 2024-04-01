@@ -62,6 +62,7 @@ public interface Routes {
   String TOKEN_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/tknlnkdacc";
   String LIST_APPS_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/lstapp";
   String COBALT_EVENT_PUB = COBALT + "/evnt";
+  String FORCE_CREATE_LINKED_ACCOUNT = COBALT + "/forcecreatelinkedaccount";
   String COBALT_EVENT_AUTHED = __BEHIND_LOGIN__ + COBALT + "/evnt";
   String ADD_OR_UPDATE_LEAD_INFO = "/ldinf";
   String HUBSPOT_DATA_FETCH_URL_HOOK = HUBSPOT + "/dfu";

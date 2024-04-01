@@ -6,6 +6,7 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.vendor.CobaltService;
 import com.sharefable.api.transport.req.ReqCobaltEvent;
+import com.sharefable.api.transport.req.ReqNewLinkedAccount;
 import com.sharefable.api.transport.resp.RespAccountToken;
 import com.sharefable.api.transport.resp.RespLinkedApps;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,12 @@ public class CobaltController {
   @RequestMapping(value = Routes.COBALT_EVENT_AUTHED, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<String> sendEventAuthed(@RequestBody ReqCobaltEvent event, @AuthUser User user) {
     cobaltService.sendEventAuthed(event, user);
+    return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
+  }
+
+  @RequestMapping(value = Routes.FORCE_CREATE_LINKED_ACCOUNT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<String> createLinkedAccount(@RequestBody ReqNewLinkedAccount body) {
+    cobaltService.createLinkedAccountIfNotExist(body);
     return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
   }
 }

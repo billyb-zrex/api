@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-03-29 07:45:58.
+// Generated using typescript-generator version 2.35.1025 on 2024-04-01 13:11:11.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -148,6 +148,10 @@ export interface ReqLeadActivityDataPost {
 export interface ReqMediaProcessing {
     path: string;
     assn: ReqEntityAssetAssn;
+}
+
+export interface ReqNewLinkedAccount {
+    orgId: number;
 }
 
 export interface ReqNewOrg {
