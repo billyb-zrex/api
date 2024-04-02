@@ -284,9 +284,22 @@ public class TourService extends ServiceBase {
     return getAllToursForOrg(userEntity.getBelongsToOrg());
   }
 
+
   @Transactional
   public RespTour publishTour(ReqTourRid body, User userEntity, RespCommonConfig commonConfig) {
     Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
+    return copyDataForPublishTour(tour, commonConfig);
+  }
+
+  @Transactional
+  public RespTour publishTour(ReqTourRid body, RespCommonConfig commonConfig) {
+    Optional<Tour> maybeTour = tourRepo.findByRid(body.tourRid());
+    if (maybeTour.isEmpty()) throw new RuntimeException("tour not present");
+    return copyDataForPublishTour(maybeTour.get(), commonConfig);
+  }
+
+  @Transactional
+  public RespTour copyDataForPublishTour(Tour tour, RespCommonConfig commonConfig) {
     Set<Screen> screens = tour.getScreens();
 
     try {
@@ -316,12 +329,8 @@ public class TourService extends ServiceBase {
         HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedLoaderFile().cachePolicy())
       ));
 
-//      ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
-//      String tourResp = objectMapper.writeValueAsString(apiResp);
-//      Callable<AssetFilePath> uploadTourResp = () -> uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
       tourInfoCopier.add(tourDataCopier);
       tourInfoCopier.add(tourLoaderCopier);
-//      tourInfoCopier.add(uploadTourResp);
 
       for (Screen screen : screens) {
         if (screen.getType() != ScreenType.Img) {

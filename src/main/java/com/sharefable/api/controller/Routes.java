@@ -18,6 +18,9 @@ public interface Routes {
   String REFRESH_SETTINGS = "/refreshsettings";
   String CHARGEBEE_WEBHOOK = "/wh/cb";
 
+  // only for migration
+  String PUBLISH_TOUR_INTERNAL = "/m/tpub";
+
   /* === Routes with authentication === */
   String __BEHIND_LOGIN__ = "/f"; // f => behind spring security [F]ilters for authentication
   String IAM = __BEHIND_LOGIN__ + "/iam";

@@ -15,31 +15,34 @@ import java.util.HashMap;
 @Getter
 @Slf4j
 public class AppSettings {
-    @Getter(AccessLevel.NONE)
-    private final AppSettingsRepo settingsRepo;
+  @Getter(AccessLevel.NONE)
+  private final AppSettingsRepo settingsRepo;
 
-    private SchemaVersion currentSchemaVersion;
-    private String onboardingTourIds;
+  private SchemaVersion currentSchemaVersion;
+  private String onboardingTourIds;
+  private String isMigrationOn;
 
-    @Autowired
-    public AppSettings(AppSettingsRepo settingsRepo) {
-        this.settingsRepo = settingsRepo;
-        load();
+  @Autowired
+  public AppSettings(AppSettingsRepo settingsRepo) {
+    this.settingsRepo = settingsRepo;
+    load();
+  }
+
+  public void load() {
+    Iterable<Settings> settings = settingsRepo.findAll();
+    HashMap<String, String> hm = new HashMap<>();
+    for (Settings setting : settings) {
+      hm.put(setting.getK(), setting.getV());
     }
 
-    public void load() {
-        Iterable<Settings> settings = settingsRepo.findAll();
-        HashMap<String, String> hm = new HashMap<>();
-        for (Settings setting : settings) {
-            hm.put(setting.getK(), setting.getV());
-        }
-
-        currentSchemaVersion = SchemaVersion.of(hm.get("CURRENT_SCHEMA_VERSION"));
-        onboardingTourIds = hm.getOrDefault("ONBOARDING_TOUR_IDS", "");
-        log.info("Settings loaded currentSchemaVersion=[{}] onboardingTourIds=[{}]",
-            currentSchemaVersion,
-            onboardingTourIds
-        );
-    }
+    currentSchemaVersion = SchemaVersion.of(hm.get("CURRENT_SCHEMA_VERSION"));
+    onboardingTourIds = hm.getOrDefault("ONBOARDING_TOUR_IDS", "");
+    isMigrationOn = hm.getOrDefault("MIGRATION", "0");
+    log.info("Settings loaded currentSchemaVersion=[{}] onboardingTourIds=[{}] migration=[{}]",
+      currentSchemaVersion,
+      onboardingTourIds,
+      isMigrationOn
+    );
+  }
 }
 

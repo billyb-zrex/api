@@ -2,6 +2,7 @@ package com.sharefable.api.controller.v1;
 
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
+import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
@@ -13,9 +14,12 @@ import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +31,7 @@ import java.util.Optional;
 public class TourController {
   private final TourService tourService;
   private final WorkspaceController wsController;
+  private final AppSettings appSettings;
 
   @RequestMapping(value = Routes.GET_ALL_TOURS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   //@PreAuthorize("hasAuthority(@Perm.READ_TOUR)")
@@ -92,6 +97,17 @@ public class TourController {
   public ApiResp<RespTour> publishTour(@RequestBody ReqTourRid body, @AuthUser User user) {
     RespCommonConfig commonConfig = wsController.getCommonConfig().getData();
     RespTour resp = tourService.publishTour(body, user, commonConfig);
+    return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.PUBLISH_TOUR_INTERNAL, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespTour> publishTour(@RequestBody ReqTourRid body) {
+    if (!StringUtils.equalsIgnoreCase(appSettings.getIsMigrationOn(), "1")) {
+      log.error("Migration requested but flag not set.");
+      throw new ResponseStatusException(HttpStatusCode.valueOf(404));
+    }
+    RespCommonConfig commonConfig = wsController.getCommonConfig().getData();
+    RespTour resp = tourService.publishTour(body, commonConfig);
     return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 

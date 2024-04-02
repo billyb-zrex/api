@@ -477,3 +477,11 @@ Content-Type: application/json
 {
   "orgId": 52
 }
+
+### creating linked account for already existing org
+POST {{api-host}}/v1/m/tpub
+Content-Type: application/json
+
+{
+  "tourRid": ""
+}
