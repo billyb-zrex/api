@@ -3,6 +3,7 @@ package com.sharefable.api.config;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.sharefable.api.common.AssetFilePath;
+import com.sharefable.api.common.VersionedFile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,9 +28,9 @@ public class S3Config {
   private static final String LOADER_FILE_NAME = "loader.json";
   private static final String IMAGE_FILE_NAME = "index.img";
   private static final String LEAD_ACTIVITY_FILE_NAME = "ule.json";
-  private static final String PUBLISHED_DATA_FILE_NAME = "0_index.json";
-  private static final String PUBLISHED_EDIT_FILE_NAME = "0_edits.json";
-  private static final String PUBLISHED_LOADER_FILE_NAME = "0_loader.json";
+  private static final String PUBLISHED_DATA_FILE_NAME = "%d_index.json";
+  private static final String PUBLISHED_EDIT_FILE_NAME = "%d_edits.json";
+  private static final String PUBLISHED_LOADER_FILE_NAME = "%d_loader.json";
   private static final String PUBLISHED_TOUR_ENTITY_FILE_NAME = "0_d_data.json";
   private static final String MANIFEST_FILE = "manifest.json";
   private static final String PATH_FOR_COMMON_ASSET = "/cmn";
@@ -49,15 +50,15 @@ public class S3Config {
 
   public static EntityFilesConfig getEntityFiles() {
     return new EntityFilesConfig(
-      new FileConfig(TOUR_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-      new FileConfig(SCREEN_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache),
-      new FileConfig(EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-      new FileConfig(LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-      new FileConfig(IMAGE_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-      new FileConfig(PUBLISHED_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.StaleOk),
-      new FileConfig(PUBLISHED_EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.StaleOk),
-      new FileConfig(PUBLISHED_LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.StaleOk),
-      new FileConfig(PUBLISHED_TOUR_ENTITY_FILE_NAME, DATA_FILE_CACHE_POLICY.StaleOk),
+      new FileConfig(TOUR_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache), // don't cache preview route's tour datafile
+      new FileConfig(SCREEN_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache), // always cache screen datafile
+      new FileConfig(EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache), // don't cache preview route's edit file
+      new FileConfig(LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache), // don't cache preview route's loader file
+      new FileConfig(IMAGE_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache), // always cache image file
+      new FileConfig(PUBLISHED_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache, String::format), // always cache published tour datafile
+      new FileConfig(PUBLISHED_EDIT_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache, String::format), // always cache published edit file
+      new FileConfig(PUBLISHED_LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache, String::format), // always cache published loader file
+      new FileConfig(PUBLISHED_TOUR_ENTITY_FILE_NAME, DATA_FILE_CACHE_POLICY.StaleOk), // cache with revalidate tour entity file
       new FileConfig(MANIFEST_FILE, DATA_FILE_CACHE_POLICY.NoCache),
       new FileConfig(LEAD_ACTIVITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
   }
@@ -65,7 +66,7 @@ public class S3Config {
   public static String getCachePolicyStr(DATA_FILE_CACHE_POLICY policy) {
     return switch (policy) {
       case NoCache -> "max-age=0";
-      case StaleOk -> "max-age=0, stale-while-revalidate=60";
+      case StaleOk -> "max-age=60, stale-while-revalidate=120";
       case Cache -> "max-age=2592000, stale-while-revalidate=60";
     };
   }
@@ -148,7 +149,34 @@ public class S3Config {
     String leadAnalytics) {
   }
 
-  public record FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
+  public static class FileConfig {
+    private final String __filename;
+    private final DATA_FILE_CACHE_POLICY __cachePolicy;
+    private final VersionedFile replacer;
+
+    FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
+      this.__filename = filename;
+      this.__cachePolicy = cachePolicy;
+      replacer = (f, v) -> f;
+    }
+
+    FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy, VersionedFile replacer) {
+      this.__filename = filename;
+      this.__cachePolicy = cachePolicy;
+      this.replacer = replacer;
+    }
+
+    public String filename() {
+      return __filename;
+    }
+
+    public String filename(Integer v) {
+      return this.replacer.apply(this.__filename, v);
+    }
+
+    public DATA_FILE_CACHE_POLICY cachePolicy() {
+      return __cachePolicy;
+    }
   }
 
   public record EntityFilesConfig(

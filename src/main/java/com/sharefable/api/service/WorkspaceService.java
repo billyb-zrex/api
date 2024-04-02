@@ -168,11 +168,11 @@ public class WorkspaceService extends ServiceBase {
       .dataFileName(entityFilesConfig.tourDataFile().filename())
       .loaderFileName(entityFilesConfig.loaderFile().filename())
       .editFileName(entityFilesConfig.editFile().filename())
-      .pubDataFileName(entityFilesConfig.publishedDataFile().filename())
-      .pubLoaderFileName(entityFilesConfig.publishedLoaderFile().filename())
-      .pubEditFileName(entityFilesConfig.publishedEditFile().filename())
-      .pubTourEntityFileName(entityFilesConfig.publishedTourEntityFile().filename())
       .manifestFileName(entityFilesConfig.manifestFile().filename());
+//      .pubDataFileName(entityFilesConfig.publishedDataFile().filename())
+//      .pubLoaderFileName(entityFilesConfig.publishedLoaderFile().filename())
+//      .pubEditFileName(entityFilesConfig.publishedEditFile().filename())
+//      .pubTourEntityFileName(entityFilesConfig.publishedTourEntityFile().filename())
   }
 
   public RespUploadUrl getPreSignedUrlToUploadFile(User user, String contentType, Optional<String> extension) {

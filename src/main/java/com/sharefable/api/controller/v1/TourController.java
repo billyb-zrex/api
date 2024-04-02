@@ -8,6 +8,7 @@ import com.sharefable.api.service.TourService;
 import com.sharefable.api.transport.EditTour;
 import com.sharefable.api.transport.ReqTourPropUpdate;
 import com.sharefable.api.transport.req.*;
+import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TourController {
   private final TourService tourService;
+  private final WorkspaceController wsController;
 
   @RequestMapping(value = Routes.GET_ALL_TOURS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   //@PreAuthorize("hasAuthority(@Perm.READ_TOUR)")
@@ -88,7 +90,8 @@ public class TourController {
 
   @RequestMapping(value = Routes.PUBLISH_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespTour> publishTour(@RequestBody ReqTourRid body, @AuthUser User user) {
-    RespTour resp = tourService.publishTour(body, user);
+    RespCommonConfig commonConfig = wsController.getCommonConfig().getData();
+    RespTour resp = tourService.publishTour(body, user, commonConfig);
     return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 

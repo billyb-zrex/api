@@ -13,17 +13,17 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @GenerateTSDef
 public class RespCommonConfig extends ResponseBase {
-    private String commonAssetPath;
-    private String screenAssetPath;
-    private String tourAssetPath;
-    private String pubTourAssetPath;
-    private String dataFileName;
-    private String loaderFileName;
-    private String editFileName;
-    private String pubDataFileName;
-    private String pubLoaderFileName;
-    private String pubEditFileName;
-    private String pubTourEntityFileName;
-    private String manifestFileName;
-    private SchemaVersion latestSchemaVersion;
+  private String commonAssetPath;
+  private String screenAssetPath;
+  private String tourAssetPath;
+  private String pubTourAssetPath;
+  private String dataFileName;
+  private String loaderFileName;
+  private String editFileName;
+  private String manifestFileName;
+  //    private String pubDataFileName;
+//    private String pubLoaderFileName;
+//    private String pubEditFileName;
+//    private String pubTourEntityFileName;
+  private SchemaVersion latestSchemaVersion;
 }

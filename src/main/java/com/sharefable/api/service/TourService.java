@@ -15,6 +15,7 @@ import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.*;
 import com.sharefable.api.transport.req.*;
+import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import io.sentry.Sentry;
@@ -82,6 +83,7 @@ public class TourService extends ServiceBase {
       .description(req.description().orElse(""))
       .rid(Utils.createReadableId(req.name()))
       .inProgress(false)
+      .publishedVersion(0)
       .assetPrefixHash(prefixHash)
       .belongsToOrg(createdByUser.getBelongsToOrg())
       .onboarding(false)
@@ -283,15 +285,12 @@ public class TourService extends ServiceBase {
   }
 
   @Transactional
-  public RespTour publishTour(ReqTourRid body, User userEntity) {
+  public RespTour publishTour(ReqTourRid body, User userEntity, RespCommonConfig commonConfig) {
     Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
     Set<Screen> screens = tour.getScreens();
 
     try {
       uploadTourManifestToS3(tour);
-      RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour);
-      ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
-      String tourResp = objectMapper.writeValueAsString(apiResp);
       AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
         S3Config.AssetType.Tour,
         tour.getAssetPrefixHash(),
@@ -301,10 +300,11 @@ public class TourService extends ServiceBase {
         tour.getAssetPrefixHash(),
         S3Config.getEntityFiles().loaderFile().filename());
 
+      Integer nextVersion = tour.getPublishedVersion() + 1;
       AssetFilePath toTourDataFilePath = s3Config.getQualifiedPathFor(
-        S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedDataFile().filename());
+        S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedDataFile().filename(nextVersion));
       AssetFilePath toTourLoaderFilePath = s3Config.getQualifiedPathFor(
-        S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedLoaderFile().filename());
+        S3Config.AssetType.Tour, tour.getAssetPrefixHash(), S3Config.getEntityFiles().publishedLoaderFile().filename(nextVersion));
 
       List<Callable<AssetFilePath>> tourInfoCopier = new ArrayList<>();
       Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(fromTourDataFilePath, toTourDataFilePath, Map.of(
@@ -315,10 +315,13 @@ public class TourService extends ServiceBase {
         HttpHeaders.CONTENT_TYPE, "application/json",
         HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedLoaderFile().cachePolicy())
       ));
-      Callable<AssetFilePath> uploadTourResp = () -> uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
+
+//      ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
+//      String tourResp = objectMapper.writeValueAsString(apiResp);
+//      Callable<AssetFilePath> uploadTourResp = () -> uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
       tourInfoCopier.add(tourDataCopier);
       tourInfoCopier.add(tourLoaderCopier);
-      tourInfoCopier.add(uploadTourResp);
+//      tourInfoCopier.add(uploadTourResp);
 
       for (Screen screen : screens) {
         if (screen.getType() != ScreenType.Img) {
@@ -329,7 +332,7 @@ public class TourService extends ServiceBase {
           AssetFilePath toScreenEditFilePath = s3Config.getQualifiedPathFor(
             S3Config.AssetType.Screen,
             screen.getAssetPrefixHash(),
-            S3Config.getEntityFiles().publishedEditFile().filename());
+            S3Config.getEntityFiles().publishedEditFile().filename(nextVersion));
 
           Callable<AssetFilePath> screenEditCopier = () -> s3Service.copy(fromScreenEditFilePath, toScreenEditFilePath, Map.of(
             HttpHeaders.CONTENT_TYPE, "application/json",
@@ -339,7 +342,15 @@ public class TourService extends ServiceBase {
         }
       }
       Utils.runInParallel(tourInfoCopier.toArray(new Callable[0]));
+
       tour.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
+      tour.setPublishedVersion(nextVersion);
+
+      RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour, commonConfig);
+      ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
+      String tourResp = objectMapper.writeValueAsString(apiResp);
+      uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
+
       Tour savedTour = tourRepo.save(tour);
       return RespTour.from(savedTour);
     } catch (Exception e) {

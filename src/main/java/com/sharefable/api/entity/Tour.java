@@ -18,26 +18,29 @@ import java.util.Set;
 @SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespTourWithScreens.class)
 public class Tour extends EntityBaseWithOwnership {
-    @Column(nullable = false)
-    private String assetPrefixHash;
+  @Column(nullable = false)
+  private String assetPrefixHash;
 
-    @Column(nullable = false)
-    private String displayName;
+  @Column(nullable = false)
+  private String displayName;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(nullable = false, name = "created_by")
-    private User createdBy;
+  @ManyToOne(fetch = FetchType.EAGER, optional = false)
+  @JoinColumn(nullable = false, name = "created_by")
+  private User createdBy;
 
-    private String description;
+  private String description;
 
-    private Timestamp lastPublishedDate;
+  private Timestamp lastPublishedDate;
 
-    @Column(nullable = false)
-    private Boolean onboarding;
+  @Column(nullable = false)
+  private Integer publishedVersion;
 
-    private Boolean inProgress;
+  @Column(nullable = false)
+  private Boolean onboarding;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))
-    private Set<Screen> screens;
+  private Boolean inProgress;
+
+  @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))
+  private Set<Screen> screens;
 }
