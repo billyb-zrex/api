@@ -185,6 +185,7 @@ public class TourService extends ServiceBase {
       .belongsToOrg(fromTour.getBelongsToOrg())
       .rid(rid)
       .inProgress(true)
+      .publishedVersion(0)
       .displayName(fromTour.getDisplayName())
       .description(fromTour.getDescription())
       .onboarding(fromTour.getOnboarding())
