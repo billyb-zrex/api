@@ -13,7 +13,10 @@ import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
-import com.sharefable.api.transport.*;
+import com.sharefable.api.transport.EditTour;
+import com.sharefable.api.transport.ScreenAssets;
+import com.sharefable.api.transport.ScreenType;
+import com.sharefable.api.transport.TourManifest;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespTour;
@@ -443,5 +446,10 @@ public class TourService extends ServiceBase {
       maybeTour.get().getAssetPrefixHash(),
       S3Config.getEntityFiles().tourDataFile().filename());
     return tourAssetFilePath.getS3UriToFile();
+  }
+
+  public RespTour getTourById(Long id) {
+    Optional<Tour> maybeTour = tourRepo.findById(id);
+    return maybeTour.map(RespTour::from).orElse(null);
   }
 }

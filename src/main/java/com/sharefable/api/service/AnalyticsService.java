@@ -9,6 +9,7 @@ import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.*;
 import com.sharefable.api.repo.*;
 import com.sharefable.api.transport.*;
+import com.sharefable.api.transport.req.ReqAddOrUpdateLeadInfo;
 import com.sharefable.api.transport.req.ReqLeadActivityDataPost;
 import com.sharefable.api.transport.resp.*;
 import lombok.extern.slf4j.Slf4j;

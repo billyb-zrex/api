@@ -189,6 +189,7 @@
                 <configuration>
                     <jsonLibrary>jackson2</jsonLibrary>
                     <classesWithAnnotations>com.sharefable.api.transport.GenerateTSDef</classesWithAnnotations>
+                    <optionalAnnotations>com.sharefable.api.transport.OptionalPropInTS</optionalAnnotations>
                     <outputKind>module</outputKind>
                     <outputFile>gen/api-contract.d.ts</outputFile>
                     <mapEnum>asEnum</mapEnum>

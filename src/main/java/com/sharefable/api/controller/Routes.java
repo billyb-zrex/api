@@ -12,6 +12,7 @@ public interface Routes {
   String GET_COMMON_CONFIG = "/cconfig";
   String GET_SCREEN = "/screen";
   String GET_TOUR = "/tour";
+  String GET_TOUR_BY_ID = "/tour/by/id/{id}";
   String LOG_USER_EVENTS = "/lue";
   String LOG_USER_EVENTS_DIRECT = "/lued";
   String NF_HOOK = "/nfhook";
@@ -20,6 +21,9 @@ public interface Routes {
 
   // only for migration
   String PUBLISH_TOUR_INTERNAL = "/m/tpub";
+
+  // internal data entry routes
+  String ADD_OR_UPDATE_PLATFORM_INTEGRATION = "/ide/platform_integration";
 
   /* === Routes with authentication === */
   String __BEHIND_LOGIN__ = "/f"; // f => behind spring security [F]ilters for authentication
@@ -60,16 +64,25 @@ public interface Routes {
   String STEPS_DURATION = __BEHIND_LOGIN__ + "/stpsdur";
   String CONVERSION = __BEHIND_LOGIN__ + "/convrsn";
   String GET_ALL_TOUR_LEADS = __BEHIND_LOGIN__ + "/gettrleads";
-  String UPLOAD_LEAD_LEVEL_ANALYTICS = "/updleadanalytics";
   String GET_LEAD_ACTIVITY_DATA_FILE = __BEHIND_LOGIN__ + "/getleadactvitydatafile";
   String TOKEN_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/tknlnkdacc";
   String LIST_APPS_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/lstapp";
-  String COBALT_EVENT_PUB = COBALT + "/evnt";
-  String FORCE_CREATE_LINKED_ACCOUNT = COBALT + "/forcecreatelinkedaccount";
   String COBALT_EVENT_AUTHED = __BEHIND_LOGIN__ + COBALT + "/evnt";
+  String TENANT_INTEGRATIONS = __BEHIND_LOGIN__ + "/tenant_integrations";
+  String TENANT_INTEGRATION = __BEHIND_LOGIN__ + "/tenant_integration";
+  String DEL_TENANT_INTEGRATION = __BEHIND_LOGIN__ + "/delete/tenant_integration/{id}";
+
+  /* === Cross service w/o authentication === */
+
+  String UPLOAD_LEAD_LEVEL_ANALYTICS = "/updleadanalytics";
   String ADD_OR_UPDATE_LEAD_INFO = "/ldinf";
   String HUBSPOT_DATA_FETCH_URL_HOOK = HUBSPOT + "/dfu";
   String HOUSE_LEAD_INFO = "/hldinf";
   String GET_TOUR_ASSET_FILE_PATH = "/trasstpath";
   String POPULATED_LEAD_360 = "/poplead";
+  String NEW_LOG = "/new/log";
+  String GET_TENANT_INTEGRATION_BY_ID = "/fat/tenant_integration/{id}";
+  // INFO although this is named as cobalt event, this event is fable's internal event and is used in multiple areas
+  String COBALT_EVENT_PUB = COBALT + "/evnt";
+  String FORCE_CREATE_LINKED_ACCOUNT = COBALT + "/forcecreatelinkedaccount";
 }

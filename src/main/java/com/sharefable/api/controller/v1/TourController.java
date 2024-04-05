@@ -7,14 +7,12 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
 import com.sharefable.api.transport.EditTour;
-import com.sharefable.api.transport.ReqTourPropUpdate;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespTour;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +51,12 @@ public class TourController {
   public ApiResp<RespTour> getTourByRId(@RequestParam("rid") String rId, @RequestParam("s") Optional<Boolean> shouldGetScreens) {
     RespTour tour = tourService.getTourByRid(rId, shouldGetScreens.orElse(Boolean.FALSE));
     return ApiResp.<RespTour>builder().data(tour).build();
+  }
+
+  @RequestMapping(value = Routes.GET_TOUR_BY_ID, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespTour> getTourById(@PathVariable("id") Long id) {
+    RespTour resp = tourService.getTourById(id);
+    return ApiResp.<RespTour>builder().data(resp).build();
   }
 
   @RequestMapping(value = Routes.RECORD_TOUR_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -102,7 +106,7 @@ public class TourController {
 
   @RequestMapping(value = Routes.PUBLISH_TOUR_INTERNAL, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespTour> publishTour(@RequestBody ReqTourRid body) {
-    if (!StringUtils.equalsIgnoreCase(appSettings.getIsMigrationOn(), "1")) {
+    if (!appSettings.isMigrationFlatSet()) {
       log.error("Migration requested but flag not set.");
       throw new ResponseStatusException(HttpStatusCode.valueOf(404));
     }

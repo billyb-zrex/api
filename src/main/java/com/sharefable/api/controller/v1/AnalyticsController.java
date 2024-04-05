@@ -5,7 +5,7 @@ import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.AnalyticsService;
-import com.sharefable.api.transport.ReqAddOrUpdateLeadInfo;
+import com.sharefable.api.transport.req.ReqAddOrUpdateLeadInfo;
 import com.sharefable.api.transport.req.ReqLeadActivityDataPost;
 import com.sharefable.api.transport.resp.*;
 import lombok.RequiredArgsConstructor;

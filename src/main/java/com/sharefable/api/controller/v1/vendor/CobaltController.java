@@ -4,6 +4,7 @@ import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.service.IntegrationService;
 import com.sharefable.api.service.vendor.CobaltService;
 import com.sharefable.api.transport.req.ReqCobaltEvent;
 import com.sharefable.api.transport.req.ReqNewLinkedAccount;
@@ -22,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CobaltController {
   private final CobaltService cobaltService;
+  private final IntegrationService integrationService;
 
   @RequestMapping(value = Routes.TOKEN_FOR_LINKED_ACCOUNT, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespAccountToken> getToken(@AuthUser User user) {
@@ -37,6 +39,7 @@ public class CobaltController {
 
   @RequestMapping(value = Routes.COBALT_EVENT_PUB, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<String> sendEventPublic(@RequestParam(name = "rid") String rid, @RequestBody ReqCobaltEvent event) {
+    integrationService.executeIntegrationIfAny(event.event(), event.payload());
     cobaltService.sendEventPublic(event, rid);
     return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
   }
