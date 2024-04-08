@@ -52,7 +52,7 @@ public class SubscriptionService {
     Org org = maybeOrg.get();
 
     try {
-      final int numberOfMembersInOrg = userRepo.countUsersByBelongsToOrgAndActiveIsTrue(org.getId());
+      final int numberOfMembersInOrg = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(org.getId());
 
       // Create a customer object in chargebee
       Result cusomerResult = Customer.create()
@@ -95,7 +95,7 @@ public class SubscriptionService {
     if (user.getBelongsToOrg() == null) return null;
     Subscription subs = repo.getSubscriptionByOrgId(user.getBelongsToOrg());
     String planId = paymentConfig.getPlanId(info.pricingPlan(), info.pricingInterval());
-    final int numberOfMembersInOrg = userRepo.countUsersByBelongsToOrgAndActiveIsTrue(user.getBelongsToOrg());
+    final int numberOfMembersInOrg = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(user.getBelongsToOrg());
 
     try {
       com.chargebee.models.Subscription.updateForItems(subs.getCbSubscriptionId())
@@ -116,7 +116,7 @@ public class SubscriptionService {
 
   @Async
   void updateNoOfSeatInSubscription(Long orgId) {
-    final int newSeatQuantity = userRepo.countUsersByBelongsToOrgAndActiveIsTrue(orgId);
+    final int newSeatQuantity = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(orgId);
     Subscription subs = repo.getSubscriptionByOrgId(orgId);
     String subsId = subs.getCbSubscriptionId();
     if (StringUtils.isBlank(subsId)) {
@@ -151,7 +151,7 @@ public class SubscriptionService {
     if (subs == null) return null;
     String subId = subs.getCbSubscriptionId();
     try {
-      final int numberOfMembersInOrg = userRepo.countUsersByBelongsToOrgAndActiveIsTrue(user.getBelongsToOrg());
+      final int numberOfMembersInOrg = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(user.getBelongsToOrg());
       Result result = HostedPage.checkoutExistingForItems()
         .subscriptionId(subId)
         .subscriptionItemItemPriceId(0, subs.getPaymentPlanId())
