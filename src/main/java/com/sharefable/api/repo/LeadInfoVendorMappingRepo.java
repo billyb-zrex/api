@@ -14,4 +14,6 @@ public interface LeadInfoVendorMappingRepo extends CrudRepository<LeadInfoVendor
     HouseLeadInfo houseLeadInfo,
     LeadInfoKey leadInfoKey
   );
+
+  Optional<LeadInfoVendorMapping> getLeadInfoVendorMappingByInfoKeyAndInfoValue(LeadInfoKey key, String infoValue);
 }

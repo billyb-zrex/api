@@ -5,14 +5,17 @@ import com.sharefable.api.repo.AppSettingsRepo;
 import com.sharefable.api.transport.SchemaVersion;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.HashMap;
 
 @Configuration
+@ConfigurationProperties(prefix = "com.sharefable.api.self")
 @Getter
 @Slf4j
 public class AppSettings {
@@ -23,6 +26,8 @@ public class AppSettings {
   private String onboardingTourIds;
   private boolean isMigrationFlatSet;
   private boolean isDataEntryFlagSet;
+  @Setter
+  private String publicEndpoint;
 
   @Autowired
   public AppSettings(AppSettingsRepo settingsRepo) {

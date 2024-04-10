@@ -1,9 +1,9 @@
 const mysql = require('mysql');
 
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
+  host: '<>',
+  user: '<>',
+  password: '<>',
   database: 'fable_tour_app',
 };
 
@@ -38,8 +38,9 @@ async function connectToDatabase() {
 
   for (const tour of data) {
     console.log('Migrating ', tour.rid);
+    let resp;
     try {
-      await fetch('http://localhost:8080/v1/m/tpub', {
+      resp = await fetch('https://api.service.sharefable.com/v1/m/tpub', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -48,7 +49,7 @@ async function connectToDatabase() {
           tourRid: tour.rid
         })
       });
-      console.log('Done')
+      console.log('resp', resp.status)
     } catch (e) {
       console.error('Error', e.stack);
     }
