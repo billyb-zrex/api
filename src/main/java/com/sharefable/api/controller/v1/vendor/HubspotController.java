@@ -82,9 +82,9 @@ public class HubspotController {
     }
 
     LeadResult[] leadResults = lead360s.stream().map(lead360 -> {
-      Tour tour = tourMap.get(lead360.getId());
+      Tour tour = tourMap.get(lead360.getTourId());
       if (tour == null) {
-        log.error("tour is present in lead360 but not found in tours. id={}", lead360.getId());
+        log.error("tour is present in lead360 but not found in tours. id={}", lead360.getTourId());
         return null;
       }
 
