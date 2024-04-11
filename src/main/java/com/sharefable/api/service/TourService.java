@@ -13,10 +13,7 @@ import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
-import com.sharefable.api.transport.EditTour;
-import com.sharefable.api.transport.ScreenAssets;
-import com.sharefable.api.transport.ScreenType;
-import com.sharefable.api.transport.TourManifest;
+import com.sharefable.api.transport.*;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespTour;
@@ -401,17 +398,30 @@ public class TourService extends ServiceBase {
     }
   }
 
+  private List<Tour> getOnboardingTours() {
+    String onboardingTourIds = settings.getOnboardingTourIds();
+    if (onboardingTourIds != null && !StringUtils.isBlank(onboardingTourIds)) {
+      List<Long> parsedOnboardingTourIds = Arrays.stream(settings.getOnboardingTourIds().trim().split(","))
+        .map(Long::valueOf)
+        .collect(Collectors.toList());
+      return tourRepo.findAllByIdIn(parsedOnboardingTourIds);
+    }
+    return null;
+  }
+
+  @Transactional(readOnly = true)
+  public List<OnboardingTourForPrev> getOnboardingToursForPreview(User user) {
+    List<Tour> onboardingTours = getOnboardingTours();
+    if (onboardingTours == null) return List.of();
+    return onboardingTours.stream().map(tour -> new OnboardingTourForPrev(tour.getRid(), tour.getDisplayName(), tour.getDescription())).collect(Collectors.toList());
+  }
+
   @Transactional
   public List<RespTourWithScreens> createOnboardingTourInUserAccount(User user) {
     List<RespTourWithScreens> respOnboardingTours = new ArrayList<>();
     try {
-      String onboardingTourIds = settings.getOnboardingTourIds();
-      if (onboardingTourIds != null && !StringUtils.isBlank(onboardingTourIds)) {
-        List<Long> parsedOnboardingTourIds = Arrays.stream(settings.getOnboardingTourIds().trim().split(","))
-          .map(Long::valueOf)
-          .collect(Collectors.toList());
-        List<Tour> onboardingTours = tourRepo.findAllByIdIn(parsedOnboardingTourIds);
-
+      List<Tour> onboardingTours = getOnboardingTours();
+      if (onboardingTours != null) {
         for (Tour onboardingTour : onboardingTours) {
           respOnboardingTours.add(this.duplicateTour(onboardingTour, user,
             newTour -> newTour.onboarding(true).belongsToOrg(user.getBelongsToOrg()), true));

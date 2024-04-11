@@ -50,7 +50,8 @@ public interface Routes {
   String RENAME_SCREEN = __BEHIND_LOGIN__ + "/renamescreen";
   String UPDATE_SCREEN_PROPERTY = __BEHIND_LOGIN__ + "/updatescreenproperty";
   String DUPLICATE_TOUR = __BEHIND_LOGIN__ + "/duptour";
-  String ONBOADING_TOUR = __BEHIND_LOGIN__ + "/conbtrs";
+  String ONBOARDING_TOUR = __BEHIND_LOGIN__ + "/conbtrs";
+  String ONBOARDING_TOUR_PREVIEW_ONLY = __BEHIND_LOGIN__ + "/onbtrspreview";
   String TRANSCODE_VIDEO = __BEHIND_LOGIN__ + "/vdt";
   String RESIZE_IMG = __BEHIND_LOGIN__ + "/rzeimg";
   String CHECKOUT = __BEHIND_LOGIN__ + "/checkout";

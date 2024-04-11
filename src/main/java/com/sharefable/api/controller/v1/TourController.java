@@ -7,6 +7,7 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
 import com.sharefable.api.transport.EditTour;
+import com.sharefable.api.transport.OnboardingTourForPrev;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespTour;
@@ -115,10 +116,16 @@ public class TourController {
     return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 
-  @RequestMapping(value = Routes.ONBOADING_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestMapping(value = Routes.ONBOARDING_TOUR, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespTourWithScreens[]> getOnboardingTours(@AuthUser User user) {
     List<RespTourWithScreens> allOnboardingTours = tourService.createOnboardingTourInUserAccount(user);
     return ApiResp.<RespTourWithScreens[]>builder().status(ApiResp.ResponseStatus.Success).data(allOnboardingTours.toArray(RespTourWithScreens[]::new)).build();
+  }
+
+  @RequestMapping(value = Routes.ONBOARDING_TOUR_PREVIEW_ONLY, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<OnboardingTourForPrev>> getOnboardingToursForPreview(@AuthUser User user) {
+    List<OnboardingTourForPrev> tourForPreview = tourService.getOnboardingToursForPreview(user);
+    return ApiResp.<List<OnboardingTourForPrev>>builder().status(ApiResp.ResponseStatus.Success).data(tourForPreview).build();
   }
 
   @RequestMapping(value = Routes.UPDATE_TOUR_PROPERTY, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
