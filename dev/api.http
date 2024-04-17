@@ -332,7 +332,16 @@ Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "tourRid": "onbording-1-jwfxoj8ycp4nzi0r"
+  "tourRid": "update-tour-hqufywi26muug4o3",
+  "inProgress": 0,
+  "site": {
+    "logo": "image00009.png",
+    "navLink": "https://www.google.com",
+    "ctaText": "test",
+    "ctaLink": "https://www.google.com",
+    "background": "#fffff",
+    "headerBackground": "#fffff"
+  }
 }
 
 ### Total Visitors

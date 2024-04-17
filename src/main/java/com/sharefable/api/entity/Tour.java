@@ -1,11 +1,14 @@
 package com.sharefable.api.entity;
 
 import com.sharefable.api.transport.resp.RespTourWithScreens;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Type;
 
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -39,6 +42,9 @@ public class Tour extends EntityBaseWithOwnership {
   private Boolean onboarding;
 
   private Boolean inProgress;
+  @Type(JsonType.class)
+  @Column(columnDefinition = "json")
+  private Map<String, Object> site;
 
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))

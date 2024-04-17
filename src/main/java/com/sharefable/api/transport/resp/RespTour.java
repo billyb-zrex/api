@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -34,6 +35,7 @@ public class RespTour extends ResponseBase {
   private String pubLoaderFileName;
   private String pubEditFileName;
   private String pubTourEntityFileName;
+  private Map<String, Object> site;
 
   public static RespTour from(Tour tour) {
     try {

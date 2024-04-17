@@ -4,6 +4,7 @@ import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.controller.Routes;
+import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
 import com.sharefable.api.transport.EditTour;
@@ -130,8 +131,8 @@ public class TourController {
 
   @RequestMapping(value = Routes.UPDATE_TOUR_PROPERTY, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespTour> updateTourProperty(@RequestBody ReqTourPropUpdate body, @AuthUser User user) {
-    RespTour tour = tourService.updateTourProperty(body, user);
-    return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(tour).build();
+    Tour tour = tourService.updateTourProperty(body, user);
+    return ApiResp.<RespTour>builder().status(ApiResp.ResponseStatus.Success).data(RespTour.from(tour)).build();
   }
 
   @RequestMapping(value = Routes.GET_TOUR_ASSET_FILE_PATH, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)

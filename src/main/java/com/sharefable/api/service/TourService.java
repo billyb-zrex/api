@@ -438,10 +438,11 @@ public class TourService extends ServiceBase {
   }
 
   @Transactional
-  public RespTour updateTourProperty(ReqTourPropUpdate body, User userEntity) {
+  public Tour updateTourProperty(ReqTourPropUpdate body, User userEntity) {
     Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
+    body.site().ifPresent(tour::setSite);
     body.inProgress().ifPresent(tour::setInProgress);
-    return RespTour.from(tour);
+    return tourRepo.save(tour);
   }
 
   @Transactional
