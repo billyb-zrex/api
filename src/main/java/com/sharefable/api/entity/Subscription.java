@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.common.SubscriptionManagedBy;
 import com.sharefable.api.transport.JobProcessingInfo;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.resp.RespSubscription;
@@ -21,34 +22,38 @@ import java.sql.Timestamp;
 @SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespSubscription.class)
 public class Subscription extends EntityBase {
-    @Column(nullable = false)
-    String paymentPlanId;
+  @Column(nullable = false)
+  String paymentPlanId;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    PaymentTerms.Plan paymentPlan;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  PaymentTerms.Plan paymentPlan;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    PaymentTerms.Interval paymentInterval;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  PaymentTerms.Interval paymentInterval;
 
-    @Column(nullable = false)
-    String cbCustomerId;
+  @Column(nullable = false)
+  String cbCustomerId;
 
-    @Column(nullable = false)
-    String cbSubscriptionId;
+  @Column(nullable = false)
+  String cbSubscriptionId;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private com.chargebee.models.Subscription.Status status;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private com.chargebee.models.Subscription.Status status;
 
-    private Timestamp trialEndsOn;
+  private Timestamp trialEndsOn;
 
-    private Timestamp trialStartedOn;
+  private Timestamp trialStartedOn;
 
-    private Long orgId;
+  private Long orgId;
 
-    @Type(JsonType.class)
-    @Column(columnDefinition = "json")
-    private JobProcessingInfo info;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private SubscriptionManagedBy managedBy;
+
+  @Type(JsonType.class)
+  @Column(columnDefinition = "json")
+  private JobProcessingInfo info;
 }

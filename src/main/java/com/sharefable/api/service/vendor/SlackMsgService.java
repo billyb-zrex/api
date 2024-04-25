@@ -1,0 +1,33 @@
+package com.sharefable.api.service.vendor;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.slack.api.Slack;
+import com.slack.api.webhook.Payload;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Map;
+
+import static com.slack.api.model.block.Blocks.asBlocks;
+import static com.slack.api.model.block.Blocks.section;
+import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
+
+@Service
+@Slf4j
+public class SlackMsgService {
+  private static final String APPSUMO_SUBS_WEBHOOK_URL = "https://hooks.slack.com/services/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";
+  private final ObjectMapper mapper = new ObjectMapper();
+  private final Slack client = Slack.getInstance();
+
+  @Async
+  public void sendAppSumoSubsMsgs(Map<String, Object> data) throws IOException {
+    String jsonStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(data);
+    Payload payload = Payload.builder()
+      .blocks(asBlocks(
+        section(s -> s.text(markdownText(String.format("```%s```", jsonStr))))
+      )).build();
+    client.send(APPSUMO_SUBS_WEBHOOK_URL, payload);
+  }
+}

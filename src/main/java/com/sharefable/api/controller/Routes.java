@@ -5,6 +5,7 @@ public interface Routes {
 
   /* === Vendor prefix === */
   String COBALT = "/vr/ct";
+  String APP_SUMO = "/vr/as";
   String HUBSPOT = "/vr/hs";
 
   /* === Routes w/o authentication === */
@@ -78,6 +79,8 @@ public interface Routes {
   String UPLOAD_LEAD_LEVEL_ANALYTICS = "/updleadanalytics";
   String ADD_OR_UPDATE_LEAD_INFO = "/ldinf";
   String HUBSPOT_DATA_FETCH_URL_HOOK = HUBSPOT + "/dfu";
+  String APP_SUMO_WEBHOOK = APP_SUMO + "/whk";
+  String APP_SUMO_REDIRECT_URL = APP_SUMO + "/redir";
   String HOUSE_LEAD_INFO = "/hldinf";
   String GET_TOUR_ASSET_FILE_PATH = "/trasstpath";
   String POPULATED_LEAD_360 = "/poplead";

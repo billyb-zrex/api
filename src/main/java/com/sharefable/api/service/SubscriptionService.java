@@ -3,7 +3,9 @@ package com.sharefable.api.service;
 import com.chargebee.Result;
 import com.chargebee.models.Customer;
 import com.chargebee.models.HostedPage;
+import com.sharefable.api.common.SubscriptionManagedBy;
 import com.sharefable.api.config.PaymentConfig;
+import com.sharefable.api.entity.Log;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.Subscription;
 import com.sharefable.api.entity.User;
@@ -23,7 +25,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -33,6 +39,7 @@ public class SubscriptionService {
   private final PaymentConfig paymentConfig;
   private final OrgRepo orgRepo;
   private final UserRepo userRepo;
+  private final LogService logService;
 
   public RespSubscription getSubscriptionForUser(User user) {
     Long orgId = user.getBelongsToOrg();
@@ -50,6 +57,66 @@ public class SubscriptionService {
     Optional<Org> maybeOrg = orgRepo.findById(user.getBelongsToOrg());
     if (maybeOrg.isEmpty()) return null;
     Org org = maybeOrg.get();
+
+    if (info.pricingInterval() == PaymentTerms.Interval.LIFETIME && !StringUtils.isBlank(info.lifetimeLicense())) {
+      // process lifetime license from appsumo, in this case we don't process saas pricing at all (chargebee)
+
+      // appsumo sends a webhook on license activate / deactivate / purchase / upgrade / downgrade
+      // when it does that, we save the data to logs table
+      // When user logs in after that we fetch the license information and populate the subscription table
+      // There might be a very little edge case when user logs in but the license information is not passed via webhook
+      // or may be the webhook failed. In that case we use status Future
+
+      Optional<Log> license = logService.getLicenseFromLog(info.lifetimeLicense());
+      Subscription.SubscriptionBuilder<?, ?> builder = Subscription.builder()
+        .paymentInterval(PaymentTerms.Interval.LIFETIME)
+        .cbSubscriptionId(info.lifetimeLicense())
+        .trialEndsOn(Timestamp.from(Instant.ofEpochMilli(1893436200000L))) // static value 2030
+        .trialStartedOn(Timestamp.from(Instant.ofEpochMilli(1893436200000L))) // static value 2030
+        .cbCustomerId("")
+        .managedBy(SubscriptionManagedBy.APPSUMO)
+        .orgId(org.getId());
+
+      boolean isDeactivated = false;
+      if (license.isPresent()) {
+        Object logLine = license.get().getLogLine();
+        Map<String, Object> licenseInfo = (Map<String, Object>) logLine;
+
+        String event = (String) licenseInfo.get("event");
+        if (StringUtils.equalsIgnoreCase(event, "deactivate")) {
+          isDeactivated = true;
+        } else {
+          Object rawTier = licenseInfo.get("tier");
+          int tier = 1;
+          if (rawTier != null) {
+            tier = (Integer) rawTier;
+          }
+          PaymentTerms.Plan plan = switch (tier) {
+            case 1 -> PaymentTerms.Plan.LIFETIME_TIER1;
+            case 2 -> PaymentTerms.Plan.LIFETIME_TIER2;
+            // case 3
+            default -> PaymentTerms.Plan.LIFETIME_TIER3;
+          };
+          builder
+            .paymentPlanId(paymentConfig.getPlanId(plan, info.pricingInterval()))
+            .paymentPlan(plan)
+            .status(com.chargebee.models.Subscription.Status.ACTIVE);
+        }
+      } else {
+        builder
+          .paymentPlanId(paymentConfig.getPlanId(info.pricingPlan(), info.pricingInterval()))
+          .paymentPlan(info.pricingPlan())
+          .status(com.chargebee.models.Subscription.Status.FUTURE);
+      }
+
+      // If license is deactivated start saas plan without breaking the flow
+      // if license is active then create appsumo subscription activation
+      if (!isDeactivated) {
+        Subscription subs = builder.build();
+        repo.save(subs);
+        return RespSubscription.from(subs);
+      }
+    }
 
     try {
       final int numberOfMembersInOrg = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(org.getId());
@@ -78,6 +145,7 @@ public class SubscriptionService {
         .cbSubscriptionId(cbSubs.id())
         .trialEndsOn(cbSubs.trialEnd())
         .trialStartedOn(cbSubs.trialStart())
+        .managedBy(SubscriptionManagedBy.CHARGEBEE)
         .status(cbSubs.status())
         .orgId(org.getId())
         .cbCustomerId(customer.id())
@@ -91,27 +159,90 @@ public class SubscriptionService {
     }
   }
 
-  public RespSubscription updateSubscription(ReqSubscriptionInfo info, User user) {
-    if (user.getBelongsToOrg() == null) return null;
-    Subscription subs = repo.getSubscriptionByOrgId(user.getBelongsToOrg());
+  @Transactional
+  public RespSubscription updateSubscription(ReqSubscriptionInfo info, Long orgId) {
+    Subscription subs = repo.getSubscriptionByOrgId(orgId);
+    Set<User> users = userRepo.getUsersByBelongsToOrgAndActiveIsTrue(orgId);
+    Optional<User> user = users.stream().findFirst();
+
+    // If subscription purchased, upgraded, downgraded update it
+    // if it's deactivated start a new chargebee subscription
+    // delete existing chargebee subscription
+
     String planId = paymentConfig.getPlanId(info.pricingPlan(), info.pricingInterval());
-    final int numberOfMembersInOrg = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(user.getBelongsToOrg());
+    final int numberOfMembersInOrg = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(orgId);
+
+    boolean isLifetimeSubscription = info.pricingInterval() == PaymentTerms.Interval.LIFETIME &&
+      !StringUtils.isBlank(info.lifetimeLicense());
+    Map<String, Object> licenseInfo;
+    if (isLifetimeSubscription) {
+      Optional<Log> license = logService.getLicenseFromLog(info.lifetimeLicense());
+      if (license.isPresent()) {
+        licenseInfo = (Map<String, Object>) license.get().getLogLine();
+        String event = (String) licenseInfo.get("event");
+        if (StringUtils.equalsIgnoreCase(event, "deactivate")) {
+          // If the license got deactivated then make lifetime subscription as false
+          isLifetimeSubscription = false;
+        }
+      } else {
+        throw new RuntimeException("License " + info.lifetimeLicense() + " should be present for user");
+      }
+    }
 
     try {
-      com.chargebee.models.Subscription.updateForItems(subs.getCbSubscriptionId())
-        .subscriptionItemItemPriceId(0, planId)
-        .subscriptionItemQuantity(0, numberOfMembersInOrg)
-        .request();
+      if (isLifetimeSubscription) {
+        if (subs.getManagedBy() == SubscriptionManagedBy.CHARGEBEE || subs.getManagedBy() == SubscriptionManagedBy.APPSUMO) {
+          // If user is choosing saas -> lifetime
+          // if upgrading / downgrading lifetime
+          repo.delete(subs);
+          return newSubscription(info, user.get());
+        } else {
+          throw new RuntimeException("Unknown subscription manager " + subs.getManagedBy());
+        }
+      } else {
+        if (subs.getManagedBy() == SubscriptionManagedBy.APPSUMO) {
+          // if switching from appsumo to saas. this happens when someone activates saas plan from app sumo plan
+          // 1. delete app sumo subscription
+          // 2. start a new saas subscription
+          repo.delete(subs);
+          return user.map(value -> newSubscription(
+            new ReqSubscriptionInfo(
+              PaymentTerms.Plan.SOLO,
+              PaymentTerms.Interval.MONTHLY,
+              null
+            ),
+            value
+          )).orElse(null);
+        } else if (subs.getManagedBy() == SubscriptionManagedBy.CHARGEBEE) {
+          // saas upgrade
+          com.chargebee.models.Subscription.updateForItems(subs.getCbSubscriptionId())
+            .subscriptionItemItemPriceId(0, planId)
+            .subscriptionItemQuantity(0, numberOfMembersInOrg)
+            .request();
 
-      subs.setPaymentPlan(info.pricingPlan());
-      subs.setPaymentInterval(info.pricingInterval());
-      subs.setPaymentPlanId(planId);
-      Subscription updatedSub = repo.save(subs);
-      return RespSubscription.from(updatedSub);
+          subs.setPaymentPlan(info.pricingPlan());
+          subs.setPaymentInterval(info.pricingInterval());
+          subs.setPaymentPlanId(planId);
+          Subscription updatedSub = repo.save(subs);
+          return RespSubscription.from(updatedSub);
+        } else {
+          throw new RuntimeException("Unknown subscription manager " + subs.getManagedBy());
+        }
+      }
     } catch (Exception e) {
       log.error("Can't update {} subscription plan to {}", subs.getCbSubscriptionId(), planId, e);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while updating subscription");
     }
+  }
+
+  @Transactional
+  public RespSubscription updateSubscriptionForUser(ReqSubscriptionInfo info, User user) {
+    if (user.getBelongsToOrg() == null) return null;
+    return updateSubscription(info, user.getBelongsToOrg());
+  }
+
+  public Subscription getSubscriptionById(String subId) {
+    return repo.getSubscriptionByCbSubscriptionId(subId);
   }
 
   @Async
@@ -168,6 +299,7 @@ public class SubscriptionService {
   public void resyncSubscription(com.chargebee.models.Subscription cbSubs) {
     Subscription subs = repo.getSubscriptionByCbSubscriptionId(cbSubs.id());
     if (subs == null) return;
+    if (subs.getManagedBy() != SubscriptionManagedBy.CHARGEBEE) return;
 
     subs.setTrialEndsOn(cbSubs.trialEnd());
     subs.setTrialStartedOn(cbSubs.trialStart());

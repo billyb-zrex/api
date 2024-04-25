@@ -36,7 +36,7 @@ public class SubscriptionController {
     if (subs == null) {
       subs = subsService.newSubscription(info, user);
     } else {
-      subs = subsService.updateSubscription(info, user);
+      subs = subsService.updateSubscriptionForUser(info, user);
     }
     return ApiResp.<RespSubscription>builder().status(ApiResp.ResponseStatus.Success).data(subs).build();
   }

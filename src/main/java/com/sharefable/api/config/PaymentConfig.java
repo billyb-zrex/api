@@ -36,6 +36,19 @@ public class PaymentConfig {
     Map.of(
       PaymentTerms.Interval.MONTHLY, "business-3-USD-Monthly",
       PaymentTerms.Interval.YEARLY, "business-3-USD-Yearly"
+    ),
+    // AppSumo lifetime tiers
+    PaymentTerms.Plan.LIFETIME_TIER1,
+    Map.of(
+      PaymentTerms.Interval.LIFETIME, "tier-1-USD-lifetime"
+    ),
+    PaymentTerms.Plan.LIFETIME_TIER2,
+    Map.of(
+      PaymentTerms.Interval.LIFETIME, "tier-2-USD-lifetime"
+    ),
+    PaymentTerms.Plan.LIFETIME_TIER3,
+    Map.of(
+      PaymentTerms.Interval.LIFETIME, "tier-3-USD-lifetime"
     )
   );
 

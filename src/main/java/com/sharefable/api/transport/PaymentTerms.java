@@ -5,11 +5,15 @@ public class PaymentTerms {
   public enum Plan {
     SOLO,
     STARTUP,
-    BUSINESS
+    BUSINESS,
+    LIFETIME_TIER1,
+    LIFETIME_TIER2,
+    LIFETIME_TIER3
   }
 
   public enum Interval {
     MONTHLY,
-    YEARLY
+    YEARLY,
+    LIFETIME
   }
 }
