@@ -125,7 +125,7 @@ public class AppSumoController {
           "client_id", clientId,
           "client_secret", clientSecret,
           "code", code.get(),
-          "redirect_uri", " https://api.service.sharefable.com/v1/vr/as/redir",
+          "redirect_uri", "https://api.service.sharefable.com/v1/vr/as/redir",
           "grant_type", "authorization_code"
         ), headers);
         ResponseEntity<Map<String, Object>> resp = this.restClient.exchange(
