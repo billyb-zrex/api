@@ -83,6 +83,7 @@ public class TourService extends ServiceBase {
       .description(req.description().orElse(""))
       .rid(Utils.createReadableId(req.name()))
       .inProgress(false)
+      .responsive(false)
       .publishedVersion(0)
       .assetPrefixHash(prefixHash)
       .belongsToOrg(createdByUser.getBelongsToOrg())
@@ -186,6 +187,7 @@ public class TourService extends ServiceBase {
       .rid(rid)
       .inProgress(true)
       .publishedVersion(0)
+      .responsive(fromTour.getResponsive())
       .displayName(fromTour.getDisplayName())
       .description(fromTour.getDescription())
       .onboarding(fromTour.getOnboarding())
@@ -442,6 +444,7 @@ public class TourService extends ServiceBase {
     Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
     body.site().ifPresent(tour::setSite);
     body.inProgress().ifPresent(tour::setInProgress);
+    body.responsive().ifPresent(tour::setResponsive);
     return tourRepo.save(tour);
   }
 

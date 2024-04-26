@@ -9,6 +9,7 @@ import java.util.Optional;
 public record ReqTourPropUpdate(
   String tourRid,
   Optional<Map<String, Object>> site,
-  Optional<Boolean> inProgress
+  Optional<Boolean> inProgress,
+  Optional<Boolean> responsive
 ) {
 }

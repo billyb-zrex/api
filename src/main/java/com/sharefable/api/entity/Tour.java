@@ -46,6 +46,9 @@ public class Tour extends EntityBaseWithOwnership {
   @Column(columnDefinition = "json")
   private Map<String, Object> site;
 
+  @Column(nullable = false)
+  private Boolean responsive;
+
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))
   private Set<Screen> screens;

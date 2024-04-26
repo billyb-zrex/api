@@ -36,6 +36,7 @@ public class RespTour extends ResponseBase {
   private String pubEditFileName;
   private String pubTourEntityFileName;
   private Map<String, Object> site;
+  private Boolean responsive;
 
   public static RespTour from(Tour tour) {
     try {
