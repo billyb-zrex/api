@@ -20,5 +20,5 @@ public class ReqLead360 {
   private Integer timeSpentSec;
   private Timestamp lastInteractedAt;
   private Integer completionPercentage;
-  private Integer ctaClickRate;
+  private Double ctaClickRate;
 }

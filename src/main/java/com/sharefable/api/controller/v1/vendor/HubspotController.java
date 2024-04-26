@@ -73,7 +73,7 @@ public class HubspotController {
 
     LeadInfoVendorMapping leadInfoVendorMapping = maybeVendorLeadInfo.get();
     Set<Lead360> lead360s = leadInfoVendorMapping.getHouseLeadInfo().getInfo360();
-    List<Long> tourIds = lead360s.stream().map(Lead360::getTourId).toList();
+    List<Long> tourIds = lead360s.stream().map(Lead360::getTourId).filter(tourId -> tourId != 0).toList();
 
     List<Tour> allTours = tourRepo.findAllByIdIn(tourIds);
     Map<Long, Tour> tourMap = new HashMap<>();
@@ -82,6 +82,7 @@ public class HubspotController {
     }
 
     LeadResult[] leadResults = lead360s.stream().map(lead360 -> {
+      if (lead360.getTourId() == 0) return null;
       Tour tour = tourMap.get(lead360.getTourId());
       if (tour == null) {
         log.error("tour is present in lead360 but not found in tours. id={}", lead360.getTourId());
@@ -89,12 +90,11 @@ public class HubspotController {
       }
 
       List<AnalyticsUserAidMapping> aidMapping = analyticsUserAidMappingRepo.getAnalyticsUserAidMappingsByTourIdAndEmailOrderByUpdatedAtDesc(tour.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
-      AnalyticsUserAidMapping mapping = aidMapping.get(0);
-
-      if (mapping == null) {
+      if (aidMapping.isEmpty()) {
         log.error("no aid mapping is found for tourId [{}] and emailId[{}] ", tour.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
         return null;
       }
+      AnalyticsUserAidMapping mapping = aidMapping.get(0);
 
       return new LeadResult(
         lead360.getId(),
@@ -102,7 +102,7 @@ public class HubspotController {
         String.format("https://app.sharefable.com/demo/%s", tour.getRid()),
         lead360.getCompletionPercentage(),
         lead360.getCtaClickRate() == 1 ? "Yes" : "No",
-        lead360.getLastInteractedAt().getTime(),
+        lead360.getLastInteractedAt() != null ? lead360.getLastInteractedAt().getTime() : lead360.getUpdatedAt().getTime(),
         lead360.getTimeSpentSec(),
         String.format("https://app.sharefable.com/a/demo/%s/leads#%s", tour.getRid(), mapping.getAid())
       );

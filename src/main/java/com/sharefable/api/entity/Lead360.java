@@ -23,7 +23,7 @@ public class Lead360 extends EntityBase {
   private Integer timeSpentSec;
   private Timestamp lastInteractedAt;
   private Integer completionPercentage;
-  private Integer ctaClickRate;
+  private Double ctaClickRate;
 
   @Transient
   public static Lead360 Empty(Long tourId) {
@@ -34,7 +34,7 @@ public class Lead360 extends EntityBase {
       .timeSpentSec(0)
       .lastInteractedAt(null)
       .completionPercentage(0)
-      .ctaClickRate(0)
+      .ctaClickRate(0.0)
       .build();
   }
 
@@ -47,7 +47,7 @@ public class Lead360 extends EntityBase {
       .timeSpentSec(0)
       .lastInteractedAt(null)
       .completionPercentage(0)
-      .ctaClickRate(0)
+      .ctaClickRate(0.0)
       .build();
   }
 }
