@@ -1,9 +1,11 @@
 package com.sharefable.api.transport.req;
 
+import com.sharefable.api.common.PlatformIntegrationType;
+
 import java.util.Map;
 
 public record ReqAddOrUpdatePlatformIntegrationConfig(
-  String type,
+  PlatformIntegrationType type,
   String name,
   String icon,
   String description,

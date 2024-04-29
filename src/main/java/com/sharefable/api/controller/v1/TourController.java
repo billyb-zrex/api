@@ -4,9 +4,11 @@ import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.controller.Routes;
+import com.sharefable.api.entity.ApiKey;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.TourService;
+import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.EditTour;
 import com.sharefable.api.transport.OnboardingTourForPrev;
 import com.sharefable.api.transport.req.*;
@@ -31,6 +33,7 @@ import java.util.Optional;
 public class TourController {
   private final TourService tourService;
   private final WorkspaceController wsController;
+  private final WorkspaceService wsService;
   private final AppSettings appSettings;
 
   @RequestMapping(value = Routes.GET_ALL_TOURS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -139,5 +142,18 @@ public class TourController {
   public ApiResp<String> getTourAssetPath(@RequestParam("id") Long tourId) {
     String assetPath = tourService.getAssetPathForTour(tourId);
     return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data(assetPath).build();
+  }
+
+  @RequestMapping(value = Routes.GET_ALL_TOURS_BY_API_KEY, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<RespTour>> getAllTours(@RequestHeader(name = "X-API-KEY") String apiKey) {
+    ApiKey key = wsService.getApiKey(apiKey);
+    log.info("GET_ALL_TOURS_API_KEY api key {}", apiKey);
+    if (key == null) {
+      log.error("Can't find api key {}", apiKey);
+      throw new ResponseStatusException(HttpStatusCode.valueOf(404));
+    }
+    List<RespTour> allTours = tourService.getAllToursForOrg(key.getOrg().getId());
+    log.info("GET_ALL_TOURS_API_KEY  orgId {} len {}", key.getOrg().getId(), allTours.size());
+    return ApiResp.<List<RespTour>>builder().status(ApiResp.ResponseStatus.Success).data(allTours).build();
   }
 }

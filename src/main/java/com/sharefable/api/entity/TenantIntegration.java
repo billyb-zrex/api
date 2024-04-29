@@ -24,6 +24,7 @@ public class TenantIntegration extends EntityBase {
   private Boolean disabled;
   private Long integrationId;
   private String event;
+  private Long tourId;
 
   @Type(JsonType.class)
   @Column(columnDefinition = "json")

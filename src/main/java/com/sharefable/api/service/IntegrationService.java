@@ -39,7 +39,7 @@ public class IntegrationService {
     Iterable<PlatformIntegration> allInstalledIntegrations = platformIntegrationRepo.findAll();
     PlatformIntegration integration = null;
     for (PlatformIntegration installedIntegration : allInstalledIntegrations) {
-      if (StringUtils.equalsIgnoreCase(installedIntegration.getType(), req.type())) {
+      if (installedIntegration.getType() == req.type()) {
         integration = installedIntegration;
       }
     }
@@ -84,7 +84,7 @@ public class IntegrationService {
     Iterable<PlatformIntegration> platformIntegrations = platformIntegrationRepo.findAll();
     PlatformIntegration pi = null;
     for (PlatformIntegration platformIntegration : platformIntegrations) {
-      if (StringUtils.equals(platformIntegration.getType(), req.getIntegrationType())) {
+      if (platformIntegration.getType() == req.getIntegrationType()) {
         pi = platformIntegration;
       }
     }
@@ -106,6 +106,7 @@ public class IntegrationService {
       ti = TenantIntegration.builder()
         .orgId(orgId)
         .disabled(false)
+        .tourId(req.getTourId() != null ? req.getTourId() : 0L)
         .integrationId(pi.getId())
         .build();
     }
@@ -120,6 +121,11 @@ public class IntegrationService {
   @Transactional
   public void deleteTenantIntegration(Long belongsToOrg, Long tenantIntegrationId) {
     tenantIntegrationRepo.deleteTenantIntegrationByOrgIdAndId(belongsToOrg, tenantIntegrationId);
+  }
+
+  @Transactional
+  public void deleteTenantIntegration(Long belongsToOrg, List<Long> ids) {
+    tenantIntegrationRepo.deleteTenantIntegrationsByOrgIdAndIdIn(belongsToOrg, ids);
   }
 
   public void executeIntegrationIfAny(String event, Map<String, String> payload) {
@@ -142,8 +148,12 @@ public class IntegrationService {
       return;
     }
 
-    List<TenantIntegration> tis = tenantIntegrationRepo.getTenantIntegrationsByOrgIdAndEvent(maybeTour.get().getBelongsToOrg(), event);
+    List<TenantIntegration> tis = tenantIntegrationRepo.getTenantIntegrationsByOrgIdAndEventAndTourIdIn(
+      maybeTour.get().getBelongsToOrg(),
+      event,
+      List.of(0L, tourId));
     for (TenantIntegration ti : tis) {
+      log.info(">>> triggered {}", ti.getId());
       try {
         HashMap<String, String> hm = new HashMap<>();
         hm.put("eventPayload", objectMapper.writeValueAsString(payload));

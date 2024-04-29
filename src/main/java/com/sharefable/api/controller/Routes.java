@@ -7,6 +7,7 @@ public interface Routes {
   String COBALT = "/vr/ct";
   String APP_SUMO = "/vr/as";
   String HUBSPOT = "/vr/hs";
+  String ZAPIER = "/vr/zp";
 
   /* === Routes w/o authentication === */
   String HEALTH = "/health";
@@ -19,6 +20,7 @@ public interface Routes {
   String NF_HOOK = "/nfhook";
   String REFRESH_SETTINGS = "/refreshsettings";
   String CHARGEBEE_WEBHOOK = "/wh/cb";
+  String API_KEY_WEBHOOK_PROBE = "/apikey/probe";
 
   // only for migration
   String PUBLISH_TOUR_INTERNAL = "/m/tpub";
@@ -73,14 +75,19 @@ public interface Routes {
   String TENANT_INTEGRATIONS = __BEHIND_LOGIN__ + "/tenant_integrations";
   String TENANT_INTEGRATION = __BEHIND_LOGIN__ + "/tenant_integration";
   String DEL_TENANT_INTEGRATION = __BEHIND_LOGIN__ + "/delete/tenant_integration/{id}";
+  String CREATE_NEW_API_KEY = __BEHIND_LOGIN__ + "/new/apikey";
+  String GET_API_KEY = __BEHIND_LOGIN__ + "/apikey";
 
   /* === Cross service w/o authentication === */
 
+  String GET_ALL_TOURS_BY_API_KEY = "/via/ak/tours";
   String UPLOAD_LEAD_LEVEL_ANALYTICS = "/updleadanalytics";
   String ADD_OR_UPDATE_LEAD_INFO = "/ldinf";
   String HUBSPOT_DATA_FETCH_URL_HOOK = HUBSPOT + "/dfu";
   String APP_SUMO_WEBHOOK = APP_SUMO + "/whk";
   String APP_SUMO_REDIRECT_URL = APP_SUMO + "/redir";
+  String ZAPIER_WEBHOOK_REG = ZAPIER + "/reghook";
+  String ZAPIER_WEBHOOK_UN_REG = ZAPIER + "/unreghook";
   String HOUSE_LEAD_INFO = "/hldinf";
   String GET_TOUR_ASSET_FILE_PATH = "/trasstpath";
   String POPULATED_LEAD_360 = "/poplead";

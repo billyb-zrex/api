@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-04-29 14:24:56.
+// Generated using typescript-generator version 2.35.1025 on 2024-04-29 14:37:38.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -137,11 +137,12 @@ export interface ReqCopyScreen {
 }
 
 export interface ReqCreateOrUpdateTenantIntegration {
-    integrationType: string;
+    integrationType: PlatformIntegrationType;
     tenantIntegrationId?: number;
     relayId?: number;
     event: string;
     disabled?: boolean;
+    tourId?: number;
     tenantConfig: { [index: string]: any };
 }
 
@@ -273,6 +274,12 @@ export interface RespAccountToken extends ResponseBase {
     token: string;
 }
 
+export interface RespApiKey extends ResponseBase {
+    apiKey: string;
+    active: boolean;
+    createdBy: RespUser;
+}
+
 export interface RespCommonConfig extends ResponseBase {
     commonAssetPath: string;
     screenAssetPath: string;
@@ -329,7 +336,7 @@ export interface RespOrg extends ResponseBase {
 }
 
 export interface RespPlatformIntegration extends ResponseBase {
-    type: string;
+    type: PlatformIntegrationType;
     name: string;
     icon: string;
     description: string;
@@ -493,7 +500,7 @@ export interface Org extends EntityBaseWithReadableId {
 }
 
 export interface PlatformIntegration extends EntityBase {
-    type: string;
+    type: PlatformIntegrationType;
     name: string;
     icon: string;
     description: string;
@@ -506,6 +513,7 @@ export interface TenantIntegration extends EntityBase {
     disabled: boolean;
     integrationId: number;
     event: string;
+    tourId: number;
     tenantConfig: { [index: string]: any };
 }
 
@@ -612,6 +620,11 @@ export const enum ForObjectType {
 export const enum LeadInfoKey {
     HUBSPOT_CONTACT_ID = "HUBSPOT_CONTACT_ID",
     SFDC_CONTACT_ID = "SFDC_CONTACT_ID",
+}
+
+export const enum PlatformIntegrationType {
+    FableWebhook = "FableWebhook",
+    Zapier = "Zapier",
 }
 
 export const enum NfEvents {

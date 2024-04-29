@@ -496,45 +496,12 @@ Content-Type: application/json
   "tourRid": ""
 }
 
-### add platform integration config
-# format of config is
-# {
-#   cv -> current version that is the latest version
-#   v  -> all the versioned config in an array that can be indexed by cv
-# }
-# first element is in the v array is null as cv starts with 1
-# for ease of reading [v]ersion is added in every versioned config
-POST {{api-host}}/v1/ide/platform_integration
-Content-Type: application/json
-
-{
-  "type": "fable-webhook",
-  "name": "Webhook",
-  "icon": "/webhook.png",
-  "description": "Post event data from Fable to your Webhook",
-  "disabled": false,
-  "config": {
-    "cv": 1,
-    "v": [
-      null,
-      {
-        "v": 1,
-        "config": {
-          "events": [
-            "CREATE_OR_UPDATE_CONTACT"
-          ]
-        }
-      }
-    ]
-  }
-}
-
 ### get tenant integration config grouped by platform integration config
 GET {{api-host}}/v1/tenant_integrations
 Content-Type: application/json
 
 
-### add tenant integration
+### add tenant integration - webhook
 POST {{api-host}}/v1/tenant_integration
 Content-Type: application/json
 
@@ -553,3 +520,8 @@ Content-Type: application/json
 
 GET {{api-host}}/v1/fat/tenant_integration/1
 Content-Type: application/json
+
+### api key
+POST {{api-host}}/v1/f/new/apikey
+Content-Type: application/json
+Authorization: {{auth-header}}

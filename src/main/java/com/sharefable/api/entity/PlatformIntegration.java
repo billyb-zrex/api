@@ -1,10 +1,9 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.common.PlatformIntegrationType;
 import com.sharefable.api.transport.resp.RespPlatformIntegration;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Type;
 
@@ -20,7 +19,9 @@ import java.util.Map;
 @Builder
 @TransportObjRef(cls = RespPlatformIntegration.class)
 public class PlatformIntegration extends EntityBase {
-  private String type;
+  @Enumerated(value = EnumType.STRING)
+  @Column(nullable = false)
+  private PlatformIntegrationType type;
   private String name;
   private String icon;
   private String description;

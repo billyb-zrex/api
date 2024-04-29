@@ -4,19 +4,14 @@ import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
+import com.sharefable.api.entity.ApiKey;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
-import com.sharefable.api.repo.OrgRepo;
-import com.sharefable.api.repo.ScreenRepo;
-import com.sharefable.api.repo.TourRepo;
-import com.sharefable.api.repo.UserRepo;
+import com.sharefable.api.repo.*;
 import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.req.ReqNewOrg;
 import com.sharefable.api.transport.req.ReqUpdateUser;
-import com.sharefable.api.transport.resp.RespCommonConfig;
-import com.sharefable.api.transport.resp.RespOrg;
-import com.sharefable.api.transport.resp.RespUploadUrl;
-import com.sharefable.api.transport.resp.RespUser;
+import com.sharefable.api.transport.resp.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
@@ -27,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URL;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,9 +36,10 @@ public class WorkspaceService extends ServiceBase {
   private final UserService userService;
   private final S3Service s3Service;
   private final NfHookService nfHookService;
+  private final ApiKeyRepo apiKeyRepo;
 
   @Autowired
-  public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo, UserService userService, NfHookService nfHookService) {
+  public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo, UserService userService, NfHookService nfHookService, ApiKeyRepo apiKeyRepo) {
     super(settings, s3Service, s3Config, screenRepo, tourRepo);
     this.orgRepo = orgRepo;
     this.userRepo = userRepo;
@@ -49,6 +47,7 @@ public class WorkspaceService extends ServiceBase {
     this.s3Service = s3Service;
     this.userService = userService;
     this.nfHookService = nfHookService;
+    this.apiKeyRepo = apiKeyRepo;
   }
 
   @Transactional
@@ -204,5 +203,34 @@ public class WorkspaceService extends ServiceBase {
 
     User changedUser = userService.setUserActiveOrInactive(targetUser, activate);
     return RespUser.from(changedUser);
+  }
+
+  @Transactional
+  public RespApiKey createNewApiKey(User user) {
+    List<ApiKey> apiKeys = apiKeyRepo.getApiKeysByOrgId(user.getBelongsToOrg());
+    Optional<Org> org = orgRepo.findById(user.getBelongsToOrg());
+    if (org.isEmpty()) return null;
+
+    ApiKey newKey = ApiKey.builder()
+      // 32 + ~11 + 32 chars
+      .apiKey(Utils.createUuidWord() + Long.toHexString(Timestamp.from(Instant.now()).getTime()) + Utils.createUuidWord())
+      .active(true)
+      .createdBy(user)
+      .org(org.get())
+      .build();
+
+    List<ApiKey> inactiveKeys = apiKeys.stream().filter(ApiKey::getActive).peek(key -> key.setActive(false)).toList();
+    newKey = apiKeyRepo.save(newKey);
+    apiKeyRepo.saveAll(inactiveKeys);
+    return RespApiKey.from(newKey);
+  }
+
+  public ApiKey getApiKey(String apiKey) {
+    return apiKeyRepo.getApiKeyByApiKeyAndActiveIsTrue(apiKey);
+  }
+
+  public RespApiKey getActiveApiKeysForOrg(Long orgId) {
+    ApiKey apiKey = apiKeyRepo.getFirstApiKeyByOrgIdAndActiveIsTrueOrderByUpdatedAtDesc(orgId);
+    return apiKey == null ? null : RespApiKey.from(apiKey);
   }
 }

@@ -1,6 +1,7 @@
 package com.sharefable.api.transport.resp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sharefable.api.common.PlatformIntegrationType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.PlatformIntegration;
 import com.sharefable.api.entity.TenantIntegration;
@@ -22,7 +23,7 @@ import java.util.Map;
 @Slf4j
 @GenerateTSDef
 public class RespPlatformIntegration extends ResponseBase {
-  private String type;
+  private PlatformIntegrationType type;
   private String name;
   private String icon;
   private String description;
@@ -34,7 +35,7 @@ public class RespPlatformIntegration extends ResponseBase {
   public static RespPlatformIntegration from(PlatformIntegration integration, List<TenantIntegration> ti) {
     try {
       RespPlatformIntegration resp = (RespPlatformIntegration) Utils.fromEntityToTransportObject(integration);
-      resp.setSlug(integration.getType());
+      resp.setSlug(integration.getType().toString());
       resp.setTenantIntegrations(
         ti.stream().map(RespTenantIntegration::from).toList()
       );

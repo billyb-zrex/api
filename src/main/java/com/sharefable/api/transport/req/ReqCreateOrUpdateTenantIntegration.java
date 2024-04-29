@@ -1,5 +1,6 @@
 package com.sharefable.api.transport.req;
 
+import com.sharefable.api.common.PlatformIntegrationType;
 import com.sharefable.api.transport.GenerateTSDef;
 import com.sharefable.api.transport.OptionalPropInTS;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,7 @@ import java.util.Map;
 @NoArgsConstructor
 @GenerateTSDef
 public class ReqCreateOrUpdateTenantIntegration {
-  String integrationType;
+  PlatformIntegrationType integrationType;
   @OptionalPropInTS
   Long tenantIntegrationId;
   @OptionalPropInTS
@@ -21,5 +22,7 @@ public class ReqCreateOrUpdateTenantIntegration {
   String event;
   @OptionalPropInTS
   Boolean disabled;
+  @OptionalPropInTS
+  Long tourId;
   Map<String, Object> tenantConfig;
 }

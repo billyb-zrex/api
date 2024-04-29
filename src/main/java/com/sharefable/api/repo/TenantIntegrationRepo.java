@@ -15,5 +15,7 @@ public interface TenantIntegrationRepo extends CrudRepository<TenantIntegration,
 
   void deleteTenantIntegrationByOrgIdAndId(Long orgId, Long tenantIntegrationId);
 
-  List<TenantIntegration> getTenantIntegrationsByOrgIdAndEvent(Long orgId, String event);
+  void deleteTenantIntegrationsByOrgIdAndIdIn(Long orgId, List<Long> ids);
+
+  List<TenantIntegration> getTenantIntegrationsByOrgIdAndEventAndTourIdIn(Long orgId, String event, List<Long> tourIds);
 }
