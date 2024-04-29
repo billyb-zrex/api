@@ -2,7 +2,6 @@ package com.sharefable.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.AssetFilePath;
-import com.sharefable.api.common.SumViews;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
@@ -77,11 +76,13 @@ public class AnalyticsService extends ServiceBase {
       return RespTourView.Empty();
     }
     String dateBeforeCertainDays = Utils.calculateParticularUtcDateFromCurrentUtc(days);
-    SumViews sumViews = analyticsMetricsRepo.findSumOfAllVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
+    Long totalVisitors = analyticsMetricsRepo.findTotalVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
+    Long uniqueViews = analyticsMetricsRepo.findUniqueVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
     List<TotalVisitorsByYmd> totalVisitorsByYmd = analyticsMetricsRepo.findTotalVisitorsByYmd(tour.getId(), dateBeforeCertainDays);
     return RespTourView.builder()
       .tourId(tour.getId())
-      .totalViews(sumViews)
+      .totalViews(totalVisitors)
+      .uniqueViews(uniqueViews)
       .totalVisitorsByYmd(totalVisitorsByYmd)
       .build();
   }

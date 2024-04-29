@@ -1,7 +1,6 @@
 package com.sharefable.api.transport.resp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.sharefable.api.common.SumViews;
 import com.sharefable.api.transport.GenerateTSDef;
 import com.sharefable.api.transport.TotalVisitorsByYmd;
 import lombok.AllArgsConstructor;
@@ -22,11 +21,12 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Slf4j
 public class RespTourView {
-    private Long tourId;
-    private SumViews totalViews;
-    private List<TotalVisitorsByYmd> totalVisitorsByYmd;
+  private Long tourId;
+  private Long totalViews;
+  private Long uniqueViews;
+  private List<TotalVisitorsByYmd> totalVisitorsByYmd;
 
-    public static RespTourView Empty() {
-        return new RespTourView();
-    }
+  public static RespTourView Empty() {
+    return new RespTourView();
+  }
 }

@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-04-26 12:39:17.
+// Generated using typescript-generator version 2.35.1025 on 2024-04-29 14:24:56.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -410,7 +410,8 @@ export interface RespTourLeads {
 
 export interface RespTourView {
     tourId: number;
-    totalViews: SumViews;
+    totalViews: number;
+    uniqueViews: number;
     totalVisitorsByYmd: TotalVisitorsByYmd[];
 }
 
@@ -521,11 +522,6 @@ export interface Lead360 extends EntityBase {
     lastInteractedAt: Date;
     completionPercentage: number;
     ctaClickRate: number;
-}
-
-export interface SumViews {
-    viewsAll: number;
-    viewsUnique: number;
 }
 
 export interface EntityBaseWithReadableId extends EntityBase {
