@@ -32,7 +32,7 @@ public class LinkedApps {
   private Optional<LinkedAppVersion> version;
   private Optional<Boolean> connected;
   @JsonProperty("connected_accounts")
-  private Optional<List<ConnectedAccounts>> connectedAccounts;
+  private Optional<List<Object>> connectedAccounts;
   @JsonProperty("auth_input_map")
   private Optional<List<AuthInputMap>> authInputMap;
   private String slug;

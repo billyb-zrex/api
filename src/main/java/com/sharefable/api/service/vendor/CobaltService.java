@@ -1,5 +1,6 @@
 package com.sharefable.api.service.vendor;
 
+import com.sharefable.api.config.AppConfig;
 import com.sharefable.api.config.vendor.CobaltConfig;
 import com.sharefable.api.entity.HouseLeadInfo;
 import com.sharefable.api.entity.Tour;
@@ -33,14 +34,16 @@ public class CobaltService {
   private final RestTemplate restClient;
   private final HouseLeadInfoRepo houseLeadInfoRepo;
   private final NfHookService nfHookService;
+  private final AppConfig appConfig;
 
   @Autowired
-  public CobaltService(CobaltConfig cobaltConfig, TourRepo tourRepo, RestTemplate restClient, HouseLeadInfoRepo houseLeadInfoRepo, NfHookService nfHookService) {
+  public CobaltService(CobaltConfig cobaltConfig, TourRepo tourRepo, RestTemplate restClient, HouseLeadInfoRepo houseLeadInfoRepo, NfHookService nfHookService, AppConfig appConfig) {
     this.cobaltConfig = cobaltConfig;
     this.tourRepo = tourRepo;
     this.restClient = restClient;
     this.houseLeadInfoRepo = houseLeadInfoRepo;
     this.nfHookService = nfHookService;
+    this.appConfig = appConfig;
 
     DefaultUriBuilderFactory defaultUriBuilderFactory = new DefaultUriBuilderFactory();
     defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
@@ -89,6 +92,8 @@ public class CobaltService {
     Optional<Tour> maybeTour = tourRepo.findByRid(tourRid);
     if (maybeTour.isEmpty()) return;
 
+    event.payload().put("demo_url", appConfig.getDns() + "/live/demo/" + maybeTour.get().getRid());
+    event.payload().put("demo_name", maybeTour.get().getDisplayName());
     try {
       sendEvent(event, maybeTour.get().getBelongsToOrg().toString());
     } catch (Exception e) {
