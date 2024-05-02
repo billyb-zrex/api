@@ -2,7 +2,6 @@ package com.sharefable.api.service;
 
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
-import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Job;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.repo.JobRepo;
@@ -26,14 +25,12 @@ public class MediaProcessingService {
   private final JobRepo repo;
   private final QMsgService qMsgService;
   private final EntityHoldingService entityHoldingService;
-  private final S3Config s3Config;
 
   @Autowired
-  public MediaProcessingService(JobRepo repo, QMsgService qMsgService, EntityHoldingService entityHoldingService, S3Config s3Config) {
+  public MediaProcessingService(JobRepo repo, QMsgService qMsgService, EntityHoldingService entityHoldingService) {
     this.repo = repo;
     this.qMsgService = qMsgService;
     this.entityHoldingService = entityHoldingService;
-    this.s3Config = s3Config;
   }
 
   private String getKeyPath(String path) {
@@ -154,8 +151,8 @@ public class MediaProcessingService {
   public void generateDemoGif(Tour tour, AssetFilePath manifestPath, AssetFilePath gifPath) {
     String key = String.format("%d:%s:%s:%d", tour.getPublishedVersion() + 1, tour.getRid(), JobType.CREATE_DEMO_GIF, Instant.now().getEpochSecond());
     CreateGifJobInfo info = CreateGifJobInfo.builder()
-      .manifestFilePath(manifestPath.getS3UriToFile())
-      .gifFilePath(gifPath.getS3UriToFile())
+      .manifestFilePath(manifestPath.getBucketUriToFile())
+      .gifFilePath(gifPath.getBucketUriToFile())
       .key(key)
       .build();
 
