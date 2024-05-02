@@ -1,3 +1,7 @@
+### refresh settings
+POST {{api-host}}/v1/refreshsettings
+Content-Type: application/json
+
 ### add platform integration config -- webhook
 # format of config is
 # {

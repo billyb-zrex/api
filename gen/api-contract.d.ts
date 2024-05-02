@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-04-29 14:37:38.
+// Generated using typescript-generator version 2.35.1025 on 2024-05-01 14:35:27.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -12,6 +12,11 @@ export interface ApiResp<T> {
 export interface ButtonClicks {
     btnId: string;
     totalClicks: number;
+}
+
+export interface CreateGifJobInfo extends JobProcessingInfo {
+    manifestFilePath: string;
+    gifFilePath: string;
 }
 
 export interface EntityHoldingInfoBase extends Serializable {
@@ -563,6 +568,7 @@ export const enum JobProcessingStatus {
 export const enum JobType {
     TRANSCODE_VIDEO = "TRANSCODE_VIDEO",
     RESIZE_IMG = "RESIZE_IMG",
+    CREATE_DEMO_GIF = "CREATE_DEMO_GIF",
     DELETE_ASSET = "DELETE_ASSET",
     REFRESH_CRAWLER = "REFRESH_CRAWLER",
     REFRESH_CRAWLER_FOR_ANN_USER_ASSIGN = "REFRESH_CRAWLER_FOR_ANN_USER_ASSIGN",
@@ -595,6 +601,7 @@ export const enum MediaType {
     VIDEO_HLS = "VIDEO_HLS",
     VIDEO_MP4 = "VIDEO_MP4",
     IMG_MULTI = "IMG_MULTI",
+    GIF = "GIF",
 }
 
 export const enum ResponseStatus {

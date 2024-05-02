@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Slf4j
 public class AppConfig {
-    private static final String PATH_TO_DEMO = "/p/demo";
-    private String dns;
+  private static final String PATH_TO_DEMO = "/live/demo";
+  private String dns;
 
-    public String getUrlForDemo() {
-        return dns + PATH_TO_DEMO;
-    }
+  public String getUrlForDemo() {
+    return dns + PATH_TO_DEMO;
+  }
 }

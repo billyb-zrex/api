@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ public class TourService extends ServiceBase {
   private final AppConfig appConfig;
   private final AppSettings settings;
   private final ScreenRepo screenRepo;
+  private final MediaProcessingService mediaProcessingService;
 
   @Autowired
   public TourService(
@@ -54,7 +56,7 @@ public class TourService extends ServiceBase {
     S3Config s3Config,
     ScreenRepo screenRepo,
     ScreenService screenService,
-    AppConfig appConfig) {
+    AppConfig appConfig, MediaProcessingService mediaProcessingService) {
     super(settings, s3Service, s3Config, screenRepo, tourRepo);
     this.tourRepo = tourRepo;
     this.s3Config = s3Config;
@@ -63,6 +65,7 @@ public class TourService extends ServiceBase {
     this.appConfig = appConfig;
     this.settings = settings;
     this.screenRepo = screenRepo;
+    this.mediaProcessingService = mediaProcessingService;
   }
 
   @Transactional
@@ -371,7 +374,8 @@ public class TourService extends ServiceBase {
     }
   }
 
-  @Transactional(propagation = Propagation.MANDATORY)
+  @Transactional
+  @Async
   public void uploadTourManifestToS3(Tour tour) {
     TourManifest tourManifest = TourManifest.builder()
       .version(1)
@@ -394,7 +398,8 @@ public class TourService extends ServiceBase {
       }
       tourManifest.setScreenAssets(screenAssets);
       String tourScreenInfoAsString = objectMapper.writeValueAsString(tourManifest);
-      uploadDataFileToS3(tourScreenInfoAsString, tour.getRid(), S3Config.getEntityFiles().manifestFile(), S3Config.AssetType.PublishedTour);
+      AssetFilePath manifestPath = uploadDataFileToS3(tourScreenInfoAsString, tour.getRid(), S3Config.getEntityFiles().manifestFile(), S3Config.AssetType.PublishedTour);
+      mediaProcessingService.generateDemoGif(tour, manifestPath, s3Config.getQualifiedPathFor(S3Config.AssetType.PublishedTour, tour.getRid(), "demo.gif"));
     } catch (Exception e) {
       throw new RuntimeException("Something went wrong while sending tour screen info to s3 " + e.getMessage());
     }

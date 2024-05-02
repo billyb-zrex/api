@@ -12,10 +12,6 @@ GET {{api-host}}/v1/f/iam
 Authorization: {{auth-header}}
 Content-Type: application/json
 
-### refresh settings
-POST {{api-host}}/v1/refreshsettings
-Content-Type: application/json
-
 ### update user
 POST {{api-host}}/v1/f/updateuserprop
 Authorization: {{auth-header}}
@@ -25,7 +21,6 @@ Content-Type: application/json
   "firstName": "Alan",
   "lastName": "James"
 }
-
 
 ### proxy asset - auth issue
 POST {{api-host}}/v1/f/proxyasset
