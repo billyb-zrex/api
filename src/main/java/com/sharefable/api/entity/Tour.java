@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.transport.Responsiveness;
 import com.sharefable.api.transport.resp.RespTourWithScreens;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
@@ -48,6 +49,9 @@ public class Tour extends EntityBaseWithOwnership {
 
   @Column(nullable = false)
   private Boolean responsive;
+  @Enumerated(value = EnumType.STRING)
+  @Column(nullable = false)
+  private Responsiveness responsive2;
 
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))
