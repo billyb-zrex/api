@@ -211,9 +211,15 @@ public class WorkspaceService extends ServiceBase {
     Optional<Org> org = orgRepo.findById(user.getBelongsToOrg());
     if (org.isEmpty()) return null;
 
+    String shortRid = StringUtils.substring(org.get().getRid(), 0, 5).replace("-", "");
+    String apiKey = String.format("%s:%s",
+      shortRid,
+      Utils.createUuidWord() + Long.toHexString(Timestamp.from(Instant.now()).getTime()) + Utils.createUuidWord()
+    );
+
     ApiKey newKey = ApiKey.builder()
       // 32 + ~11 + 32 chars
-      .apiKey(Utils.createUuidWord() + Long.toHexString(Timestamp.from(Instant.now()).getTime()) + Utils.createUuidWord())
+      .apiKey(apiKey)
       .active(true)
       .createdBy(user)
       .org(org.get())

@@ -401,7 +401,9 @@ public class TourService extends ServiceBase {
       tourManifest.setScreenAssets(screenAssets);
       String tourScreenInfoAsString = objectMapper.writeValueAsString(tourManifest);
       AssetFilePath manifestPath = uploadDataFileToS3(tourScreenInfoAsString, tour.getRid(), S3Config.getEntityFiles().manifestFile(), S3Config.AssetType.PublishedTour);
-      mediaProcessingService.generateDemoGif(tour, manifestPath, s3Config.getQualifiedPathFor(S3Config.AssetType.PublishedTour, tour.getRid(), "demo.gif"));
+      // Currently gif creation runs into problem since the container size is pretty small it runs into oom
+      // uncomment this code if gif creation is needed and oom is fixed.
+      // mediaProcessingService.generateDemoGif(tour, manifestPath, s3Config.getQualifiedPathFor(S3Config.AssetType.PublishedTour, tour.getRid(), "demo.gif"));
     } catch (Exception e) {
       throw new RuntimeException("Something went wrong while sending tour screen info to s3 " + e.getMessage());
     }

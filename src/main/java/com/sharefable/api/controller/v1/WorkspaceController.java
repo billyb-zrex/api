@@ -13,6 +13,7 @@ import com.sharefable.api.transport.req.ReqUpdateUser;
 import com.sharefable.api.transport.resp.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -117,7 +118,12 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.API_KEY_WEBHOOK_PROBE, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<String> probeApiKey(@RequestHeader("X-API-KEY") String apiKey) {
-    return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
+    String[] apiKeySplit = StringUtils.split(apiKey, ":");
+    String postfix = "";
+    if (apiKeySplit.length > 1) {
+      postfix = "@" + apiKeySplit[0];
+    }
+    return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok" + postfix).build();
   }
 
   @RequestMapping(value = Routes.GET_API_KEY, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)

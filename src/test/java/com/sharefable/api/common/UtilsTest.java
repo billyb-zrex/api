@@ -9,7 +9,6 @@ import com.sharefable.api.entity.TransportObjRef;
 import com.sharefable.api.transport.resp.ResponseBase;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.List;
 
 class UtilsTest {
   /*
@@ -29,15 +27,17 @@ class UtilsTest {
    */
   @Test
   void test69() throws NoSuchAlgorithmException {
-    String text = StringUtils.join(List.of(
-      "<client_secret>",
-      "GET",
-      "https://62e8-122-171-22-212.ngrok-free.app/v1/vr/hs/dfu?userId=64955372&userEmail=akash00goswami@gmail.com&associatedObjectId=5283919377&associatedObjectType=CONTACT&portalId=45540659&email=akash@acme.com"
-    ), "");
-    System.out.println("text " + text);
-//    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-//    byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
-    System.out.println("hash " + DigestUtils.sha256Hex(text));
+    String shortRid = StringUtils.substring("hell-2345", 0, 5).replace("-", "");
+    System.out.println(shortRid);
+//    String text = StringUtils.join(List.of(
+//      "<client_secret>",
+//      "GET",
+//      "https://62e8-122-171-22-212.ngrok-free.app/v1/vr/hs/dfu?userId=64955372&userEmail=akash00goswami@gmail.com&associatedObjectId=5283919377&associatedObjectType=CONTACT&portalId=45540659&email=akash@acme.com"
+//    ), "");
+//    System.out.println("text " + text);
+////    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+////    byte[] hash = digest.digest(text.getBytes(StandardCharsets.UTF_8));
+//    System.out.println("hash " + DigestUtils.sha256Hex(text));
   }
 
   @Test

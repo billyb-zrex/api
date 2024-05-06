@@ -153,7 +153,7 @@ public class IntegrationService {
       event,
       List.of(0L, tourId));
     for (TenantIntegration ti : tis) {
-      log.info(">>> triggered {}", ti.getId());
+      log.info("Integration triggered {}", ti.getId());
       try {
         HashMap<String, String> hm = new HashMap<>();
         hm.put("eventPayload", objectMapper.writeValueAsString(payload));

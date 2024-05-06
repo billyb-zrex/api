@@ -88,6 +88,7 @@ public interface Routes {
   String APP_SUMO_REDIRECT_URL = APP_SUMO + "/redir";
   String ZAPIER_WEBHOOK_REG = ZAPIER + "/reghook";
   String ZAPIER_WEBHOOK_UN_REG = ZAPIER + "/unreghook";
+  String ZAPIER_WEBHOOK_SAMPLE = ZAPIER + "/sample_data";
   String HOUSE_LEAD_INFO = "/hldinf";
   String GET_TOUR_ASSET_FILE_PATH = "/trasstpath";
   String POPULATED_LEAD_360 = "/poplead";

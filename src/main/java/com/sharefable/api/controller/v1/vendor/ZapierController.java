@@ -68,6 +68,18 @@ public class ZapierController {
     return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data(idsStr).build();
   }
 
+  @RequestMapping(value = Routes.ZAPIER_WEBHOOK_SAMPLE, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public List<Map<String, Object>> sample(@RequestHeader(name = "X-API-KEY") String apiKeyStr) {
+    return List.of(
+      Map.of(
+        "email", "alex@acme.com",
+        "demo_rid", "untitled-bvyktli4jed4rbpz",
+        "demo_name", "untitled"
+      )
+    );
+  }
+
+
   private ApiKey validateAndGetApiKey(@RequestHeader(name = "X-API-KEY") String apiKeyStr) {
     ApiKey apiKey = apiKeyRepo.getApiKeyByApiKeyAndActiveIsTrue(apiKeyStr);
     if (apiKey == null) {
