@@ -33,6 +33,7 @@ public interface Routes {
   String IAM = __BEHIND_LOGIN__ + "/iam";
   String NEW_ORG = __BEHIND_LOGIN__ + "/neworg";
   String GET_ORG = __BEHIND_LOGIN__ + "/org";
+  String UPDATE_ORG_PROPS = __BEHIND_LOGIN__ + "/updtorgprops";
   String ASSIGN_IMPLICIT_USER_ORG = __BEHIND_LOGIN__ + "/assgnimplorg";
   String UPDATE_USER_PROP = __BEHIND_LOGIN__ + "/userprop";
   String PROXY_ASSET = __BEHIND_LOGIN__ + "/proxyasset";

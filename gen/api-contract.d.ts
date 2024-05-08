@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-05-02 08:55:57.
+// Generated using typescript-generator version 2.35.1025 on 2024-05-08 15:34:47.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -46,6 +46,11 @@ export interface OnboardingTourForPrev {
     rid: string;
     name: string;
     description: string;
+}
+
+export interface OrgInfo {
+    useCases: string[];
+    othersText: string;
 }
 
 export interface PaymentTerms {
@@ -265,6 +270,10 @@ export interface ReqTourRid {
     tourRid: string;
 }
 
+export interface ReqUpdateOrg {
+    orgInfo: OrgInfo;
+}
+
 export interface ReqUpdateScreenProperty {
     rid: string;
     propName: string;
@@ -339,6 +348,7 @@ export interface RespOrg extends ResponseBase {
     rid: string;
     displayName: string;
     thumbnail: string;
+    info: OrgInfo;
 }
 
 export interface RespPlatformIntegration extends ResponseBase {
@@ -499,6 +509,7 @@ export interface Org extends EntityBaseWithReadableId {
     displayName: string;
     thumbnail: string;
     domain: string;
+    info: OrgInfo;
 }
 
 export interface PlatformIntegration extends EntityBase {

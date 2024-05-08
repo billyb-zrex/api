@@ -10,6 +10,7 @@ import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.*;
 import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.req.ReqNewOrg;
+import com.sharefable.api.transport.req.ReqUpdateOrg;
 import com.sharefable.api.transport.req.ReqUpdateUser;
 import com.sharefable.api.transport.resp.*;
 import lombok.extern.slf4j.Slf4j;
@@ -238,5 +239,15 @@ public class WorkspaceService extends ServiceBase {
   public RespApiKey getActiveApiKeysForOrg(Long orgId) {
     ApiKey apiKey = apiKeyRepo.getFirstApiKeyByOrgIdAndActiveIsTrueOrderByUpdatedAtDesc(orgId);
     return apiKey == null ? null : RespApiKey.from(apiKey);
+  }
+
+  @Transactional
+  public RespOrg updateOrgInfo(ReqUpdateOrg updateOrg, User user) {
+    Optional<Org> maybeOrg = orgRepo.findById(user.getBelongsToOrg());
+    if (maybeOrg.isEmpty()) return RespOrg.Empty();
+    Org org = maybeOrg.get();
+    org.setInfo(updateOrg.orgInfo());
+    Org savedOrg = orgRepo.save(org);
+    return RespOrg.from(savedOrg);
   }
 }

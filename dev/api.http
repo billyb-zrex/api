@@ -520,3 +520,18 @@ Content-Type: application/json
 POST {{api-host}}/v1/f/new/apikey
 Content-Type: application/json
 Authorization: {{auth-header}}
+
+### Update tour props
+POST {{api-host}}/v1/f/updtorgprops
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "orgInfo": {
+    "useCases": [
+      "Marketing",
+      "Sales"
+    ],
+    "othersText": ""
+  }
+}

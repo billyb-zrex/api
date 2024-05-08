@@ -9,6 +9,7 @@ import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.ObjectValidationResult;
 import com.sharefable.api.transport.req.ReqActivateOrDeactivateUser;
 import com.sharefable.api.transport.req.ReqNewOrg;
+import com.sharefable.api.transport.req.ReqUpdateOrg;
 import com.sharefable.api.transport.req.ReqUpdateUser;
 import com.sharefable.api.transport.resp.*;
 import lombok.RequiredArgsConstructor;
@@ -130,5 +131,11 @@ public class WorkspaceController {
   public ApiResp<RespApiKey> getApiKey(@AuthUser User user) {
     RespApiKey newApiKey = wsService.getActiveApiKeysForOrg(user.getBelongsToOrg());
     return ApiResp.<RespApiKey>builder().status(ApiResp.ResponseStatus.Success).data(newApiKey).build();
+  }
+
+  @RequestMapping(value = Routes.UPDATE_ORG_PROPS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespOrg> updateOrgProps(@RequestBody ReqUpdateOrg updateOrg, @AuthUser User user) {
+    RespOrg respOrg = wsService.updateOrgInfo(updateOrg, user);
+    return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(respOrg).build();
   }
 }
