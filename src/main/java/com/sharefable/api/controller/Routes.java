@@ -21,6 +21,7 @@ public interface Routes {
   String REFRESH_SETTINGS = "/refreshsettings";
   String CHARGEBEE_WEBHOOK = "/wh/cb";
   String API_KEY_WEBHOOK_PROBE = "/apikey/probe";
+  String FEATURE_PLAN_MATRIX = "/featureplanmtx";
 
   // only for migration
   String PUBLISH_TOUR_INTERNAL = "/m/tpub";

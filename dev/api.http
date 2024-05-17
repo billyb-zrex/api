@@ -535,3 +535,7 @@ Authorization: {{auth-header}}
     "othersText": ""
   }
 }
+
+### Feature per plan
+GET {{api-host}}/v1/featureplanmtx
+Content-Type: application/json

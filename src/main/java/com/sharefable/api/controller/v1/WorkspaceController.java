@@ -19,7 +19,9 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @SuppressWarnings("removal")
@@ -137,5 +139,11 @@ public class WorkspaceController {
   public ApiResp<RespOrg> updateOrgProps(@RequestBody ReqUpdateOrg updateOrg, @AuthUser User user) {
     RespOrg respOrg = wsService.updateOrgInfo(updateOrg, user);
     return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(respOrg).build();
+  }
+
+  @RequestMapping(value = Routes.FEATURE_PLAN_MATRIX, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<Map<String, Object>> getFeaturePlanMatrix() {
+    Map<String, Object> resp = settings.getFeaturePlanMatrix() == null ? new HashMap<>() : settings.getFeaturePlanMatrix();
+    return ApiResp.<Map<String, Object>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 }
