@@ -22,10 +22,12 @@ import java.lang.reflect.InvocationTargetException;
 @SuperBuilder(toBuilder = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RespOrg extends ResponseBase {
+  private Long id;
   private String rid;
   private String displayName;
   private String thumbnail;
   private OrgInfo info;
+  private RespUser createdBy;
 
   public static RespOrg from(Org org) {
     try {

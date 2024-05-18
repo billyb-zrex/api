@@ -12,6 +12,11 @@ GET {{api-host}}/v1/f/iam
 Authorization: {{auth-header}}
 Content-Type: application/json
 
+### get users of an org
+GET {{api-host}}/v1/f/users
+Authorization: {{auth-header}}
+Content-Type: application/json
+
 ### update user
 POST {{api-host}}/v1/f/updateuserprop
 Authorization: {{auth-header}}
@@ -539,3 +544,28 @@ Authorization: {{auth-header}}
 ### Feature per plan
 GET {{api-host}}/v1/featureplanmtx
 Content-Type: application/json
+
+### New Invite
+POST {{api-host}}/v1/f/new/invite
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "invitedEmail": "john@gmail.com",
+  "expiryTimeUnit": "h",
+  "expiryAt": 1
+}
+
+### Get all org for user
+GET {{api-host}}/v1/f/orgsfruser
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+### Assign user to org
+POST {{api-host}}/v1/f/orgstouser
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "orgId": "12"
+}

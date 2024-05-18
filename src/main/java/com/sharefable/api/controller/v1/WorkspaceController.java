@@ -7,14 +7,12 @@ import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.ObjectValidationResult;
-import com.sharefable.api.transport.req.ReqActivateOrDeactivateUser;
-import com.sharefable.api.transport.req.ReqNewOrg;
-import com.sharefable.api.transport.req.ReqUpdateOrg;
-import com.sharefable.api.transport.req.ReqUpdateUser;
+import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.javatuples.Pair;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,6 +50,7 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.ASSIGN_IMPLICIT_USER_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespUser> assignDefaultOrgForUserUsingDomain(@AuthUser User user) {
+    log.warn("[deprecate] #assignUserToImplicitOrg after v1.2.41");
     RespUser updatedUser = wsService.assignUserToImplicitOrg(user);
     return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(updatedUser).build();
   }
@@ -103,7 +102,7 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.GET_ALL_USER_IN_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespUser[]> updateUserName(@AuthUser User user) {
-    List<RespUser> users = wsService.getAllUsersInOrg(user.getBelongsToOrg());
+    List<RespUser> users = wsService.getAllUsersInAnOrg(user.getBelongsToOrg());
     return ApiResp.<RespUser[]>builder().status(ApiResp.ResponseStatus.Success).data(users.toArray(RespUser[]::new)).build();
   }
 
@@ -145,5 +144,23 @@ public class WorkspaceController {
   public ApiResp<Map<String, Object>> getFeaturePlanMatrix() {
     Map<String, Object> resp = settings.getFeaturePlanMatrix() == null ? new HashMap<>() : settings.getFeaturePlanMatrix();
     return ApiResp.<Map<String, Object>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.NEW_INVITE, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespNewInvite> createNewInvite(@RequestBody ReqNewInvite body, @AuthUser User user) {
+    RespNewInvite respInvite = wsService.createNewInvite(body, user);
+    return ApiResp.<RespNewInvite>builder().status(ApiResp.ResponseStatus.Success).data(respInvite).build();
+  }
+
+  @RequestMapping(value = Routes.ALL_ORG_FOR_USER, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<RespOrg>> getAllOrgForUser(@AuthUser User user) {
+    List<RespOrg> allOrgForUser = wsService.getAllOrgForUser(user);
+    return ApiResp.<List<RespOrg>>builder().status(ApiResp.ResponseStatus.Success).data(allOrgForUser).build();
+  }
+
+  @RequestMapping(value = Routes.ASSIGN_ORG_TO_USER, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespOrg> assignOrgToUser(@RequestBody ReqAssignOrgToUser body, @AuthUser User user) {
+    Pair<RespUser, RespOrg> pair = wsService.assignOrgToUser(body, user);
+    return ApiResp.<RespOrg>builder().status(ApiResp.ResponseStatus.Success).data(pair.getValue1()).build();
   }
 }

@@ -9,7 +9,7 @@ import java.util.Set;
 
 @Repository
 public interface OrgRepo extends CrudRepository<Org, Long> {
-    Optional<Org> findFirstByRid(String rId);
+  Optional<Org> findFirstByRid(String rId);
 
-    Set<Org> findOrgByDomain(String emailDomain);
+  Set<Org> findOrgByDomain(String emailDomain);
 }

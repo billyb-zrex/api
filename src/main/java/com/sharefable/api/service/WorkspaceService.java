@@ -1,5 +1,6 @@
 package com.sharefable.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
@@ -8,10 +9,9 @@ import com.sharefable.api.entity.ApiKey;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.*;
+import com.sharefable.api.transport.InviteCode;
 import com.sharefable.api.transport.NfEvents;
-import com.sharefable.api.transport.req.ReqNewOrg;
-import com.sharefable.api.transport.req.ReqUpdateOrg;
-import com.sharefable.api.transport.req.ReqUpdateUser;
+import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +38,7 @@ public class WorkspaceService extends ServiceBase {
   private final S3Service s3Service;
   private final NfHookService nfHookService;
   private final ApiKeyRepo apiKeyRepo;
+  private final ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
   public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo, UserService userService, NfHookService nfHookService, ApiKeyRepo apiKeyRepo) {
@@ -56,18 +57,14 @@ public class WorkspaceService extends ServiceBase {
     Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.getEmail());
     String emailDomain = domainInf.getValue0();
 
-    // For now only one org per domain is allowed
-    Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
-    if (!orgs.isEmpty()) {
-      log.error("Org for domain is already present but still requested by {}", user);
-      return RespOrg.from(orgs.iterator().next());
-    }
-
     String displayName = body.displayName();
     String rid = Utils.createReadableId(displayName);
+
     Org.OrgBuilder orgBuilder = Org.builder()
       .displayName(displayName)
       .domain(emailDomain)
+      .createdBy(user)
+      .users(Set.of(user))
       .rid(rid);
     if (StringUtils.isNotBlank(body.thumbnail())) {
       Optional<AssetFilePath> assetFilePath = uploadBase64ImageToS3(body.thumbnail(), S3Config.AssetType.Common);
@@ -117,7 +114,6 @@ public class WorkspaceService extends ServiceBase {
     String emailDomain = domainInf.getValue0();
     Set<Org> org = orgRepo.findOrgByDomain(emailDomain);
     return org.isEmpty() ? RespOrg.Empty() : RespOrg.from(org.iterator().next());
-
   }
 
   @Transactional
@@ -125,9 +121,11 @@ public class WorkspaceService extends ServiceBase {
     Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.getEmail());
     String emailDomain = domainInf.getValue0();
     Set<Org> orgs = orgRepo.findOrgByDomain(emailDomain);
+
     if (!orgs.isEmpty()) {
       Org org = orgs.iterator().next();
       user.setBelongsToOrg(org.getId());
+      user.setOrgs(orgs);
       userRepo.save(user);
     } else {
       log.error("No org present but call to assignUserToImplicitOrg is done by user {}", user);
@@ -245,9 +243,71 @@ public class WorkspaceService extends ServiceBase {
   public RespOrg updateOrgInfo(ReqUpdateOrg updateOrg, User user) {
     Optional<Org> maybeOrg = orgRepo.findById(user.getBelongsToOrg());
     if (maybeOrg.isEmpty()) return RespOrg.Empty();
+
     Org org = maybeOrg.get();
     org.setInfo(updateOrg.orgInfo());
     Org savedOrg = orgRepo.save(org);
     return RespOrg.from(savedOrg);
+  }
+
+  @Transactional
+  public RespNewInvite createNewInvite(ReqNewInvite newInvite, User user) {
+    Optional<Org> maybeOrg = orgRepo.findById(user.getBelongsToOrg());
+    if (maybeOrg.isEmpty()) return RespNewInvite.Empty();
+
+    InviteCode inviteCode = InviteCode.builder()
+      .invitedEmail(newInvite.getInvitedEmail())
+      .orgId(maybeOrg.get().getId())
+      .build();
+    String inviteCodeString;
+
+    try {
+      inviteCodeString = mapper.writeValueAsString(inviteCode);
+    } catch (Exception e) {
+      log.error("Something went wrong while converting invite code to string", e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while converting invite code to string");
+    }
+
+    return RespNewInvite.builder()
+      .code(Base64.getEncoder().encodeToString(inviteCodeString.getBytes()))
+      .build();
+  }
+
+  @Transactional(readOnly = true)
+  public List<RespOrg> getAllOrgForUser(User user) {
+    Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.getEmail());
+    String emailDomain = domainInf.getValue0();
+    boolean isWorkEmail = domainInf.getValue1();
+    Set<Org> orgs = new HashSet<>();
+    if (isWorkEmail) {
+      orgs.addAll(orgRepo.findOrgByDomain(emailDomain));
+    }
+    orgs.addAll(user.getOrgs() != null ? user.getOrgs() : Set.of());
+
+    return orgs.stream().map(RespOrg::from).collect(Collectors.toList());
+  }
+
+  @Transactional
+  public Pair<RespUser, RespOrg> assignOrgToUser(ReqAssignOrgToUser body, User user) {
+    Optional<Org> maybeOrg = orgRepo.findById(body.orgId());
+    if (maybeOrg.isEmpty()) return Pair.with(RespUser.from(user), RespOrg.Empty());
+
+    Set<Org> orgs = user.getOrgs();
+    orgs.add(maybeOrg.get());
+    user.setBelongsToOrg(maybeOrg.get().getId());
+    user.setOrgs(orgs);
+
+    User savedUser = userRepo.save(user);
+    return Pair.with(RespUser.from(savedUser), RespOrg.from(maybeOrg.get()));
+  }
+
+  public List<RespUser> getAllUsersInAnOrg(Long orgId) {
+    Optional<Org> maybeOrg = orgRepo.findById(orgId);
+    if (maybeOrg.isEmpty()) return new ArrayList<>();
+
+    Org org = maybeOrg.get();
+    Set<User> users = org.getUsers();
+
+    return users.stream().map(RespUser::from).collect(Collectors.toList());
   }
 }

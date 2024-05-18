@@ -79,6 +79,9 @@ public interface Routes {
   String DEL_TENANT_INTEGRATION = __BEHIND_LOGIN__ + "/delete/tenant_integration/{id}";
   String CREATE_NEW_API_KEY = __BEHIND_LOGIN__ + "/new/apikey";
   String GET_API_KEY = __BEHIND_LOGIN__ + "/apikey";
+  String NEW_INVITE = __BEHIND_LOGIN__ + "/new/invite";
+  String ALL_ORG_FOR_USER = __BEHIND_LOGIN__ + "/orgsfruser";
+  String ASSIGN_ORG_TO_USER = __BEHIND_LOGIN__ + "/orgstouser";
 
   /* === Cross service w/o authentication === */
 

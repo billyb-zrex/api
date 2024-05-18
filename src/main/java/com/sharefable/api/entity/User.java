@@ -1,10 +1,10 @@
 package com.sharefable.api.entity;
 
 import com.sharefable.api.transport.resp.RespUser;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "user")
@@ -16,21 +16,28 @@ import lombok.*;
 @Builder
 @TransportObjRef(cls = RespUser.class)
 public class User extends EntityBase {
-    private String authId;
+  private String authId;
 
-    private String firstName;
+  private String firstName;
 
-    private String lastName;
+  private String lastName;
 
-    @Column(nullable = false)
-    private String email;
+  @Column(nullable = false)
+  private String email;
 
-    private String avatar;
+  private String avatar;
 
-    private Boolean domainBlacklisted;
+  private Boolean domainBlacklisted;
 
-    private Long belongsToOrg;
+  private Long belongsToOrg;
 
-    @Column(nullable = false)
-    private Boolean active = true;
+  @Column(nullable = false)
+  private Boolean active = true;
+
+  @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+  @JoinTable(
+    name = "user_org_join",
+    joinColumns = @JoinColumn(name = "user_id"),
+    inverseJoinColumns = @JoinColumn(name = "org_id"))
+  private Set<Org> orgs;
 }

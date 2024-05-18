@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "yarn build && node dist/publish.js"
+    "migrate-publish-demo": "yarn build && node dist/publish.js",
+    "migrate-multi-org": "node user_org_join.js",
+    "migrate-assign-createdby": "node assign_created_by_for_org.js"
   },
   "devDependencies": {
     "@types/mysql": "^2.15.22",
