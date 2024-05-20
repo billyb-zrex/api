@@ -3,6 +3,7 @@ package com.sharefable.api.service;
 import com.chargebee.Result;
 import com.chargebee.models.Customer;
 import com.chargebee.models.HostedPage;
+import com.chargebee.org.json.JSONObject;
 import com.sharefable.api.common.SubscriptionManagedBy;
 import com.sharefable.api.config.PaymentConfig;
 import com.sharefable.api.entity.Log;
@@ -14,7 +15,9 @@ import com.sharefable.api.repo.SubscriptionRepo;
 import com.sharefable.api.repo.UserRepo;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.req.ReqSubscriptionInfo;
+import com.sharefable.api.transport.resp.RespSubsValidation;
 import com.sharefable.api.transport.resp.RespSubscription;
+import io.sentry.Sentry;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -215,10 +218,21 @@ public class SubscriptionService {
           )).orElse(null);
         } else if (subs.getManagedBy() == SubscriptionManagedBy.CHARGEBEE) {
           // saas upgrade
-          com.chargebee.models.Subscription.updateForItems(subs.getCbSubscriptionId())
-            .subscriptionItemItemPriceId(0, planId)
-            .subscriptionItemQuantity(0, numberOfMembersInOrg)
-            .request();
+          try {
+            com.chargebee.models.Subscription.updateForItems(subs.getCbSubscriptionId())
+              .subscriptionItemItemPriceId(0, planId)
+              .request();
+          } catch (Exception e) {
+            // this is just a fail safe mechanism as sometimes chargebee throws error if numberOfMembersInOrg is set
+            // or this is created for the case where solo plan requires numberOfMember to have not set but rest of the plan
+            // requires numberofMembers to be set
+            // TODO Fix this
+            log.error("CB param mismatch. Trying another way", e);
+            com.chargebee.models.Subscription.updateForItems(subs.getCbSubscriptionId())
+              .subscriptionItemItemPriceId(0, planId)
+              .subscriptionItemQuantity(0, numberOfMembersInOrg)
+              .request();
+          }
 
           subs.setPaymentPlan(info.pricingPlan());
           subs.setPaymentInterval(info.pricingInterval());
@@ -277,15 +291,17 @@ public class SubscriptionService {
     }
   }
 
-  public String createHostedPage(User user) {
+  public String createHostedPage(User user, Optional<ReqSubscriptionInfo> info) {
     Subscription subs = repo.getSubscriptionByOrgId(user.getBelongsToOrg());
     if (subs == null) return null;
+
     String subId = subs.getCbSubscriptionId();
+    String paymentPlanId = info.isPresent() ? paymentConfig.getPlanId(info.get().pricingPlan(), info.get().pricingInterval()) : subs.getPaymentPlanId();
     try {
       final int numberOfMembersInOrg = userRepo.countActiveUsersByBelongsToOrgWhoAreNotFableSupport(user.getBelongsToOrg());
       Result result = HostedPage.checkoutExistingForItems()
         .subscriptionId(subId)
-        .subscriptionItemItemPriceId(0, subs.getPaymentPlanId())
+        .subscriptionItemItemPriceId(0, paymentPlanId)
         .subscriptionItemQuantity(0, numberOfMembersInOrg)
         .request();
       HostedPage hostedPage = result.hostedPage();
@@ -313,5 +329,29 @@ public class SubscriptionService {
       subs.setPaymentInterval(items.getValue1());
     }
     repo.save(subs);
+  }
+
+  public RespSubsValidation validate(Long orgId) {
+    RespSubsValidation validationResult = new RespSubsValidation();
+    try {
+      Subscription subs = repo.getSubscriptionByOrgId(orgId);
+      if (subs.getManagedBy() == SubscriptionManagedBy.CHARGEBEE) {
+        Result currentSub = com.chargebee.models.Subscription.retrieve(subs.getCbSubscriptionId()).request();
+        JSONObject subJson = currentSub.jsonResponse();
+        JSONObject customer = (JSONObject) subJson.get("customer");
+        String cardStatus = (String) customer.get("card_status");
+        if (StringUtils.equalsIgnoreCase(cardStatus, "no_card")) {
+          validationResult.setCardPresent(false);
+        }
+        validationResult.setCardPresent(true);
+      } else {
+        validationResult.setCardPresent(true);
+      }
+    } catch (Exception e) {
+      validationResult.setCardPresent(true);
+      log.error("Error while getting subscription result", e);
+      Sentry.captureException(e);
+    }
+    return validationResult;
   }
 }

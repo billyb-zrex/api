@@ -1,0 +1,265 @@
+{
+  "no_of_demos": {
+    "plans": [
+      {
+        "test": "count",
+        "value": "<=1",
+        "plan": "SOLO"
+      },
+      {
+        "test": "count",
+        "value": ">=1",
+        "plan": "*"
+      }
+    ]
+  },
+  "no_of_creator": {
+    "plans": [
+      {
+        "test": "count",
+        "value": "<=3",
+        "plan": "LIFETIME_TIER2"
+      },
+      {
+        "test": "count",
+        "value": ">=1",
+        "plan": "LIFETIME_TIER3"
+      },
+      {
+        "test": "count",
+        "value": "<=1",
+        "plan": "*"
+      }
+    ]
+  },
+  "analytics": {
+    "plans": [
+      {
+        "test": "text",
+        "value": [
+          "advanced"
+        ],
+        "plan": "BUSINESS"
+      },
+      {
+        "test": "text",
+        "value": [
+          "basic"
+        ],
+        "plan": "*"
+      }
+    ]
+  },
+  "multi_flow_demo": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "SOLO"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "LIFETIME_TIER1"
+      },
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "*"
+      }
+    ]
+  },
+  "custom_webhooks": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "SOLO"
+      },
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "*"
+      }
+    ]
+  },
+  "cta_buttons": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "SOLO"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "LIFETIME_TIER1"
+      },
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "*"
+      }
+    ]
+  },
+  "custom_lead_form": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "BUSINESS"
+      },
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "LIFETIME_TIER3"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "*"
+      }
+    ]
+  },
+  "integration": {
+    "plans": [
+      {
+        "test": "text",
+        "value": [
+          "hubspot"
+        ],
+        "plan": "BUSINESS"
+      },
+      {
+        "test": "text",
+        "value": [
+          "hubspot"
+        ],
+        "plan": "LIFETIME_TIER3"
+      },
+      {
+        "test": "text",
+        "value": [],
+        "plan": "*"
+      }
+    ]
+  },
+  "advanced_branching": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "BUSINESS"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "*"
+      }
+    ]
+  },
+  "annotation": {
+    "plans": [
+      {
+        "test": "text",
+        "value": [
+          "video"
+        ],
+        "plan": "BUSINESS"
+      },
+      {
+        "test": "text",
+        "value": [
+          "text"
+        ],
+        "plan": "*"
+      }
+    ]
+  },
+  "personalize_demo": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "BUSINESS"
+      },
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "LIFETIME_TIER3"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "*"
+      }
+    ]
+  },
+  "domain_for_sharing": {
+    "plans": [
+      {
+        "test": "count",
+        "value": "<=1",
+        "plan": "LIFETIME_TIER2"
+      },
+      {
+        "test": "count",
+        "value": "<=3",
+        "plan": "LIFETIME_TIER2"
+      },
+      {
+        "test": "count",
+        "value": "<=10",
+        "plan": "LIFETIME_TIER3"
+      },
+      {
+        "test": "count",
+        "value": "<=0",
+        "plan": "*"
+      }
+    ]
+  },
+  "no_watermark": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "SOLO"
+      },
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "*"
+      }
+    ]
+  },
+  "custom_demo_loader": {
+    "plans": [
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "SOLO"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "STARTUP"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "BUSINESS"
+      },
+      {
+        "test": "switch",
+        "value": "off",
+        "plan": "LIFETIME_TIER1"
+      },
+      {
+        "test": "switch",
+        "value": "on",
+        "plan": "*"
+      }
+    ]
+  }
+}

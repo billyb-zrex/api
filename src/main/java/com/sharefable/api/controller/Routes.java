@@ -61,6 +61,7 @@ public interface Routes {
   String RESIZE_IMG = __BEHIND_LOGIN__ + "/rzeimg";
   String CHECKOUT = __BEHIND_LOGIN__ + "/checkout";
   String GET_SUBSCRIPTION = __BEHIND_LOGIN__ + "/subs";
+  String VALIDATE_SUBSCRIPTION_FOR_UPGRADE_OR_DOWNGRADE = __BEHIND_LOGIN__ + "/subsvalid";
   String GET_ALL_USER_IN_ORG = __BEHIND_LOGIN__ + "/users";
   String ACTIVATE_OR_DEACTIVATE_USER = __BEHIND_LOGIN__ + "/aodusr";
   String GEN_CHECKOUT_URL = __BEHIND_LOGIN__ + "/genchckouturl";

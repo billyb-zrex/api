@@ -10,6 +10,7 @@ import com.sharefable.api.entity.User;
 import com.sharefable.api.service.SubscriptionService;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.req.ReqSubscriptionInfo;
+import com.sharefable.api.transport.resp.RespSubsValidation;
 import com.sharefable.api.transport.resp.RespSubscription;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping(Routes.API_V1)
@@ -47,9 +50,15 @@ public class SubscriptionController {
     return ApiResp.<RespSubscription>builder().status(ApiResp.ResponseStatus.Success).data(subs).build();
   }
 
+  @RequestMapping(value = Routes.VALIDATE_SUBSCRIPTION_FOR_UPGRADE_OR_DOWNGRADE, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespSubsValidation> validateSubscription(@AuthUser User user) {
+    RespSubsValidation validationResult = subsService.validate(user.getBelongsToOrg());
+    return ApiResp.<RespSubsValidation>builder().status(ApiResp.ResponseStatus.Success).data(validationResult).build();
+  }
+
   @RequestMapping(value = Routes.GEN_CHECKOUT_URL, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-  public String generateCheckoutUrl(@AuthUser User user) {
-    return subsService.createHostedPage(user);
+  public String generateCheckoutUrl(@AuthUser User user, @RequestBody Optional<ReqSubscriptionInfo> info) {
+    return subsService.createHostedPage(user, info);
   }
 
   @RequestMapping(value = Routes.CHARGEBEE_WEBHOOK, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
