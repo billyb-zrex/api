@@ -696,6 +696,7 @@ export const enum NfEvents {
     NEW_ORG_CREATED = "NEW_ORG_CREATED",
     EBOOK_DOWNLOAD = "EBOOK_DOWNLOAD",
     RUN_INTEGRATION = "RUN_INTEGRATION",
+    NEW_USER_SIGNUP_WITH_SUBS = "NEW_USER_SIGNUP_WITH_SUBS",
 }
 
 export const enum Plan {

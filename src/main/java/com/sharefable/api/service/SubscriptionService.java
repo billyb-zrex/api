@@ -13,6 +13,7 @@ import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.OrgRepo;
 import com.sharefable.api.repo.SubscriptionRepo;
 import com.sharefable.api.repo.UserRepo;
+import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.req.ReqSubscriptionInfo;
 import com.sharefable.api.transport.resp.RespSubsValidation;
@@ -30,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,6 +45,7 @@ public class SubscriptionService {
   private final OrgRepo orgRepo;
   private final UserRepo userRepo;
   private final LogService logService;
+  private final NfHookService nfHookService;
 
   public RespSubscription getSubscriptionForUser(User user) {
     Long orgId = user.getBelongsToOrg();
@@ -117,6 +120,9 @@ public class SubscriptionService {
       if (!isDeactivated) {
         Subscription subs = builder.build();
         repo.save(subs);
+
+        sendUserDetailsWithPlans(user, subs);
+
         return RespSubscription.from(subs);
       }
     }
@@ -153,7 +159,10 @@ public class SubscriptionService {
         .orgId(org.getId())
         .cbCustomerId(customer.id())
         .build();
+
       repo.save(subs);
+
+      sendUserDetailsWithPlans(user, subs);
 
       return RespSubscription.from(subs);
     } catch (Exception e) {
@@ -353,5 +362,14 @@ public class SubscriptionService {
       Sentry.captureException(e);
     }
     return validationResult;
+  }
+
+  public void sendUserDetailsWithPlans(User user, Subscription subs) {
+    Map<String, String> payload = new HashMap<>();
+    payload.put("email", user.getEmail());
+    payload.put("firstName", user.getFirstName());
+    if (!StringUtils.isBlank(user.getLastName())) payload.put("lastName", user.getLastName());
+    payload.put("subs", subs.getPaymentPlan().name());
+    nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP_WITH_SUBS, payload);
   }
 }

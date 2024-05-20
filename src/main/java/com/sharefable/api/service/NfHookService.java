@@ -20,6 +20,7 @@ public class NfHookService {
     ALLOWED_EVENTS.add(NfEvents.NEW_USER_SIGNUP);
     ALLOWED_EVENTS.add(NfEvents.NEW_ORG_CREATED);
     ALLOWED_EVENTS.add(NfEvents.RUN_INTEGRATION);
+    ALLOWED_EVENTS.add(NfEvents.NEW_USER_SIGNUP_WITH_SUBS);
   }
 
   private final QMsgService qMsgService;
