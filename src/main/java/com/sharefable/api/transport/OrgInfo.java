@@ -15,6 +15,10 @@ import lombok.experimental.SuperBuilder;
 @GenerateTSDef
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrgInfo {
+  @OptionalPropInTS
   private String[] useCases;
+  @OptionalPropInTS
   private String othersText;
+  @OptionalPropInTS
+  private Object bet; // bet -> [b]ack[e]nd [t]ransparent config; only used in client side
 }

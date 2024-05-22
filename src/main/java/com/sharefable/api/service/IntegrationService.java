@@ -11,6 +11,7 @@ import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.RespFatTenantIntegration;
 import com.sharefable.api.transport.req.ReqAddOrUpdatePlatformIntegrationConfig;
 import com.sharefable.api.transport.req.ReqCreateOrUpdateTenantIntegration;
+import com.sharefable.api.transport.resp.RespOrg;
 import com.sharefable.api.transport.resp.RespPlatformIntegration;
 import com.sharefable.api.transport.resp.RespTenantIntegration;
 import lombok.RequiredArgsConstructor;
@@ -179,7 +180,7 @@ public class IntegrationService {
     maybePlatformIntegration.ifPresent(resp::setPlatformIntegration);
 
     Optional<Org> maybeOrg = orgRepo.findById(maybeTenantIntegration.get().getOrgId());
-    maybeOrg.ifPresent(resp::setOrg);
+    maybeOrg.ifPresent(org -> resp.setOrg(RespOrg.from(org)));
 
     return resp;
   }

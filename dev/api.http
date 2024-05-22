@@ -518,7 +518,7 @@ Content-Type: application/json
 
 ### fat tenant integration
 
-GET {{api-host}}/v1/fat/tenant_integration/1
+GET {{api-host}}/v1/fat/tenant_integration/14
 Content-Type: application/json
 
 ### api key

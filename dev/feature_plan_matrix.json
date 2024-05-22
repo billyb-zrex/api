@@ -50,7 +50,7 @@
       }
     ]
   },
-  "multi_flow_demo": {
+  "modules": {
     "plans": [
       {
         "test": "switch",
@@ -126,16 +126,40 @@
       {
         "test": "text",
         "value": [
-          "hubspot"
+          "*"
         ],
         "plan": "BUSINESS"
       },
       {
         "test": "text",
         "value": [
-          "hubspot"
+          "hubspot",
+          "Zapier",
+          "FableWebhook"
         ],
         "plan": "LIFETIME_TIER3"
+      },
+      {
+        "test": "text",
+        "value": [
+          "Zapier",
+          "FableWebhook"
+        ],
+        "plan": "LIFETIME_TIER2"
+      },
+      {
+        "test": "text",
+        "value": [
+          "FableWebhook"
+        ],
+        "plan": "LIFETIME_TIER1"
+      },
+      {
+        "test": "text",
+        "value": [
+          "FableWebhook"
+        ],
+        "plan": "STARTUP"
       },
       {
         "test": "text",
@@ -144,7 +168,7 @@
       }
     ]
   },
-  "advanced_branching": {
+  "multi_annontation": {
     "plans": [
       {
         "test": "switch",
@@ -176,21 +200,41 @@
       }
     ]
   },
-  "personalize_demo": {
+  "edit_and_personalize_demo": {
     "plans": [
       {
-        "test": "switch",
-        "value": "on",
+        "test": "text",
+        "value": [
+          "*"
+        ],
         "plan": "BUSINESS"
       },
       {
-        "test": "switch",
-        "value": "on",
+        "test": "text",
+        "value": [
+          "blur",
+          "show_hide"
+        ],
+        "plan": "STARTUP"
+      },
+      {
+        "test": "text",
+        "value": [
+          "*"
+        ],
         "plan": "LIFETIME_TIER3"
       },
       {
-        "test": "switch",
-        "value": "off",
+        "test": "text",
+        "value": [
+          "blur",
+          "show_hide"
+        ],
+        "plan": "LIFETIME_TIER2"
+      },
+      {
+        "test": "text",
+        "value": [],
         "plan": "*"
       }
     ]
@@ -200,7 +244,7 @@
       {
         "test": "count",
         "value": "<=1",
-        "plan": "LIFETIME_TIER2"
+        "plan": "LIFETIME_TIER1"
       },
       {
         "test": "count",
@@ -244,11 +288,6 @@
         "test": "switch",
         "value": "off",
         "plan": "STARTUP"
-      },
-      {
-        "test": "switch",
-        "value": "off",
-        "plan": "BUSINESS"
       },
       {
         "test": "switch",
