@@ -156,4 +156,14 @@ public class TourController {
     log.info("GET_ALL_TOURS_API_KEY  orgId {} len {}", key.getOrg().getId(), allTours.size());
     return ApiResp.<List<RespTour>>builder().status(ApiResp.ResponseStatus.Success).data(allTours).build();
   }
+
+  @RequestMapping(value = Routes.COPY_TOUR_TO_DIFFERENT_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<RespTourWithScreens>> copyToursToDifferentOrg(@RequestBody ReqTransferTour body) {
+    if (!appSettings.isMigrationFlatSet()) {
+      log.error("Migration requested but flag not set.");
+      throw new ResponseStatusException(HttpStatusCode.valueOf(404));
+    }
+    List<RespTourWithScreens> respTourWithScreens = tourService.copyToursToDifferentOrg(body);
+    return ApiResp.<List<RespTourWithScreens>>builder().status(ApiResp.ResponseStatus.Success).data(respTourWithScreens).build();
+  }
 }

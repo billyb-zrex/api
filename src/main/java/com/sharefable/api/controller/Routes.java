@@ -25,6 +25,7 @@ public interface Routes {
 
   // only for migration
   String PUBLISH_TOUR_INTERNAL = "/m/tpub";
+  String COPY_TOUR_TO_DIFFERENT_ORG = "m/cpytrdifforg";
 
   // internal data entry routes
   String ADD_OR_UPDATE_PLATFORM_INTEGRATION = "/ide/platform_integration";

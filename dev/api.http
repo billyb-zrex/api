@@ -569,3 +569,16 @@ Authorization: {{auth-header}}
 {
   "orgId": "12"
 }
+
+### transfer tour
+POST {{api-host}}/v1/m/cpytrdifforg
+Content-Type: application/json
+
+{
+  "email": "john@acme.com",
+  "orgId": "45",
+  "rids": [
+    "git-1rdtndsgp8g71up1",
+    "untitled-ivmkaqafd1gwr8lg"
+  ]
+}

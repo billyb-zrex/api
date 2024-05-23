@@ -42,29 +42,12 @@ public class UserService {
       .orElseGet(() -> createNewUser(userClaimFromAuth0, jwt.getSubject()));
 
     Long orgId = OrgContext.getCurrentOrgId();
-    if (orgId != null) {
-      Set<Org> orgs = user.getOrgs();
-      orgs = orgs == null ? Set.of() : orgs;
-      boolean isOrgValid = false;
-      for (Org org : orgs) {
-        if (Objects.equals(org.getId(), orgId)) {
-          user.setBelongsToOrg(orgId);
-          isOrgValid = true;
-          break;
-        }
-      }
-      if (!isOrgValid) {
-        log.error("orgId {} is passed but user {} is not associated with org", orgId, user.getEmail());
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, objectMapper.writeValueAsString(
-          Map.of("r", UnauthorizedReason.OrgSuggestedButInvalidAssociation)
-        ));
-      }
-    }
+    User updatedUser = settingUserBelongsTo(user, orgId);
 
     // If the user is deactivated any new auth attempt would mark the user as active.
     // This is not ideal but for the timebeing this would do.
     // Ideally any nonactive user has zero role based permission.
-    return setUserActiveOrInactive(user, true);
+    return setUserActiveOrInactive(updatedUser, true);
   }
 
   public UserClaimFromAuth0 getUserClaimsFromAuth0(Jwt jwt) throws JsonProcessingException {
@@ -117,6 +100,28 @@ public class UserService {
     eventInfo.put("firstName", firstName);
     if (!StringUtils.isBlank(lastName)) eventInfo.put("lastName", lastName);
     nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP, eventInfo);
+  }
+
+  public User settingUserBelongsTo(User user, Long orgId) throws JsonProcessingException {
+    if (orgId != null) {
+      Set<Org> orgs = user.getOrgs();
+      orgs = orgs == null ? Set.of() : orgs;
+      boolean isOrgValid = false;
+      for (Org org : orgs) {
+        if (Objects.equals(org.getId(), orgId)) {
+          user.setBelongsToOrg(orgId);
+          isOrgValid = true;
+          break;
+        }
+      }
+      if (!isOrgValid) {
+        log.error("orgId {} is passed but user {} is not associated with org", orgId, user.getEmail());
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, objectMapper.writeValueAsString(
+          Map.of("r", UnauthorizedReason.OrgSuggestedButInvalidAssociation)
+        ));
+      }
+    }
+    return user;
   }
 
   public record UserClaimFromAuth0(String picture, String email, String familyName, String givenName) {

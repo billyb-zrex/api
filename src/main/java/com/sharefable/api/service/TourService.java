@@ -13,6 +13,7 @@ import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
+import com.sharefable.api.repo.UserRepo;
 import com.sharefable.api.transport.*;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespCommonConfig;
@@ -40,8 +41,10 @@ public class TourService extends ServiceBase {
   private final static ObjectMapper objectMapper = new ObjectMapper();
   private final static String ONBOARDING_ERR_NO_TOUR_IDS = "This error is occurring because there may be no onboarding tour ids present in db while trying to create onboarding tours for an organisation";
   private final TourRepo tourRepo;
+  private final UserRepo userRepo;
   private final S3Config s3Config;
   private final ScreenService screenService;
+  private final UserService userService;
   private final S3Service s3Service;
   private final AppConfig appConfig;
   private final AppSettings settings;
@@ -51,17 +54,19 @@ public class TourService extends ServiceBase {
   @Autowired
   public TourService(
     TourRepo tourRepo,
-    AppSettings settings,
+    UserRepo userRepo, AppSettings settings,
     S3Service s3Service,
     S3Config s3Config,
     ScreenRepo screenRepo,
     ScreenService screenService,
-    AppConfig appConfig, MediaProcessingService mediaProcessingService) {
+    UserService userService, AppConfig appConfig, MediaProcessingService mediaProcessingService) {
     super(settings, s3Service, s3Config, screenRepo, tourRepo);
     this.tourRepo = tourRepo;
+    this.userRepo = userRepo;
     this.s3Config = s3Config;
     this.screenService = screenService;
     this.s3Service = s3Service;
+    this.userService = userService;
     this.appConfig = appConfig;
     this.settings = settings;
     this.screenRepo = screenRepo;
@@ -475,5 +480,35 @@ public class TourService extends ServiceBase {
   public RespTour getTourById(Long id) {
     Optional<Tour> maybeTour = tourRepo.findById(id);
     return maybeTour.map(RespTour::from).orElse(null);
+  }
+
+  @Transactional
+  public List<RespTourWithScreens> copyToursToDifferentOrg(ReqTransferTour body) {
+    try {
+      Optional<User> maybeUser = userRepo.findUserByEmail(body.email());
+      if (maybeUser.isEmpty()) {
+        log.warn("User not present for email {} ", body.email());
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User not present for email");
+      }
+
+      User user = userService.settingUserBelongsTo(maybeUser.get(), body.orgId());
+
+      List<RespTourWithScreens> copiedTours = new ArrayList<>();
+      List<Tour> allToursByRid = tourRepo.findAllByRidIn(body.rids());
+
+      if (allToursByRid != null) {
+        for (Tour tour : allToursByRid) {
+          copiedTours.add(this.duplicateTour(tour, user,
+            newTour -> newTour.onboarding(false).inProgress(false).belongsToOrg(user.getBelongsToOrg()), true));
+        }
+      } else {
+        log.warn("Provided rids are not present");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Provided rids are not present");
+      }
+      return copiedTours;
+    } catch (Exception e) {
+      log.error("Something went wrong while copying tour to another org {}", e.getMessage());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while copying tour to another org");
+    }
   }
 }

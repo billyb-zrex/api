@@ -9,9 +9,11 @@ import java.util.Optional;
 
 @Repository
 public interface TourRepo extends CrudRepository<Tour, Long> {
-    List<Tour> findAllByBelongsToOrgOrderByUpdatedAtDesc(Long belongsToOrgId);
+  List<Tour> findAllByBelongsToOrgOrderByUpdatedAtDesc(Long belongsToOrgId);
 
-    Optional<Tour> findByRid(String rid);
+  Optional<Tour> findByRid(String rid);
 
-    List<Tour> findAllByIdIn(List<Long> id);
+  List<Tour> findAllByIdIn(List<Long> id);
+
+  List<Tour> findAllByRidIn(List<String> rids);
 }
