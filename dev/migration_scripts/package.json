@@ -16,6 +16,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "deepcopy": "^2.1.0",
     "mysql": "^2.18.1"
   }
 }

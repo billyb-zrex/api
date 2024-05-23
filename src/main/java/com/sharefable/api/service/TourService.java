@@ -200,6 +200,7 @@ public class TourService extends ServiceBase {
       .responsive2(fromTour.getResponsive2())
       .displayName(fromTour.getDisplayName())
       .description(fromTour.getDescription())
+      .site(fromTour.getSite())
       .onboarding(fromTour.getOnboarding())
       .createdBy(user);
     tourBuilder = f.apply(tourBuilder);
