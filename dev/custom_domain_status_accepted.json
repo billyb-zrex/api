@@ -1,0 +1,22 @@
+{
+  "status": "Requested",
+  "cluster": "proxy1.app.sharefable.com",
+  "records": [
+    {
+      "recordType": "CNAME",
+      "recordDes": "Verification record",
+      "recordKey": "_817fed9b42a84125021f1371a7a08c81.proxyfable.com.",
+      "recordValue": "_52271d8a6c4173988fcd2bda6a6984ba.sdgjtdhdhz.acm-validations.aws."
+    },
+    {
+      "recordType": "CNAME",
+      "recordDes": "Subdomain record",
+      "recordKey": "sslhs",
+      "recordValue": "d13w95vz2sk3es.cloudfront.net"
+    }
+  ],
+  "createdAt": 1716589445644,
+  "deployedOn": "AWS_AMPLIFY",
+  "domainName": "home.acme.com",
+  "rejectionReason": null
+}

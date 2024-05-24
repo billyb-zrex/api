@@ -1,18 +1,20 @@
 package com.sharefable.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sharefable.api.common.AssetFilePath;
-import com.sharefable.api.common.Utils;
+import com.sharefable.api.common.*;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.ApiKey;
+import com.sharefable.api.entity.EntityConfigKV;
 import com.sharefable.api.entity.Org;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.*;
+import com.sharefable.api.service.vendor.SlackMsgService;
 import com.sharefable.api.transport.InviteCode;
 import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.*;
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -38,10 +41,12 @@ public class WorkspaceService extends ServiceBase {
   private final S3Service s3Service;
   private final NfHookService nfHookService;
   private final ApiKeyRepo apiKeyRepo;
+  private final SlackMsgService slackMsgService;
+  private final EntityConfigKVRepo entityConfigKVRepo;
   private final ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
-  public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo, UserService userService, NfHookService nfHookService, ApiKeyRepo apiKeyRepo) {
+  public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo, UserService userService, NfHookService nfHookService, ApiKeyRepo apiKeyRepo, SlackMsgService slackMsgService, EntityConfigKVRepo entityConfigKVRepo) {
     super(settings, s3Service, s3Config, screenRepo, tourRepo);
     this.orgRepo = orgRepo;
     this.userRepo = userRepo;
@@ -50,6 +55,8 @@ public class WorkspaceService extends ServiceBase {
     this.userService = userService;
     this.nfHookService = nfHookService;
     this.apiKeyRepo = apiKeyRepo;
+    this.slackMsgService = slackMsgService;
+    this.entityConfigKVRepo = entityConfigKVRepo;
   }
 
   @Transactional
@@ -309,5 +316,77 @@ public class WorkspaceService extends ServiceBase {
     Set<User> users = org.getUsers();
 
     return users.stream().map(RespUser::from).collect(Collectors.toList());
+  }
+
+  public List<RespVanityDomain> getAllVanityDomains(Long orgId) {
+    List<EntityConfigKV> config = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigType(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.VANITY_DOMAIN
+    );
+    return config.stream().map(entry -> mapper.convertValue(entry.getConfigVal(), VanityDomain.class))
+      .map(RespVanityDomain::from).toList();
+  }
+
+  @Transactional
+  public RespVanityDomain addNewVanityDomain(String domainName, Long orgId, User user) {
+    VanityDomain vanityDomain = VanityDomain.builder()
+      .domainName(domainName)
+      .createdAt(Timestamp.from(Instant.now()))
+      .status(VanityDomainDeploymentStatus.Requested)
+      .build();
+
+    EntityConfigKV config = EntityConfigKV.builder()
+      .entityType(ConfigEntityType.Org)
+      .entityId(orgId)
+      .configType(EntityConfigConfigType.VANITY_DOMAIN)
+      .configKey(domainName)
+      .configVal(vanityDomain)
+      .build();
+
+    EntityConfigKV savedConfig = entityConfigKVRepo.save(config);
+
+    try {
+      slackMsgService.sendCustomDomainReq(
+        orgId,
+        user.getEmail(),
+        savedConfig.getId(),
+        "issue_new",
+        vanityDomain
+      );
+    } catch (IOException e) {
+      log.error("Couldn't send slack notification for new custom domain. Issue new {}", savedConfig.getId());
+      Sentry.captureException(e);
+    }
+
+    return RespVanityDomain.from(vanityDomain);
+  }
+
+  @Transactional
+  public List<RespVanityDomain> deleteVanityDomain(String domainName, Long orgId, User user) {
+    List<EntityConfigKV> entity = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.VANITY_DOMAIN,
+      domainName
+    );
+
+    for (EntityConfigKV item : entity) {
+      try {
+        slackMsgService.sendCustomDomainReq(
+          orgId,
+          user.getEmail(),
+          item.getId(),
+          "delete_custom_domain",
+          item.getConfigVal()
+        );
+      } catch (IOException e) {
+        log.error("Couldn't send slack notification for new custom domain. delete existing {}", item.getId());
+        Sentry.captureException(e);
+      }
+    }
+
+    entityConfigKVRepo.deleteAll(entity);
+    return getAllVanityDomains(orgId);
   }
 }

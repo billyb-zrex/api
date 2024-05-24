@@ -13,6 +13,7 @@ import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.OrgRepo;
 import com.sharefable.api.repo.SubscriptionRepo;
 import com.sharefable.api.repo.UserRepo;
+import com.sharefable.api.service.vendor.SlackMsgService;
 import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.req.ReqSubscriptionInfo;
@@ -45,6 +46,7 @@ public class SubscriptionService {
   private final OrgRepo orgRepo;
   private final UserRepo userRepo;
   private final LogService logService;
+  private final SlackMsgService slackMsgService;
   private final NfHookService nfHookService;
 
   public RespSubscription getSubscriptionForUser(User user) {
@@ -195,6 +197,20 @@ public class SubscriptionService {
         if (StringUtils.equalsIgnoreCase(event, "deactivate")) {
           // If the license got deactivated then make lifetime subscription as false
           isLifetimeSubscription = false;
+        }
+
+        try {
+          slackMsgService.sendAppSumoSubsMsgs(
+            Map.of(
+              "__st", "ASSOCIATION",
+              "email", user.isPresent() ? user.get().getEmail() : "na",
+              "EVENT", event,
+              "licenseInfo", licenseInfo
+            )
+          );
+        } catch (Exception e) {
+          log.error("Couldn't send message to slack", e);
+          Sentry.captureException(e);
         }
       } else {
         throw new RuntimeException("License " + info.lifetimeLicense() + " should be present for user");
