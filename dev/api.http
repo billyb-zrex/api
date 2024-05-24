@@ -159,7 +159,11 @@ Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "name": "Default2 tour"
+  "name": "Demo with settings",
+  "settings": {
+    "vpdWidth": 360,
+    "vpdHeight": 450
+  }
 }
 
 ### renaming tour

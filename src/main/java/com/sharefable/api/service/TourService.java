@@ -97,6 +97,7 @@ public class TourService extends ServiceBase {
       .assetPrefixHash(prefixHash)
       .belongsToOrg(createdByUser.getBelongsToOrg())
       .onboarding(false)
+      .settings(req.settings().orElse(null))
       .build();
 
     Tour storedTour = tourRepo.save(tour);
@@ -202,6 +203,7 @@ public class TourService extends ServiceBase {
       .description(fromTour.getDescription())
       .site(fromTour.getSite())
       .onboarding(fromTour.getOnboarding())
+      .settings(fromTour.getSettings())
       .createdBy(user);
     tourBuilder = f.apply(tourBuilder);
     Tour tour = tourBuilder.build();
