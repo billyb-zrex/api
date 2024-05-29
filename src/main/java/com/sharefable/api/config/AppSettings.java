@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.entity.Settings;
 import com.sharefable.api.repo.AppSettingsRepo;
 import com.sharefable.api.transport.SchemaVersion;
+import io.sentry.Sentry;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -29,6 +32,8 @@ public class AppSettings {
   private String onboardingTourIds;
   private boolean isMigrationFlatSet;
   private boolean isDataEntryFlagSet;
+  private int maxSSLCertPerClusterLimit;
+  private List<CustomDomainProxyCluster> customDomainProxyClusters = new ArrayList<>();
   private Map<String, Object> featurePlanMatrix;
   @Setter
   private String publicEndpoint;
@@ -37,6 +42,18 @@ public class AppSettings {
   public AppSettings(AppSettingsRepo settingsRepo) {
     this.settingsRepo = settingsRepo;
     load();
+  }
+
+  private List<CustomDomainProxyCluster> parseCustomDomainClusterIdentifiers(String str) {
+    String[] clusters = StringUtils.split(str, ';');
+    ArrayList<CustomDomainProxyCluster> list = new ArrayList<>();
+
+    for (String cluster : clusters) {
+      String[] clusterIds = cluster.split("#");
+      list.add(new CustomDomainProxyCluster(clusterIds[0], clusterIds[1]));
+    }
+
+    return list;
   }
 
   public void load() {
@@ -48,24 +65,35 @@ public class AppSettings {
 
     currentSchemaVersion = SchemaVersion.of(hm.get("CURRENT_SCHEMA_VERSION"));
     onboardingTourIds = hm.getOrDefault("ONBOARDING_TOUR_IDS", "");
+
     try {
       TypeReference<Map<String, Object>> typeRef = new TypeReference<>() {
       };
       featurePlanMatrix = mapper.readValue(hm.getOrDefault("FEATURE_PLAN_MATRIX", null), typeRef);
     } catch (Exception e) {
-//      featurePlanMatrix = null;
       log.error("Something went wrong with getting #featurePerPlan {}", e.getMessage());
+      Sentry.captureException(e);
     }
 
     // Turn this on when migration scripts are run and needs to access api for migration
     String migrationFlagRaw = hm.getOrDefault("MIGRATION_FLAG", "0");
     isMigrationFlatSet = StringUtils.equals(migrationFlagRaw, "1");
+
     // Turn this on when manual data entry of a table is required
     String dataEntryFlagRaw = hm.getOrDefault("DATA_ENTRY_FLAG", "0");
     isDataEntryFlagSet = StringUtils.equals(dataEntryFlagRaw, "1");
 
-    log.info("Settings loaded currentSchemaVersion=[{}] onboardingTourIds=[{}] migrationFlag=[{}] dataEntryFlag=[{}] featurePlanMatrix=[{}]",
+    // In the format
+    // cluster-name1#id;cluster-name2#id
+    String clusters = hm.getOrDefault("CUSTOM_DOMAIN_PROXY_CLUSTERS", "");
+    customDomainProxyClusters = parseCustomDomainClusterIdentifiers(clusters);
+
+    String maxSsl = hm.getOrDefault("MAX_SSL_CERT_PER_CLUSTER", "40");
+    maxSSLCertPerClusterLimit = Integer.parseInt(maxSsl);
+
+    log.info("Settings loaded currentSchemaVersion=[{}] customDomainProxyClusters=[{}] onboardingTourIds=[{}] migrationFlag=[{}] dataEntryFlag=[{}] featurePlanMatrix=[{}]",
       currentSchemaVersion,
+      customDomainProxyClusters,
       onboardingTourIds,
       isMigrationFlatSet,
       isDataEntryFlagSet,

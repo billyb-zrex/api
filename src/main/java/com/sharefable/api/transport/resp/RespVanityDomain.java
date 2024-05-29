@@ -21,6 +21,8 @@ import java.util.List;
 @GenerateTSDef
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RespVanityDomain {
+  public String subdomainName;
+  public String apexDomainName;
   private String domainName;
   private Timestamp createdAt;
   private VanityDomainDeploymentStatus status;
@@ -31,6 +33,8 @@ public class RespVanityDomain {
   public static RespVanityDomain from(VanityDomain vanityDomain) {
     RespVanityDomain resp = new RespVanityDomain();
     resp.setDomainName(vanityDomain.getDomainName());
+    resp.setSubdomainName(vanityDomain.getSubdomainName());
+    resp.setApexDomainName(vanityDomain.getApexDomainName());
     resp.setRecords(vanityDomain.getRecords());
     resp.setStatus(vanityDomain.getStatus());
     resp.setCreatedAt(vanityDomain.getCreatedAt());

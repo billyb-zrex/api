@@ -172,13 +172,19 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.ADD_NEW_VANITY_DOMAIN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespVanityDomain> createNewVanityDomain(@RequestBody ReqCreateOrDeleteNewVanityDomain req, @AuthUser User user) {
-    RespVanityDomain resp = wsService.addNewVanityDomain(req.getDomainName(), user.getBelongsToOrg(), user);
+    RespVanityDomain resp = wsService.addNewVanityDomain(req, user.getBelongsToOrg(), user);
+    return ApiResp.<RespVanityDomain>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.PROBE_VANITY_DOMAIN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespVanityDomain> probeDomains(@RequestBody ReqCreateOrDeleteNewVanityDomain req, @AuthUser User user) {
+    RespVanityDomain resp = wsService.getAndUpdateStatusForVanityDomain(req, user.getBelongsToOrg(), user);
     return ApiResp.<RespVanityDomain>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 
   @RequestMapping(value = Routes.DEL_VANITY_DOMAIN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<List<RespVanityDomain>> deleteNewVanityDomains(@RequestBody ReqCreateOrDeleteNewVanityDomain req, @AuthUser User user) {
-    List<RespVanityDomain> resp = wsService.deleteVanityDomain(req.getDomainName(), user.getBelongsToOrg(), user);
+    List<RespVanityDomain> resp = wsService.deleteVanityDomain(req, user.getBelongsToOrg(), user);
     return ApiResp.<List<RespVanityDomain>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 }

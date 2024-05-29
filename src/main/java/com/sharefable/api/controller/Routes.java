@@ -37,6 +37,7 @@ public interface Routes {
   String GET_ORG = __BEHIND_LOGIN__ + "/org";
   String GET_ALL_VANITY_DOMAINS = __BEHIND_LOGIN__ + "/vanitydomains";
   String ADD_NEW_VANITY_DOMAIN = __BEHIND_LOGIN__ + "/vanitydomain";
+  String PROBE_VANITY_DOMAIN = __BEHIND_LOGIN__ + "/vanitydomain/probe";
   String DEL_VANITY_DOMAIN = __BEHIND_LOGIN__ + "/delvanitydomains";
   String UPDATE_ORG_PROPS = __BEHIND_LOGIN__ + "/updtorgprops";
   String ASSIGN_IMPLICIT_USER_ORG = __BEHIND_LOGIN__ + "/assgnimplorg";

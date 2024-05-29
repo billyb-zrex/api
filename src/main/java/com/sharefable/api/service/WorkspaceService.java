@@ -1,5 +1,6 @@
 package com.sharefable.api.service;
 
+import com.amazonaws.services.amplify.model.DomainStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.*;
 import com.sharefable.api.config.AppSettings;
@@ -43,10 +44,23 @@ public class WorkspaceService extends ServiceBase {
   private final ApiKeyRepo apiKeyRepo;
   private final SlackMsgService slackMsgService;
   private final EntityConfigKVRepo entityConfigKVRepo;
+  private final AwsAmplifyCustomDomainService customDomainService;
   private final ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
-  public WorkspaceService(OrgRepo orgRepo, UserRepo userRepo, S3Service s3Service, S3Config s3Config, AppSettings settings, ScreenRepo screenRepo, TourRepo tourRepo, UserService userService, NfHookService nfHookService, ApiKeyRepo apiKeyRepo, SlackMsgService slackMsgService, EntityConfigKVRepo entityConfigKVRepo) {
+  public WorkspaceService(OrgRepo orgRepo,
+                          UserRepo userRepo,
+                          S3Service s3Service,
+                          S3Config s3Config,
+                          AppSettings settings,
+                          ScreenRepo screenRepo,
+                          TourRepo tourRepo,
+                          UserService userService,
+                          NfHookService nfHookService,
+                          ApiKeyRepo apiKeyRepo,
+                          SlackMsgService slackMsgService,
+                          EntityConfigKVRepo entityConfigKVRepo,
+                          AwsAmplifyCustomDomainService customDomainService) {
     super(settings, s3Service, s3Config, screenRepo, tourRepo);
     this.orgRepo = orgRepo;
     this.userRepo = userRepo;
@@ -57,6 +71,20 @@ public class WorkspaceService extends ServiceBase {
     this.apiKeyRepo = apiKeyRepo;
     this.slackMsgService = slackMsgService;
     this.entityConfigKVRepo = entityConfigKVRepo;
+    this.customDomainService = customDomainService;
+  }
+
+  // is in the format test CNAME d3uxmturbrrjns.cloudfront.net
+  // or this demo CNAME <pending>
+  private VanityDomainRecords getRecordSetFromString(String recordSetStr, String type) {
+    if (StringUtils.isBlank(recordSetStr)) return null;
+    String[] recArr = StringUtils.split(recordSetStr, " ");
+    return new VanityDomainRecords(
+      DomainRecordType.CNAME,
+      type,
+      recArr[0],
+      recArr[2]
+    );
   }
 
   @Transactional
@@ -328,65 +356,151 @@ public class WorkspaceService extends ServiceBase {
       .map(RespVanityDomain::from).toList();
   }
 
+  private Pair<Optional<Pair<VanityDomain, EntityConfigKV>>, List<VanityDomain>> getDomainIfExists(Long orgId, String apexDomain, String fullDomain) {
+    List<EntityConfigKV> domainConfig = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.VANITY_DOMAIN,
+      apexDomain
+    );
+
+    if (domainConfig == null || domainConfig.isEmpty()) return Pair.with(Optional.empty(), List.of());
+
+    List<VanityDomain> subdomains = new ArrayList<>();
+    Optional<Pair<VanityDomain, EntityConfigKV>> thisDomain = Optional.empty();
+    for (EntityConfigKV entityConfigKV : domainConfig) {
+      VanityDomain vanityDomain = mapper.convertValue(entityConfigKV.getConfigVal(), VanityDomain.class);
+      if (StringUtils.equalsIgnoreCase(vanityDomain.getDomainName(), fullDomain)) {
+        thisDomain = Optional.of(Pair.with(vanityDomain, entityConfigKV));
+      } else {
+        subdomains.add(vanityDomain);
+      }
+    }
+
+    return Pair.with(thisDomain, subdomains);
+  }
+
   @Transactional
-  public RespVanityDomain addNewVanityDomain(String domainName, Long orgId, User user) {
-    VanityDomain vanityDomain = VanityDomain.builder()
-      .domainName(domainName)
-      .createdAt(Timestamp.from(Instant.now()))
-      .status(VanityDomainDeploymentStatus.Requested)
-      .build();
+  public RespVanityDomain addNewVanityDomain(ReqCreateOrDeleteNewVanityDomain req, Long orgId, User user) {
+    // If the domain is already present in db that means a request has been sent already in that case simply
+    // return the value
+    Pair<Optional<Pair<VanityDomain, EntityConfigKV>>, List<VanityDomain>> maybeDomain = getDomainIfExists(orgId, req.getApexDomainName(), req.getDomainName());
+    if (maybeDomain.getValue0().isPresent()) {
+      return RespVanityDomain.from(maybeDomain.getValue0().get().getValue0());
+    }
+
+    // If a new domain request is sent
+    VanityDomain.VanityDomainBuilder vanityDomainBuilder = VanityDomain.builder()
+      .domainName(req.getDomainName())
+      .subdomainName(req.getSubdomainName())
+      .apexDomainName(req.getApexDomainName())
+      .createdAt(Timestamp.from(Instant.now()));
+
+    VanityDomain vanityDomain;
+    String reasonForManualRequest = "";
+    try {
+      Optional<ProxyClusterCreationData> maybeCluster = customDomainService.getProvisionedClusterForNewSSLCreation(req.getApexDomainName());
+      ProxyClusterCreationData clusterWithData = maybeCluster.orElseThrow(() -> new RuntimeException("No empty cluster found for ssl cert creation"));
+
+      vanityDomain = vanityDomainBuilder
+        .cluster(clusterWithData.getCluster().name())
+        .status(VanityDomainDeploymentStatus.InProgress).build();
+
+      List<VanityDomain> allDomainsToAdd = new ArrayList<>();
+      allDomainsToAdd.add(vanityDomain);
+      allDomainsToAdd.addAll(maybeDomain.getValue1());
+      if (clusterWithData.isApexDomainPresent()) {
+        // Apex domain with subdomain already present then update
+        customDomainService.updateExistingDomain(clusterWithData.getCluster(), req.getApexDomainName(), allDomainsToAdd);
+      } else {
+        // If there is no apex domain registered before register a new one
+        customDomainService.registerNewDomain(clusterWithData.getCluster(), req.getApexDomainName(), allDomainsToAdd);
+      }
+    } catch (Exception e) {
+      vanityDomain = vanityDomainBuilder.status(VanityDomainDeploymentStatus.ManualInterventionNeeded).build();
+      reasonForManualRequest = e.getMessage();
+      log.error("Error while creating ssl cert upstream", e);
+      Sentry.captureException(e);
+    }
 
     EntityConfigKV config = EntityConfigKV.builder()
       .entityType(ConfigEntityType.Org)
       .entityId(orgId)
       .configType(EntityConfigConfigType.VANITY_DOMAIN)
-      .configKey(domainName)
+      .configKey(req.getApexDomainName())
       .configVal(vanityDomain)
       .build();
 
     EntityConfigKV savedConfig = entityConfigKVRepo.save(config);
 
-    try {
-      slackMsgService.sendCustomDomainReq(
-        orgId,
-        user.getEmail(),
-        savedConfig.getId(),
-        "issue_new",
-        vanityDomain
-      );
-    } catch (IOException e) {
-      log.error("Couldn't send slack notification for new custom domain. Issue new {}", savedConfig.getId());
-      Sentry.captureException(e);
-    }
-
-    return RespVanityDomain.from(vanityDomain);
-  }
-
-  @Transactional
-  public List<RespVanityDomain> deleteVanityDomain(String domainName, Long orgId, User user) {
-    List<EntityConfigKV> entity = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
-      ConfigEntityType.Org,
-      orgId,
-      EntityConfigConfigType.VANITY_DOMAIN,
-      domainName
-    );
-
-    for (EntityConfigKV item : entity) {
+    if (vanityDomain.getStatus() == VanityDomainDeploymentStatus.Requested || vanityDomain.getStatus() == VanityDomainDeploymentStatus.ManualInterventionNeeded) {
       try {
         slackMsgService.sendCustomDomainReq(
           orgId,
           user.getEmail(),
-          item.getId(),
-          "delete_custom_domain",
-          item.getConfigVal()
+          savedConfig.getId(),
+          "issue_new",
+          reasonForManualRequest,
+          vanityDomain
         );
       } catch (IOException e) {
-        log.error("Couldn't send slack notification for new custom domain. delete existing {}", item.getId());
+        log.error("Couldn't send slack notification for new custom domain. Issue new {}", savedConfig.getId());
         Sentry.captureException(e);
       }
     }
+    return RespVanityDomain.from(vanityDomain);
+  }
 
-    entityConfigKVRepo.deleteAll(entity);
+  @Transactional
+  public List<RespVanityDomain> deleteVanityDomain(ReqCreateOrDeleteNewVanityDomain req, Long orgId, User user) {
+    Pair<Optional<Pair<VanityDomain, EntityConfigKV>>, List<VanityDomain>> maybeDomain = getDomainIfExists(orgId, req.getApexDomainName(), req.getDomainName());
+    if (maybeDomain.getValue0().isEmpty()) return getAllVanityDomains(orgId);
+
+
+    List<VanityDomain> subdomains = maybeDomain.getValue1();
+    VanityDomain subdomainTobeDeleted = maybeDomain.getValue0().get().getValue0();
+    if (subdomainTobeDeleted.getCluster() != null) {
+      if (!subdomains.isEmpty()) {
+        // if subdomain exists for apex domain just delete the subdomain
+        customDomainService.updateExistingDomain(subdomainTobeDeleted.getCluster(), req.getApexDomainName(), subdomains);
+      } else {
+        customDomainService.deleteDomain(subdomainTobeDeleted.getCluster(), req.getApexDomainName());
+      }
+    }
+
+    entityConfigKVRepo.delete(maybeDomain.getValue0().get().getValue1());
     return getAllVanityDomains(orgId);
+  }
+
+  @Transactional
+  public RespVanityDomain getAndUpdateStatusForVanityDomain(ReqCreateOrDeleteNewVanityDomain req, Long orgId, User user) {
+    Pair<Optional<Pair<VanityDomain, EntityConfigKV>>, List<VanityDomain>> maybeDomain = getDomainIfExists(orgId, req.getApexDomainName(), req.getDomainName());
+
+    if (maybeDomain.getValue0().isEmpty()) return null;
+    VanityDomain vanityDomain = maybeDomain.getValue0().get().getValue0();
+
+    if (vanityDomain.getStatus() == VanityDomainDeploymentStatus.InProgress || vanityDomain.getStatus() == VanityDomainDeploymentStatus.VerificationPending) {
+      DomainAssociationStatus associationStatus = customDomainService.getAssociationStatus(vanityDomain);
+
+      VanityDomainRecords subdomainRecord = getRecordSetFromString(associationStatus.getSubdomainDNSRecords(), "Subdomain Record");
+      VanityDomainRecords verificationRecord = getRecordSetFromString(associationStatus.getCertificateVerificationDNSRecords(), "Verification Record");
+      List<VanityDomainRecords> records = new LinkedList<>();
+      if (subdomainRecord != null) records.add(subdomainRecord);
+      if (verificationRecord != null) records.add(verificationRecord);
+      vanityDomain.setRecords(records);
+
+      if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.PENDING_VERIFICATION ||
+        associationStatus.getApexDomainVerificationStatus() == DomainStatus.UPDATING) {
+        vanityDomain.setStatus(VanityDomainDeploymentStatus.VerificationPending);
+      } else if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.FAILED) {
+        vanityDomain.setStatus(VanityDomainDeploymentStatus.Failed);
+      } else if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.AVAILABLE) {
+        vanityDomain.setStatus(VanityDomainDeploymentStatus.Issued);
+      }
+    }
+    EntityConfigKV conf = maybeDomain.getValue0().get().getValue1();
+    conf.setConfigVal(vanityDomain);
+    entityConfigKVRepo.save(conf);
+    return RespVanityDomain.from(vanityDomain);
   }
 }

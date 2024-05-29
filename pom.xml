@@ -71,6 +71,11 @@
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-amplify</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>${aws.sdk.version}</version>
         </dependency>

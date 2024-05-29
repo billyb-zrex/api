@@ -586,3 +586,25 @@ Content-Type: application/json
     "untitled-ivmkaqafd1gwr8lg"
   ]
 }
+
+### create new domain
+POST {{api-host}}/v1/f/vanitydomain
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "domainName": "home3.blackdog.com",
+  "subdomainName": "home3",
+  "apexDomainName": "blackdog.com"
+}
+
+### probe domain
+POST {{api-host}}/v1/f/vanitydomain/probe
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "domainName": "home3.blackdog.com",
+  "subdomainName": "home3",
+  "apexDomainName": "blackdog.com"
+}

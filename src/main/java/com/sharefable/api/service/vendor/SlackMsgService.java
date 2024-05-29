@@ -39,6 +39,7 @@ public class SlackMsgService {
     String email,
     Long configId,
     String action,
+    String reason,
     Object customDomain
   ) throws IOException {
     String jsonStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Map.of(
@@ -47,6 +48,7 @@ public class SlackMsgService {
       "requester_email", email,
       "EntityConfigKvId", configId,
       "action", action,
+      "reason", reason,
       "customDomain", customDomain
     ));
     Payload payload = Payload.builder()

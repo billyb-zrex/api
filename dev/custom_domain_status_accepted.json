@@ -1,22 +1,24 @@
 {
-  "status": "Requested",
+  "status": "Issued",
   "cluster": "proxy1.app.sharefable.com",
   "records": [
     {
       "recordType": "CNAME",
       "recordDes": "Verification record",
-      "recordKey": "_817fed9b42a84125021f1371a7a08c81.proxyfable.com.",
-      "recordValue": "_52271d8a6c4173988fcd2bda6a6984ba.sdgjtdhdhz.acm-validations.aws."
+      "recordKey": "_dbade64137a2c679e0633aa7d05ce896.yjbn-media.com.",
+      "recordValue": "_9f4b5311d83ffa1dad2a27310e2496f7.sdgjtdhdhz.acm-validations.aws."
     },
     {
       "recordType": "CNAME",
       "recordDes": "Subdomain record",
-      "recordKey": "sslhs",
-      "recordValue": "d13w95vz2sk3es.cloudfront.net"
+      "recordKey": "recording",
+      "recordValue": "dclz0y3ksvoii.cloudfront.net"
     }
   ],
-  "createdAt": 1716589445644,
   "deployedOn": "AWS_AMPLIFY",
-  "domainName": "home.acme.com",
+  "domainName": "recording.yjbn-media.com",
+  "createdAt": 1716627030891,
   "rejectionReason": null
 }
+
+

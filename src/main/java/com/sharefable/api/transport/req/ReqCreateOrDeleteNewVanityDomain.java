@@ -11,4 +11,6 @@ import lombok.NoArgsConstructor;
 @GenerateTSDef
 public class ReqCreateOrDeleteNewVanityDomain {
   String domainName;
+  String subdomainName;
+  String apexDomainName;
 }

@@ -13,6 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VanityDomain {
+  public String subdomainName;
+  public String apexDomainName;
   private String domainName;
   private Timestamp createdAt;
   private String cluster;
