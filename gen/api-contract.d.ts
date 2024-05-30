@@ -460,6 +460,7 @@ export interface RespTour extends ResponseBase {
     site: { [index: string]: any };
     responsive: boolean;
     responsive2: Responsiveness;
+    deleted: TourDeleted;
     settings?: TourSettings;
 }
 
@@ -658,6 +659,11 @@ export const enum SchemaVersion {
 export const enum ScreenType {
     Img = 0,
     SerDom = 1,
+}
+
+export const enum TourDeleted {
+    ACTIVE = 0,
+    DELETED = 1,
 }
 
 export const enum VideoProcessingSub {

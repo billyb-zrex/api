@@ -9,6 +9,7 @@ import com.sharefable.api.repo.HouseLeadInfoRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.service.NfHookService;
 import com.sharefable.api.transport.NfEvents;
+import com.sharefable.api.transport.TourDeleted;
 import com.sharefable.api.transport.req.ReqCobaltEvent;
 import com.sharefable.api.transport.req.ReqNewLinkedAccount;
 import com.sharefable.api.transport.resp.RespAccountToken;
@@ -89,7 +90,7 @@ public class CobaltService {
   }
 
   public void sendEventPublic(ReqCobaltEvent event, String tourRid) {
-    Optional<Tour> maybeTour = tourRepo.findByRid(tourRid);
+    Optional<Tour> maybeTour = tourRepo.findByRidAndDeletedEquals(tourRid, TourDeleted.ACTIVE);
     if (maybeTour.isEmpty()) return;
 
     event.payload().put("demo_url", appConfig.getDns() + "/live/demo/" + maybeTour.get().getRid());

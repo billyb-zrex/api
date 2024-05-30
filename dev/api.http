@@ -193,6 +193,10 @@ Content-Type: application/json
 GET {{api-host}}/v1/tour?rid=untitled-4n0193hgecfkf2qn&s=1
 Content-Type: application/json
 
+### get deleted tour by rid
+GET {{api-host}}/v1/tour?rid=sms-it-rn4haa54iun1j907&_i=1
+Content-Type: application/json
+
 
 ### get s3 presigned url
 # {param} te => base64 encoding of content type (like image/png)

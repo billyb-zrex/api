@@ -15,6 +15,7 @@ import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.ScreenType;
+import com.sharefable.api.transport.TourDeleted;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespScreen;
 import lombok.extern.slf4j.Slf4j;
@@ -135,7 +136,7 @@ public class ScreenService extends ServiceBase {
     String tourRid = body.tourRid();
 
     Optional<Screen> maybeScreen = screenRepo.findById(parentId);
-    Optional<Tour> maybeTour = tourRepo.findByRid(tourRid);
+    Optional<Tour> maybeTour = tourRepo.findByRidAndDeletedEquals(tourRid, TourDeleted.ACTIVE);
 
     if (maybeScreen.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Screen with id %s not found", parentId));

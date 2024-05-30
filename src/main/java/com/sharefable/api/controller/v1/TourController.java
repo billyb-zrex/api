@@ -11,6 +11,7 @@ import com.sharefable.api.service.TourService;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.EditTour;
 import com.sharefable.api.transport.OnboardingTourForPrev;
+import com.sharefable.api.transport.TourDeleted;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespTour;
@@ -40,7 +41,7 @@ public class TourController {
   //@PreAuthorize("hasAuthority(@Perm.READ_TOUR)")
   public ApiResp<RespTour[]> getAllTours(@AuthUser User user) {
     Long orgId = user.getBelongsToOrg();
-    List<RespTour> allTours = tourService.getAllToursForOrg(orgId);
+    List<RespTour> allTours = tourService.getAllToursForOrg(orgId, TourDeleted.ACTIVE);
     return ApiResp.<RespTour[]>builder().status(ApiResp.ResponseStatus.Success).data(allTours.toArray(RespTour[]::new)).build();
   }
 
@@ -53,8 +54,8 @@ public class TourController {
   }
 
   @RequestMapping(value = Routes.GET_TOUR, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  public ApiResp<RespTour> getTourByRId(@RequestParam("rid") String rId, @RequestParam("s") Optional<Boolean> shouldGetScreens) {
-    RespTour tour = tourService.getTourByRid(rId, shouldGetScreens.orElse(Boolean.FALSE));
+  public ApiResp<RespTour> getTourByRId(@RequestParam("rid") String rId, @RequestParam("s") Optional<Boolean> shouldGetScreens, @RequestParam("_i") Optional<Boolean> shouldGetDeleted) {
+    RespTour tour = tourService.getTourByRid(rId, shouldGetScreens.orElse(Boolean.FALSE), shouldGetDeleted.orElse(Boolean.FALSE));
     return ApiResp.<RespTour>builder().data(tour).build();
   }
 
@@ -152,7 +153,7 @@ public class TourController {
       log.error("Can't find api key {}", apiKey);
       throw new ResponseStatusException(HttpStatusCode.valueOf(404));
     }
-    List<RespTour> allTours = tourService.getAllToursForOrg(key.getOrg().getId());
+    List<RespTour> allTours = tourService.getAllToursForOrg(key.getOrg().getId(), TourDeleted.ACTIVE);
     log.info("GET_ALL_TOURS_API_KEY  orgId {} len {}", key.getOrg().getId(), allTours.size());
     return ApiResp.<List<RespTour>>builder().status(ApiResp.ResponseStatus.Success).data(allTours).build();
   }

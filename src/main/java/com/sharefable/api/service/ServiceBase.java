@@ -12,6 +12,7 @@ import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.ScreenRepo;
 import com.sharefable.api.repo.TourRepo;
+import com.sharefable.api.transport.TourDeleted;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -148,6 +149,14 @@ public abstract class ServiceBase implements DefaultThumbnail {
       log.error("Can't update edit or retrieve analytics for {} {} as it's not found", entityType, rid);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "");
     }
+
+    if (entityType.equals("tour")) {
+      Tour tour = (Tour) maybeEntity.get();
+      if (tour.getDeleted() == TourDeleted.DELETED) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour with rid " + rid + " is not found");
+      }
+    }
+
     EntityBaseWithOwnership entity = maybeEntity.get();
     if (!Objects.equals(entity.getBelongsToOrg(), user.getBelongsToOrg())) {
       log.error("Can't update edit or retrieve analytics for {} {} as it's belong to different org. Requested by user {}, belongs to org {}",

@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.Tour;
-import com.sharefable.api.transport.GenerateTSDef;
-import com.sharefable.api.transport.OptionalPropInTS;
-import com.sharefable.api.transport.Responsiveness;
-import com.sharefable.api.transport.TourSettings;
+import com.sharefable.api.transport.*;
 import io.sentry.Sentry;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +38,7 @@ public class RespTour extends ResponseBase {
   private Map<String, Object> site;
   private Boolean responsive;
   private Responsiveness responsive2;
+  private TourDeleted deleted;
   @OptionalPropInTS
   private TourSettings settings;
 

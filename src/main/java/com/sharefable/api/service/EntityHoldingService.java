@@ -18,42 +18,42 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class EntityHoldingService {
-    private final TourRepo tourRepo;
+  private final TourRepo tourRepo;
 
-    private final ScreenRepo screenRepo;
+  private final ScreenRepo screenRepo;
 
-    private final EntityHoldingRepo entityHoldingRepo;
+  private final EntityHoldingRepo entityHoldingRepo;
 
-    public EntityHoldingService(TourRepo tourRepo, ScreenRepo screenRepo, EntityHoldingRepo entityHoldingRepo) {
-        this.tourRepo = tourRepo;
-        this.screenRepo = screenRepo;
-        this.entityHoldingRepo = entityHoldingRepo;
+  public EntityHoldingService(TourRepo tourRepo, ScreenRepo screenRepo, EntityHoldingRepo entityHoldingRepo) {
+    this.tourRepo = tourRepo;
+    this.screenRepo = screenRepo;
+    this.entityHoldingRepo = entityHoldingRepo;
+  }
+
+  EntityHolding addAssociation(ReqEntityAssetAssn body, String assetKey, EntityHoldingInfoBase info) {
+    Optional<? extends EntityBaseWithReadableId> maybeEntity;
+    if (body.getEntityType() == EntityType.Screen) {
+      maybeEntity = screenRepo.findByRid(body.getEntityRid());
+    } else if (body.getEntityType() == EntityType.Tour) {
+      maybeEntity = tourRepo.findByRid(body.getEntityRid());
+    } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No association is mentioned");
     }
 
-    EntityHolding addAssociation(ReqEntityAssetAssn body, String assetKey, EntityHoldingInfoBase info) {
-        Optional<? extends EntityBaseWithReadableId> maybeEntity;
-        if (body.getEntityType() == EntityType.Screen) {
-            maybeEntity = screenRepo.findByRid(body.getEntityRid());
-        } else if (body.getEntityType() == EntityType.Tour) {
-            maybeEntity = tourRepo.findByRid(body.getEntityRid());
-        } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No association is mentioned");
-        }
-
-        if (maybeEntity.isEmpty()) {
-            log.error("Media processing is requested without explicit association with entity. Entity type {}, Entity rid {}",
-                body.getEntityType().name(),
-                body.getEntityRid());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No association is mentioned");
-        }
-
-        EntityHolding entityHolding = EntityHolding.builder()
-            .entityType(body.getEntityType())
-            .entityKey(maybeEntity.get().getId())
-            .assetKey(assetKey)
-            .info(info)
-            .build();
-
-        return entityHoldingRepo.save(entityHolding);
+    if (maybeEntity.isEmpty()) {
+      log.error("Media processing is requested without explicit association with entity. Entity type {}, Entity rid {}",
+        body.getEntityType().name(),
+        body.getEntityRid());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No association is mentioned");
     }
+
+    EntityHolding entityHolding = EntityHolding.builder()
+      .entityType(body.getEntityType())
+      .entityKey(maybeEntity.get().getId())
+      .assetKey(assetKey)
+      .info(info)
+      .build();
+
+    return entityHoldingRepo.save(entityHolding);
+  }
 }

@@ -74,8 +74,8 @@ public class TourService extends ServiceBase {
   }
 
   @Transactional
-  public List<RespTour> getAllToursForOrg(Long orgId) {
-    List<Tour> tours = tourRepo.findAllByBelongsToOrgOrderByUpdatedAtDesc(orgId);
+  public List<RespTour> getAllToursForOrg(Long orgId, TourDeleted deleted) {
+    List<Tour> tours = tourRepo.findAllByBelongsToOrgAndDeletedEqualsOrderByUpdatedAtDesc(orgId, deleted);
     return tours.stream().map(RespTour::from).collect(Collectors.toList());
   }
 
@@ -92,6 +92,7 @@ public class TourService extends ServiceBase {
       .rid(Utils.createReadableId(req.name()))
       .inProgress(false)
       .responsive(false)
+      .deleted(TourDeleted.ACTIVE)
       .responsive2(Responsiveness.NoChoice)
       .publishedVersion(0)
       .assetPrefixHash(prefixHash)
@@ -105,8 +106,8 @@ public class TourService extends ServiceBase {
   }
 
   @Transactional(readOnly = true)
-  public RespTour getTourByRid(String rid, boolean shouldGetScreens) {
-    Optional<Tour> maybeTour = tourRepo.findByRid(rid);
+  public RespTour getTourByRid(String rid, boolean shouldGetScreens, boolean shouldGetDeletedTour) {
+    Optional<Tour> maybeTour = tourRepo.findByRidAndDeletedEquals(rid, shouldGetDeletedTour ? TourDeleted.DELETED : TourDeleted.ACTIVE);
     if (maybeTour.isEmpty()) {
       log.error("Can't get tour by rid {}", rid);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
@@ -202,6 +203,7 @@ public class TourService extends ServiceBase {
       .displayName(fromTour.getDisplayName())
       .description(fromTour.getDescription())
       .site(fromTour.getSite())
+      .deleted(fromTour.getDeleted())
       .onboarding(fromTour.getOnboarding())
       .settings(fromTour.getSettings())
       .createdBy(user);
@@ -296,8 +298,9 @@ public class TourService extends ServiceBase {
   @Transactional
   public List<RespTour> removeTour(ReqTourRid body, User userEntity) {
     Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
-    tourRepo.delete(tour);
-    return getAllToursForOrg(userEntity.getBelongsToOrg());
+    tour.setDeleted(TourDeleted.DELETED);
+    tourRepo.save(tour);
+    return getAllToursForOrg(userEntity.getBelongsToOrg(), TourDeleted.ACTIVE);
   }
 
 
@@ -309,7 +312,7 @@ public class TourService extends ServiceBase {
 
   @Transactional
   public RespTour publishTour(ReqTourRid body, RespCommonConfig commonConfig) {
-    Optional<Tour> maybeTour = tourRepo.findByRid(body.tourRid());
+    Optional<Tour> maybeTour = tourRepo.findByRidAndDeletedEquals(body.tourRid(), TourDeleted.ACTIVE);
     if (maybeTour.isEmpty()) throw new RuntimeException("tour not present");
     return copyDataForPublishTour(maybeTour.get(), commonConfig);
   }
@@ -497,8 +500,7 @@ public class TourService extends ServiceBase {
       User user = userService.settingUserBelongsTo(maybeUser.get(), body.orgId());
 
       List<RespTourWithScreens> copiedTours = new ArrayList<>();
-      List<Tour> allToursByRid = tourRepo.findAllByRidIn(body.rids());
-
+      List<Tour> allToursByRid = tourRepo.findAllByRidInAndDeletedEquals(body.rids(), TourDeleted.ACTIVE);
       if (allToursByRid != null) {
         for (Tour tour : allToursByRid) {
           copiedTours.add(this.duplicateTour(tour, user,
