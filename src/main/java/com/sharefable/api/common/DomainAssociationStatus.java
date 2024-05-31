@@ -12,4 +12,5 @@ public class DomainAssociationStatus {
   private boolean isSubdomainVerified;
   private String subdomainDNSRecords;
   private String certificateVerificationDNSRecords;
+  private String statusReason;
 }

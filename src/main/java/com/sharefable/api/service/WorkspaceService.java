@@ -1,5 +1,6 @@
 package com.sharefable.api.service;
 
+import com.amazonaws.services.amplify.model.BadRequestException;
 import com.amazonaws.services.amplify.model.DomainStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.*;
@@ -398,6 +399,7 @@ public class WorkspaceService extends ServiceBase {
 
     VanityDomain vanityDomain;
     String reasonForManualRequest = "";
+    boolean fatalError = false;
     try {
       Optional<ProxyClusterCreationData> maybeCluster = customDomainService.getProvisionedClusterForNewSSLCreation(req.getApexDomainName());
       ProxyClusterCreationData clusterWithData = maybeCluster.orElseThrow(() -> new RuntimeException("No empty cluster found for ssl cert creation"));
@@ -416,35 +418,45 @@ public class WorkspaceService extends ServiceBase {
         // If there is no apex domain registered before register a new one
         customDomainService.registerNewDomain(clusterWithData.getCluster(), req.getApexDomainName(), allDomainsToAdd);
       }
+    } catch (BadRequestException e) {
+      log.error("Bad request while creating ssl cert upstream", e);
+      Sentry.captureException(e);
+      fatalError = true;
+      vanityDomain = vanityDomainBuilder.status(VanityDomainDeploymentStatus.ManualInterventionNeeded).build();
     } catch (Exception e) {
       vanityDomain = vanityDomainBuilder.status(VanityDomainDeploymentStatus.ManualInterventionNeeded).build();
       reasonForManualRequest = e.getMessage();
       log.error("Error while creating ssl cert upstream", e);
       Sentry.captureException(e);
     }
+    EntityConfigKV savedConfig = null;
+    if (!fatalError) {
+      EntityConfigKV config = EntityConfigKV.builder()
+        .entityType(ConfigEntityType.Org)
+        .entityId(orgId)
+        .configType(EntityConfigConfigType.VANITY_DOMAIN)
+        .configKey(req.getApexDomainName())
+        .configVal(vanityDomain)
+        .build();
+      savedConfig = entityConfigKVRepo.save(config);
+    }
 
-    EntityConfigKV config = EntityConfigKV.builder()
-      .entityType(ConfigEntityType.Org)
-      .entityId(orgId)
-      .configType(EntityConfigConfigType.VANITY_DOMAIN)
-      .configKey(req.getApexDomainName())
-      .configVal(vanityDomain)
-      .build();
-
-    EntityConfigKV savedConfig = entityConfigKVRepo.save(config);
-
-    if (vanityDomain.getStatus() == VanityDomainDeploymentStatus.Requested || vanityDomain.getStatus() == VanityDomainDeploymentStatus.ManualInterventionNeeded) {
+    if (
+      fatalError
+        || vanityDomain.getStatus() == VanityDomainDeploymentStatus.Requested
+        || vanityDomain.getStatus() == VanityDomainDeploymentStatus.ManualInterventionNeeded) {
+      Long id = savedConfig == null ? -1 : savedConfig.getId();
       try {
         slackMsgService.sendCustomDomainReq(
           orgId,
           user.getEmail(),
-          savedConfig.getId(),
+          id,
           "issue_new",
           reasonForManualRequest,
           vanityDomain
         );
       } catch (IOException e) {
-        log.error("Couldn't send slack notification for new custom domain. Issue new {}", savedConfig.getId());
+        log.error("Couldn't send slack notification for new custom domain. Issue new {}", id);
         Sentry.captureException(e);
       }
     }
@@ -479,7 +491,10 @@ public class WorkspaceService extends ServiceBase {
     if (maybeDomain.getValue0().isEmpty()) return null;
     VanityDomain vanityDomain = maybeDomain.getValue0().get().getValue0();
 
-    if (vanityDomain.getStatus() == VanityDomainDeploymentStatus.InProgress || vanityDomain.getStatus() == VanityDomainDeploymentStatus.VerificationPending) {
+    if (vanityDomain.getStatus() == VanityDomainDeploymentStatus.InProgress
+      || vanityDomain.getStatus() == VanityDomainDeploymentStatus.VerificationPending
+      || vanityDomain.getStatus() == VanityDomainDeploymentStatus.DeploymentPending
+    ) {
       DomainAssociationStatus associationStatus = customDomainService.getAssociationStatus(vanityDomain);
 
       VanityDomainRecords subdomainRecord = getRecordSetFromString(associationStatus.getSubdomainDNSRecords(), "Subdomain Record");
@@ -489,13 +504,19 @@ public class WorkspaceService extends ServiceBase {
       if (verificationRecord != null) records.add(verificationRecord);
       vanityDomain.setRecords(records);
 
-      if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.PENDING_VERIFICATION ||
-        associationStatus.getApexDomainVerificationStatus() == DomainStatus.UPDATING) {
+      if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.PENDING_VERIFICATION
+        || associationStatus.getApexDomainVerificationStatus() == DomainStatus.UPDATING) {
         vanityDomain.setStatus(VanityDomainDeploymentStatus.VerificationPending);
       } else if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.FAILED) {
+        String failureReason = associationStatus.getStatusReason();
+        if (StringUtils.isNotBlank(failureReason) && StringUtils.containsIgnoreCase(failureReason, "CAA record that does not include Amazon as an approved Certificate Authority")) {
+          vanityDomain.setRejectionReason("CAA_INVALID");
+        }
         vanityDomain.setStatus(VanityDomainDeploymentStatus.Failed);
       } else if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.AVAILABLE) {
         vanityDomain.setStatus(VanityDomainDeploymentStatus.Issued);
+      } else if (associationStatus.getApexDomainVerificationStatus() == DomainStatus.PENDING_DEPLOYMENT) {
+        vanityDomain.setStatus(VanityDomainDeploymentStatus.DeploymentPending);
       }
     }
     EntityConfigKV conf = maybeDomain.getValue0().get().getValue1();

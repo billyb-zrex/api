@@ -79,6 +79,7 @@ public class AwsAmplifyCustomDomainService {
     req.withAppId(cluster.id()).withDomainName(vanityDomain.getApexDomainName());
     GetDomainAssociationResult resp = client.getDomainAssociation(req);
 
+    String statusReason = resp.getDomainAssociation().getStatusReason();
     DomainStatus domainStatus = DomainStatus.fromValue(
       // For some reason AWAITING_APP_CNAME is not present in enum
       StringUtils.equalsIgnoreCase(resp.getDomainAssociation().getDomainStatus(), "AWAITING_APP_CNAME") ? DomainStatus.PENDING_VERIFICATION.toString() : resp.getDomainAssociation().getDomainStatus()
@@ -91,6 +92,7 @@ public class AwsAmplifyCustomDomainService {
       SubDomain sub = subdomains.get(0);
       return DomainAssociationStatus.builder()
         .apexDomainVerificationStatus(domainStatus)
+        .statusReason(statusReason)
         .isSubdomainVerified(sub.isVerified())
         .subdomainName(sub.getSubDomainSetting().getPrefix())
         .certificateVerificationDNSRecords(resp.getDomainAssociation().getCertificateVerificationDNSRecord())
@@ -100,6 +102,7 @@ public class AwsAmplifyCustomDomainService {
 
     return DomainAssociationStatus.builder()
       .apexDomainVerificationStatus(domainStatus)
+      .statusReason(statusReason)
       .build();
   }
 

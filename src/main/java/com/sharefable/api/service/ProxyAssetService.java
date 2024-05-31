@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
-import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -100,8 +99,10 @@ public class ProxyAssetService {
       HttpEntity<Void> entity = new HttpEntity<>(headers);
 
 
-      String orginEncoded = UriUtils.encodePath(origin, StandardCharsets.UTF_8);
-      ResponseEntity<byte[]> resp = this.restClient.exchange(orginEncoded, HttpMethod.GET, entity, byte[].class);
+      ResponseEntity<byte[]> resp = this.restClient.exchange(origin, HttpMethod.GET, entity, byte[].class);
+      // temp revert
+//      String orginEncoded = UriUtils.encodePath(origin, StandardCharsets.UTF_8);
+//      ResponseEntity<byte[]> resp = this.restClient.exchange(orginEncoded, HttpMethod.GET, entity, byte[].class);
       // if css then convert the body to string and parse the body for further urls and process those again
       // if not then continue with previous code
 

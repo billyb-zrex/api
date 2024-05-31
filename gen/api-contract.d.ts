@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-05-29 13:21:55.
+// Generated using typescript-generator version 2.35.1025 on 2024-05-31 08:01:48.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -763,6 +763,7 @@ export const enum VanityDomainDeploymentStatus {
     ManualInterventionNeeded = "ManualInterventionNeeded",
     InProgress = "InProgress",
     VerificationPending = "VerificationPending",
+    DeploymentPending = "DeploymentPending",
     Issued = "Issued",
     Failed = "Failed",
 }

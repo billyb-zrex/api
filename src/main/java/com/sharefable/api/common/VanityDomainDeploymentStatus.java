@@ -5,6 +5,7 @@ public enum VanityDomainDeploymentStatus {
   ManualInterventionNeeded, // for any deployment failure from aws end
   InProgress,
   VerificationPending,
+  DeploymentPending,
   Issued,
   Failed
 }
