@@ -5,6 +5,7 @@ public interface Routes {
 
   /* === Vendor prefix === */
   String COBALT = "/vr/ct";
+  String EMBEDLY = "/vr/embdly";
   String APP_SUMO = "/vr/as";
   String HUBSPOT = "/vr/hs";
   String ZAPIER = "/vr/zp";
@@ -80,6 +81,7 @@ public interface Routes {
   String TOKEN_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/tknlnkdacc";
   String LIST_APPS_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/lstapp";
   String COBALT_EVENT_AUTHED = __BEHIND_LOGIN__ + COBALT + "/evnt";
+  String EMBEDLY_EMBED = EMBEDLY + "/embed";
   String TENANT_INTEGRATIONS = __BEHIND_LOGIN__ + "/tenant_integrations";
   String TENANT_INTEGRATION = __BEHIND_LOGIN__ + "/tenant_integration";
   String DEL_TENANT_INTEGRATION = __BEHIND_LOGIN__ + "/delete/tenant_integration/{id}";

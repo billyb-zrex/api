@@ -612,3 +612,9 @@ Authorization: {{auth-header}}
   "subdomainName": "home3",
   "apexDomainName": "blackdog.com"
 }
+
+
+### embedly
+GET {{api-host}}/v1/vr/embdly/embed?url=https%3A%2F%2Fapp.sharefable.com%2Flive%2Fdemo%2Fgcal-demo-3mfa0nl5v6pqz6ro&
+    format=json
+Content-Type: application/json
