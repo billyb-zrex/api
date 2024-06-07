@@ -8,7 +8,9 @@ public class PaymentTerms {
     BUSINESS,
     LIFETIME_TIER1,
     LIFETIME_TIER2,
-    LIFETIME_TIER3
+    LIFETIME_TIER3,
+    LIFETIME_TIER4,
+    LIFETIME_TIER5
   }
 
   public enum Interval {

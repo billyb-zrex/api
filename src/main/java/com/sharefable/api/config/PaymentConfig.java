@@ -49,6 +49,14 @@ public class PaymentConfig {
     PaymentTerms.Plan.LIFETIME_TIER3,
     Map.of(
       PaymentTerms.Interval.LIFETIME, "tier-3-USD-lifetime"
+    ),
+    PaymentTerms.Plan.LIFETIME_TIER4,
+    Map.of(
+      PaymentTerms.Interval.LIFETIME, "tier-4-USD-lifetime"
+    ),
+    PaymentTerms.Plan.LIFETIME_TIER5,
+    Map.of(
+      PaymentTerms.Interval.LIFETIME, "tier-5-USD-lifetime"
     )
   );
 

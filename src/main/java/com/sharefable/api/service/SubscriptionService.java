@@ -100,10 +100,12 @@ public class SubscriptionService {
             tier = (Integer) rawTier;
           }
           PaymentTerms.Plan plan = switch (tier) {
-            case 1 -> PaymentTerms.Plan.LIFETIME_TIER1;
             case 2 -> PaymentTerms.Plan.LIFETIME_TIER2;
-            // case 3
-            default -> PaymentTerms.Plan.LIFETIME_TIER3;
+            case 3 -> PaymentTerms.Plan.LIFETIME_TIER3;
+            case 4 -> PaymentTerms.Plan.LIFETIME_TIER4;
+            case 5 -> PaymentTerms.Plan.LIFETIME_TIER5;
+            // case 1
+            default -> PaymentTerms.Plan.LIFETIME_TIER1;
           };
           builder
             .paymentPlanId(paymentConfig.getPlanId(plan, info.pricingInterval()))

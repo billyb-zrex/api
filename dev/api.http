@@ -618,3 +618,72 @@ Authorization: {{auth-header}}
 GET {{api-host}}/v1/vr/embdly/embed?url=https%3A%2F%2Fapp.sharefable.com%2Flive%2Fdemo%2Fgcal-demo-3mfa0nl5v6pqz6ro&
     format=json
 Content-Type: application/json
+
+### appsumo tier testing -- purchase event [1]
+POST {{api-host}}/v1/vr/as/whk
+Content-Type: application/json
+
+{
+  "tier": 1,
+  "event": "purchase",
+  "extra": {},
+  "plan_id": "19c82fdf9484460ad6be7d5509bf5a6cf8e52530c0e6516536a82bc4339a5905",
+  "created_at": 1714079801710,
+  "license_key": "lk666",
+  "license_status": "inactive",
+  "event_timestamp": 1714079801712
+}
+
+### appsumo tier testing -- activate event [2]
+POST {{api-host}}/v1/vr/as/whk
+Content-Type: application/json
+
+{
+  "tier": 1,
+  "event": "activate",
+  "extra": {
+    "reason": "Activated by user"
+  },
+  "plan_id": "19c82fdf9484460ad6be7d5509bf5a6cf8e52530c0e6516536a82bc4339a5905",
+  "created_at": 1714081572277,
+  "license_key": "lk666",
+  "license_status": "inactive",
+  "event_timestamp": 1714081572281
+}
+
+### appsumo tier testing -- upgrade event [3]
+POST {{api-host}}/v1/vr/as/whk
+Content-Type: application/json
+
+{
+  "tier": 5,
+  "event": "upgrade",
+  "extra": {
+    "reason": "Upgraded by customer"
+  },
+  "plan_id": "3f6a72e31e65ad58336a64470c6081d5c2f23ac0543afc1991aa3a393bd2d5e1",
+  "created_at": 1716522131798,
+  "license_key": "lk670",
+  "license_status": "inactive",
+  "event_timestamp": 1716522131801,
+  "prev_license_key": "669"
+}
+
+
+### appsumo tier testing --- downgrade event [4]
+POST {{api-host}}/v1/vr/as/whk
+Content-Type: application/json
+
+{
+  "license_key": "669",
+  "prev_license_key": "lk668",
+  "event": "downgrade",
+  "plan_id": "19c82fdf9484460ad6be7d5509bf5a6cf8e52530c0e6516536a82bc4339a5905",
+  "event_timestamp": 1716669896064,
+  "created_at": 1716669896061,
+  "license_status": "inactive",
+  "tier": 1,
+  "extra": {
+    "reason": "Downgraded by customer"
+  }
+}
