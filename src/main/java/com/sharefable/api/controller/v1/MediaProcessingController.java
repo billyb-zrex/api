@@ -7,8 +7,10 @@ import com.sharefable.api.transport.req.ReqMediaProcessing;
 import com.sharefable.api.transport.resp.RespMediaProcessingInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -40,7 +42,8 @@ public class MediaProcessingController {
   @RequestMapping(value = Routes.RESIZE_IMG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   //@PreAuthorize("hasAuthority(@Perm.WRITE_SCREEN)")
   public ApiResp<RespMediaProcessingInfo> resizeImage(@RequestBody ReqMediaProcessing body, @RequestParam("pr") Optional<String> proposedResolution) {
-    RespMediaProcessingInfo info = mpiService.resizeImage(body, proposedResolution.orElse("480"));
-    return ApiResp.<RespMediaProcessingInfo>builder().status(ApiResp.ResponseStatus.Success).data(info).build();
+    throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Forced shutdown service");
+//    RespMediaProcessingInfo info = mpiService.resizeImage(body, proposedResolution.orElse("480"));
+//    return ApiResp.<RespMediaProcessingInfo>builder().status(ApiResp.ResponseStatus.Success).data(info).build();
   }
 }
