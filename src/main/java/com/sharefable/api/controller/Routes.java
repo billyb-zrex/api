@@ -64,6 +64,7 @@ public interface Routes {
   String ONBOARDING_TOUR = __BEHIND_LOGIN__ + "/conbtrs";
   String ONBOARDING_TOUR_PREVIEW_ONLY = __BEHIND_LOGIN__ + "/onbtrspreview";
   String TRANSCODE_VIDEO = __BEHIND_LOGIN__ + "/vdt";
+  String TRANSCODE_AUDIO = __BEHIND_LOGIN__ + "/audt";
   String RESIZE_IMG = __BEHIND_LOGIN__ + "/rzeimg";
   String CHECKOUT = __BEHIND_LOGIN__ + "/checkout";
   String GET_SUBSCRIPTION = __BEHIND_LOGIN__ + "/subs";

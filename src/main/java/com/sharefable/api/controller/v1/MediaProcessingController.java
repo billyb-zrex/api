@@ -16,24 +16,31 @@ import java.util.Optional;
 @RequestMapping(Routes.API_V1)
 @Slf4j
 public class MediaProcessingController {
-    private final MediaProcessingService mpiService;
+  private final MediaProcessingService mpiService;
 
-    @Autowired
-    public MediaProcessingController(MediaProcessingService mpiService) {
-        this.mpiService = mpiService;
-    }
+  @Autowired
+  public MediaProcessingController(MediaProcessingService mpiService) {
+    this.mpiService = mpiService;
+  }
 
-    @RequestMapping(value = Routes.TRANSCODE_VIDEO, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-    public ApiResp<RespMediaProcessingInfo[]> transcodeVideo(@RequestBody ReqMediaProcessing body) {
-        RespMediaProcessingInfo[] infos = mpiService.transcodeVideoForStreaming(body);
-        return ApiResp.<RespMediaProcessingInfo[]>builder().status(ApiResp.ResponseStatus.Success).data(infos).build();
-    }
+  @RequestMapping(value = Routes.TRANSCODE_VIDEO, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespMediaProcessingInfo[]> transcodeVideo(@RequestBody ReqMediaProcessing body) {
+    RespMediaProcessingInfo[] infos = mpiService.transcodeVideoForStreaming(body);
+    return ApiResp.<RespMediaProcessingInfo[]>builder().status(ApiResp.ResponseStatus.Success).data(infos).build();
+  }
 
-    @RequestMapping(value = Routes.RESIZE_IMG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    //@PreAuthorize("hasAuthority(@Perm.WRITE_SCREEN)")
-    public ApiResp<RespMediaProcessingInfo> resizeImage(@RequestBody ReqMediaProcessing body, @RequestParam("pr") Optional<String> proposedResolution) {
-        RespMediaProcessingInfo info = mpiService.resizeImage(body, proposedResolution.orElse("480"));
-        return ApiResp.<RespMediaProcessingInfo>builder().status(ApiResp.ResponseStatus.Success).data(info).build();
-    }
+  @RequestMapping(value = Routes.TRANSCODE_AUDIO, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespMediaProcessingInfo[]> transcodeAudio(@RequestBody ReqMediaProcessing body) {
+    RespMediaProcessingInfo[] infos = mpiService.transcodeAudioForStreaming(body);
+    return ApiResp.<RespMediaProcessingInfo[]>builder().status(ApiResp.ResponseStatus.Success).data(infos).build();
+  }
+
+  @RequestMapping(value = Routes.RESIZE_IMG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_SCREEN)")
+  public ApiResp<RespMediaProcessingInfo> resizeImage(@RequestBody ReqMediaProcessing body, @RequestParam("pr") Optional<String> proposedResolution) {
+    RespMediaProcessingInfo info = mpiService.resizeImage(body, proposedResolution.orElse("480"));
+    return ApiResp.<RespMediaProcessingInfo>builder().status(ApiResp.ResponseStatus.Success).data(info).build();
+  }
 }

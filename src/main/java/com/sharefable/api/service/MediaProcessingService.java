@@ -65,38 +65,13 @@ public class MediaProcessingService {
       case CONVERT_TO_MP4 -> MediaType.VIDEO_MP4;
       case CONVERT_TO_HLS -> MediaType.VIDEO_HLS;
     };
-
-
-    String keyPath = getKeyPath(processedPath);
-    VideoTranscodingJobInfo jobInfo = VideoTranscodingJobInfo.builder()
-      .sourceFilePath(basePath)
-      .sub(sub)
-      .key(keyPath)
-      .processedFilePath(processedPath)
-      .build();
-
-    Job submittedJob = submitJob(keyPath, JobType.TRANSCODE_VIDEO, jobInfo);
-
-    String processedPathForClient = processedPath;
-    if (sub == VideoProcessingSub.CONVERT_TO_HLS) {
-      processedPathForClient += ".m3u8"; // send the file extension to client
-    }
-    return RespMediaProcessingInfo.builder()
-      .processingState(JobProcessingStatus.Touched)
-      .originalFilePath(basePath)
-      .jobId(submittedJob.getId())
-      .mediaType(mediaType)
-      .processedFilePath(processedPathForClient)
-      .createdAt(submittedJob.getCreatedAt())
-      .updatedAt(submittedJob.getUpdatedAt())
-      .build();
+    return submitTranscoding(sub, processedPath, basePath, JobType.TRANSCODE_VIDEO, mediaType);
   }
 
   @Transactional
   public RespMediaProcessingInfo[] transcodeVideoForStreaming(ReqMediaProcessing body) {
     RespMediaProcessingInfo mp4JobInfo = transcodeVideoWithFormat(VideoProcessingSub.CONVERT_TO_MP4, body.getPath());
     RespMediaProcessingInfo hlsJobInfo = transcodeVideoWithFormat(VideoProcessingSub.CONVERT_TO_HLS, body.getPath());
-
     String keyPath = getKeyPath(body.getPath());
     entityHoldingService.addAssociation(
       body.getAssn(),
@@ -157,5 +132,80 @@ public class MediaProcessingService {
       .build();
 
     submitJob(key, JobType.CREATE_DEMO_GIF, info);
+  }
+
+  private RespMediaProcessingInfo transcodeAudioWithFormat(AudioProcessingSub sub, String basePath) {
+    String processedPath = switch (sub) {
+      case CONVERT_TO_HLS -> String.format("%s_hls/master", basePath);
+      case CONVERT_TO_WEBM -> String.format("%s.webm", basePath);
+    };
+    MediaType mediaType = switch (sub) {
+      case CONVERT_TO_HLS -> MediaType.AUDIO_HLS;
+      case CONVERT_TO_WEBM -> MediaType.AUDIO_WEBM;
+    };
+
+    return submitTranscoding(sub, processedPath, basePath, JobType.TRANSCODE_AUDIO, mediaType);
+  }
+
+  @Transactional
+  public RespMediaProcessingInfo[] transcodeAudioForStreaming(ReqMediaProcessing body) {
+    RespMediaProcessingInfo hlsJobInfo = transcodeAudioWithFormat(AudioProcessingSub.CONVERT_TO_HLS, body.getPath());
+    RespMediaProcessingInfo webmJobInfo = transcodeAudioWithFormat(AudioProcessingSub.CONVERT_TO_WEBM, body.getPath());
+
+    String keyPath = getKeyPath(body.getPath());
+    entityHoldingService.addAssociation(
+      body.getAssn(),
+      keyPath,
+      MediaTypeEntityHolding.builder()
+        .fullFilePaths(new String[]{
+          body.getPath(),
+          hlsJobInfo.getProcessedFilePath(),
+          webmJobInfo.getProcessedFilePath(),
+        })
+        .build()
+    );
+
+    return new RespMediaProcessingInfo[]{hlsJobInfo, webmJobInfo};
+  }
+
+  public RespMediaProcessingInfo submitTranscoding(Enum<?> sub, String processedPath, String basePath, JobType jobType, MediaType mediaType) {
+    String keyPath = getKeyPath(processedPath);
+
+    JobProcessingInfo jobInfo;
+    if (sub instanceof AudioProcessingSub) {
+      jobInfo = AudioTranscodingJobInfo.builder()
+        .sourceFilePath(basePath)
+        .sub((AudioProcessingSub) sub)
+        .key(keyPath)
+        .processedFilePath(processedPath)
+        .build();
+    } else if (sub instanceof VideoProcessingSub) {
+      jobInfo = VideoTranscodingJobInfo.builder()
+        .sourceFilePath(basePath)
+        .sub((VideoProcessingSub) sub)
+        .key(keyPath)
+        .processedFilePath(processedPath)
+        .build();
+    } else {
+      log.error("The processing sub is not present");
+      throw new RuntimeException("The processing sub is not present");
+    }
+
+    String processedPathForClient = processedPath;
+    if (sub == VideoProcessingSub.CONVERT_TO_HLS || sub == AudioProcessingSub.CONVERT_TO_HLS) {
+      processedPathForClient += ".m3u8"; // send the file extension to client
+    }
+
+    Job submittedJob = submitJob(keyPath, jobType, jobInfo);
+
+    return RespMediaProcessingInfo.builder()
+      .processingState(JobProcessingStatus.Touched)
+      .originalFilePath(basePath)
+      .jobId(submittedJob.getId())
+      .mediaType(mediaType)
+      .processedFilePath(processedPathForClient)
+      .createdAt(submittedJob.getCreatedAt())
+      .updatedAt(submittedJob.getUpdatedAt())
+      .build();
   }
 }
