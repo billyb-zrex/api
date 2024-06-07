@@ -28,6 +28,7 @@ import java.util.Set;
 public class AnalyticsService extends ServiceBase {
   private static final String TABLE_NAME = "analytics_cta_clicked";
   private static final String TABLE_PREFIX = "analytics_";
+  private static final String LIFETIME = "20230100";
   private final ObjectMapper mapper = new ObjectMapper();
   private final AnalyticsMetricsRepo analyticsMetricsRepo;
   private final AnalyticsAnnClickRepo analyticsAnnClickRepo;
@@ -75,7 +76,7 @@ public class AnalyticsService extends ServiceBase {
       log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
       return RespTourView.Empty();
     }
-    String dateBeforeCertainDays = Utils.calculateParticularUtcDateFromCurrentUtc(days);
+    String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
     Long totalVisitors = analyticsMetricsRepo.findTotalVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
     Long uniqueViews = analyticsMetricsRepo.findUniqueVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
     List<TotalVisitorsByYmd> totalVisitorsByYmd = analyticsMetricsRepo.findTotalVisitorsByYmd(tour.getId(), dateBeforeCertainDays);
@@ -95,7 +96,7 @@ public class AnalyticsService extends ServiceBase {
       log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
       return RespTourAnnViews.Empty();
     }
-    String dateBeforeCertainDays = Utils.calculateParticularUtcDateFromCurrentUtc(days);
+    String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
     List<TourAnnWithViews> tourAnnWithViews = analyticsAnnClickRepo.findTotalViewsForAnn(tour.getId(), dateBeforeCertainDays);
     if (tourAnnWithViews.isEmpty()) {
       return RespTourAnnViews.Empty();
@@ -115,7 +116,7 @@ public class AnalyticsService extends ServiceBase {
       log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
       return RespTourAnnWithPercentile.Empty();
     }
-    String dateBeforeCertainDays = Utils.calculateParticularUtcDateFromCurrentUtc(days);
+    String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
     List<TourAnnViewsWithPercentile> annInfo = analyticsAnnClickRepo.findTotalViewWithPercentile(tour.getId(), dateBeforeCertainDays);
     if (annInfo.isEmpty()) {
       return RespTourAnnWithPercentile.Empty();
@@ -133,7 +134,7 @@ public class AnalyticsService extends ServiceBase {
       log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
       return RespConversion.Empty();
     }
-    String dateBeforeCertainDays = Utils.calculateParticularUtcDateFromCurrentUtc(days);
+    String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
     List<ButtonClicks> buttonInfo = analyticsConversionRepo.findClicksForAllButtonIdInATour(tour.getId(), dateBeforeCertainDays);
     if (buttonInfo.isEmpty()) {
       return RespConversion.Empty();
@@ -151,7 +152,7 @@ public class AnalyticsService extends ServiceBase {
     if (analyticsUserAidMapping.isEmpty()) {
       return RespTourLeads.Empty();
     }
-    String dateBeforeCertainDays = Utils.calculateParticularUtcDateFromCurrentUtc(days);
+    String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
     List<TourLeads> allTourLeads = analyticsUserAidMappingRepo.findLeadsByYmd(tour.getId(), dateBeforeCertainDays);
     Long uniqueEmails = analyticsUserAidMappingRepo.findUniqueEmails(tour.getId(), dateBeforeCertainDays);
     if (allTourLeads.isEmpty()) {
