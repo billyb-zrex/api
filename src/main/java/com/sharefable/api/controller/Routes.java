@@ -91,6 +91,9 @@ public interface Routes {
   String NEW_INVITE = __BEHIND_LOGIN__ + "/new/invite";
   String ALL_ORG_FOR_USER = __BEHIND_LOGIN__ + "/orgsfruser";
   String ASSIGN_ORG_TO_USER = __BEHIND_LOGIN__ + "/orgstouser";
+  String ADD_NEW_CUSTOM_FIELDS = __BEHIND_LOGIN__ + "/addcfields";
+  String DELETE_CUSTOM_FIELDS = __BEHIND_LOGIN__ + "/delcfields";
+  String GET_FIELDS = __BEHIND_LOGIN__ + "/cfields";
 
   /* === Cross service w/o authentication === */
 

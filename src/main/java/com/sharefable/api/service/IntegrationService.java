@@ -129,8 +129,8 @@ public class IntegrationService {
     tenantIntegrationRepo.deleteTenantIntegrationsByOrgIdAndIdIn(belongsToOrg, ids);
   }
 
-  public void executeIntegrationIfAny(String event, Map<String, String> payload) {
-    String tourIdRaw = payload.get("ti");
+  public void executeIntegrationIfAny(String event, Map<String, Object> payload) {
+    String tourIdRaw = payload.get("ti").toString();
     if (StringUtils.isBlank(tourIdRaw)) {
       log.error("Can't send event to integration as tourId is not present");
       return;

@@ -187,4 +187,22 @@ public class WorkspaceController {
     List<RespVanityDomain> resp = wsService.deleteVanityDomain(req, user.getBelongsToOrg(), user);
     return ApiResp.<List<RespVanityDomain>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
+
+  @RequestMapping(value = Routes.ADD_NEW_CUSTOM_FIELDS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<RespCustomField>> addCustomFields(@RequestBody ReqCreateOrDeleteCustomFields req, @AuthUser User user) {
+    List<RespCustomField> resp = wsService.addCustomFields(req, user.getBelongsToOrg());
+    return ApiResp.<List<RespCustomField>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.DELETE_CUSTOM_FIELDS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<RespCustomField>> deleteCustomFields(@RequestBody ReqCreateOrDeleteCustomFields req, @AuthUser User user) {
+    List<RespCustomField> resp = wsService.deleteCustomFields(req, user.getBelongsToOrg());
+    return ApiResp.<List<RespCustomField>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.GET_FIELDS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<RespCustomField>> getCustomFields(@AuthUser User user) {
+    List<RespCustomField> resp = wsService.getAllCustomFields(user.getBelongsToOrg());
+    return ApiResp.<List<RespCustomField>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
 }

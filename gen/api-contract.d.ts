@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-06-05 13:51:33.
+// Generated using typescript-generator version 2.35.1025 on 2024-06-14 21:43:19.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -160,7 +160,7 @@ export interface ReqAssignOrgToUser {
 
 export interface ReqCobaltEvent {
     event: string;
-    payload: { [index: string]: string };
+    payload: { [index: string]: any };
 }
 
 export interface ReqCopyScreen {
@@ -182,6 +182,10 @@ export interface ReqCreateOrUpdateTenantIntegration {
     disabled?: boolean;
     tourId?: number;
     tenantConfig: { [index: string]: any };
+}
+
+export interface ReqCustomFields {
+    customFields: any;
 }
 
 export interface ReqDeleteTenantIntegration {
@@ -351,6 +355,10 @@ export interface RespCommonConfig extends ResponseBase {
 export interface RespConversion {
     tourId: number;
     buttonsWithTotalClicks: ButtonClicks[];
+}
+
+export interface RespCustomFields {
+    customFields: any;
 }
 
 export interface RespHealth extends ResponseBase {
@@ -744,6 +752,8 @@ export const enum Plan {
     LIFETIME_TIER1 = "LIFETIME_TIER1",
     LIFETIME_TIER2 = "LIFETIME_TIER2",
     LIFETIME_TIER3 = "LIFETIME_TIER3",
+    LIFETIME_TIER4 = "LIFETIME_TIER4",
+    LIFETIME_TIER5 = "LIFETIME_TIER5",
 }
 
 export const enum Interval {

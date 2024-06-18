@@ -687,3 +687,35 @@ Content-Type: application/json
     "reason": "Downgraded by customer"
   }
 }
+
+### create custom fields
+POST {{api-host}}/v1/f/addcfields
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "customFields": [
+    "first_name",
+    "email",
+    "phone"
+  ]
+}
+
+### delete custom fields
+POST {{api-host}}/v1/f/delcfields
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "customFields": [
+    "first_name",
+    "family_name",
+    "phone"
+  ]
+}
+
+
+### get custom fields
+GET {{api-host}}/v1/f/cfields
+Content-Type: application/json
+Authorization: {{auth-header}}

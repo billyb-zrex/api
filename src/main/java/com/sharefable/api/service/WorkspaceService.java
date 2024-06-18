@@ -524,4 +524,57 @@ public class WorkspaceService extends ServiceBase {
     entityConfigKVRepo.save(conf);
     return RespVanityDomain.from(vanityDomain);
   }
+
+  @Transactional
+  public List<RespCustomField> addCustomFields(ReqCreateOrDeleteCustomFields req, Long orgId) {
+    List<EntityConfigKV> existingCustomFields = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKeyIn(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.CUSTOM_FORM_FIELDS,
+      req.customFields()
+    );
+
+    Set<String> fieldsTobeAdded = req.customFields();
+    for (EntityConfigKV field : existingCustomFields) {
+      fieldsTobeAdded.remove(field.getConfigKey());
+    }
+
+
+    List<EntityConfigKV> configs = fieldsTobeAdded.stream().map(field -> {
+      EntityConfigKV entityConfigKV = new EntityConfigKV();
+      entityConfigKV.setEntityType(ConfigEntityType.Org);
+      entityConfigKV.setEntityId(orgId);
+      entityConfigKV.setConfigType(EntityConfigConfigType.CUSTOM_FORM_FIELDS);
+      entityConfigKV.setConfigKey(field);
+      entityConfigKV.setConfigVal(null);
+      return entityConfigKV;
+    }).toList();
+
+    entityConfigKVRepo.saveAll(configs);
+    return getAllCustomFields(orgId);
+  }
+
+  @Transactional
+  public List<RespCustomField> getAllCustomFields(Long orgId) {
+    List<EntityConfigKV> customFields = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigType(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.CUSTOM_FORM_FIELDS
+    );
+
+    return customFields.stream().map(RespCustomField::from).toList();
+  }
+
+  @Transactional
+  public List<RespCustomField> deleteCustomFields(ReqCreateOrDeleteCustomFields req, Long orgId) {
+    List<EntityConfigKV> existingCustomFields = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKeyIn(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.CUSTOM_FORM_FIELDS,
+      req.customFields()
+    );
+
+    entityConfigKVRepo.deleteAll(existingCustomFields);
+    return getAllCustomFields(orgId);
+  }
 }

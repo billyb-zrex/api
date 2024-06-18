@@ -7,6 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface EntityConfigKVRepo extends CrudRepository<EntityConfigKV, Long> {
@@ -21,5 +22,12 @@ public interface EntityConfigKVRepo extends CrudRepository<EntityConfigKV, Long>
     Long entityId,
     EntityConfigConfigType configType,
     String configKey
+  );
+
+  List<EntityConfigKV> findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKeyIn(
+    ConfigEntityType entityType,
+    Long entityId,
+    EntityConfigConfigType configType,
+    Set<String> configKey
   );
 }
