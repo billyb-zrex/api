@@ -253,6 +253,16 @@ Content-Type: application/json
   "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"logo\": { \"url\": \"https://s3.amazonaws.com/app.sharefable.com/favicon.png\"}, \"loader\": { \"url\": \"https://sample.com\", \"type\": \"gif\"}}"
 }
 
+### update global opts file
+POST {{api-host}}/v1/f/recordgbsedit
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "rid": "werr",
+  "editData": "{\"logo\":\"https://s3.amazonaws.com/app.sharefable.com/favicon.png\",\"companyUrl\":\"\",\"bookADemoUrl\":\"\",\"demoLoadingText\":\"Setting up the interactive demo for your org\",\"fontFamily\":\"\",\"primaryColor\":\"#7567ff\",\"ctaSize\":\"medium\",\"annBodyBgColor\":\"#FFFFFF\",\"annBorderColor\":\"#BDBDBD\",\"fontColor\":\"#424242\",\"annBorderRadius\":4,\"annConPad\":\"14 14\",\"selColor\":\"#2196f3\",\"selShape\":\"box\",\"selEffect\":\"regular\",\"showStepNo\":true,\"showWatermark\":true,\"nextBtnText\":\"Next\",\"nextBtnStyle\":\"primary\",\"prevBtnText\":\"Back\",\"prevBtnStyle\":\"primary\",\"customBtn1Text\":\"Book a demo\",\"customBtn1Style\":\"primary\",\"customBtn1URL\":\"\",\"monoIncKey\":1,\"createdAt\":1719227405,\"updatedAt\":1719227405,\"version\":1}"
+}
+
 ### video transcoding
 POST {{api-host}}/v1/f/vdt
 Content-Type: application/json
@@ -717,5 +727,10 @@ Authorization: {{auth-header}}
 
 ### get custom fields
 GET {{api-host}}/v1/f/cfields
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+### get global opts
+GET {{api-host}}/v1/f/gopts
 Content-Type: application/json
 Authorization: {{auth-header}}

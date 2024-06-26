@@ -205,4 +205,16 @@ public class WorkspaceController {
     List<RespCustomField> resp = wsService.getAllCustomFields(user.getBelongsToOrg());
     return ApiResp.<List<RespCustomField>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
+
+  @RequestMapping(value = Routes.UPDATE_GLOBAL_OPTS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespGlobalOpts> updateGlobalOpts(@RequestBody ReqUpdateGlobalOpts body, @AuthUser User user) {
+    RespGlobalOpts respGlobalOpts = wsService.updateGlobalOpts(body, user);
+    return ApiResp.<RespGlobalOpts>builder().data(respGlobalOpts).build();
+  }
+
+  @RequestMapping(value = Routes.GET_GLOBAL_OPTS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespGlobalOpts> updateGlobalOpts(@AuthUser User user) {
+    RespGlobalOpts resp = wsService.getGlobalOpts(user);
+    return ApiResp.<RespGlobalOpts>builder().data(resp).build();
+  }
 }

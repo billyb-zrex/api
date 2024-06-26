@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-06-14 21:43:19.
+// Generated using typescript-generator version 2.35.1025 on 2024-06-25 11:42:12.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -168,6 +168,10 @@ export interface ReqCopyScreen {
     tourRid: string;
 }
 
+export interface ReqCreateOrDeleteCustomFields {
+    customFields: string[];
+}
+
 export interface ReqCreateOrDeleteNewVanityDomain {
     domainName: string;
     subdomainName: string;
@@ -182,10 +186,6 @@ export interface ReqCreateOrUpdateTenantIntegration {
     disabled?: boolean;
     tourId?: number;
     tenantConfig: { [index: string]: any };
-}
-
-export interface ReqCustomFields {
-    customFields: any;
 }
 
 export interface ReqDeleteTenantIntegration {
@@ -345,10 +345,12 @@ export interface RespCommonConfig extends ResponseBase {
     screenAssetPath: string;
     tourAssetPath: string;
     pubTourAssetPath: string;
+    globalOptsAssetPath: string;
     dataFileName: string;
     loaderFileName: string;
     editFileName: string;
     manifestFileName: string;
+    globalOptsFileName: string;
     latestSchemaVersion: SchemaVersion;
 }
 
@@ -357,8 +359,8 @@ export interface RespConversion {
     buttonsWithTotalClicks: ButtonClicks[];
 }
 
-export interface RespCustomFields {
-    customFields: any;
+export interface RespCustomField {
+    fieldName: string;
 }
 
 export interface RespHealth extends ResponseBase {
@@ -476,6 +478,7 @@ export interface RespTour extends ResponseBase {
     responsive: boolean;
     responsive2: Responsiveness;
     deleted: TourDeleted;
+    globalOpts: any;
     settings?: TourSettings;
 }
 

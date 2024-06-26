@@ -1,13 +1,11 @@
 package com.sharefable.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sharefable.api.common.ApiResp;
-import com.sharefable.api.common.AssetFilePath;
-import com.sharefable.api.common.FnTourBuilder;
-import com.sharefable.api.common.Utils;
+import com.sharefable.api.common.*;
 import com.sharefable.api.config.AppConfig;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
+import com.sharefable.api.entity.EntityConfigKV;
 import com.sharefable.api.entity.Screen;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
@@ -49,6 +47,7 @@ public class TourService extends ServiceBase {
   private final AppConfig appConfig;
   private final AppSettings settings;
   private final ScreenRepo screenRepo;
+  private final EntityConfigService entityConfigService;
   private final MediaProcessingService mediaProcessingService;
 
   @Autowired
@@ -59,7 +58,7 @@ public class TourService extends ServiceBase {
     S3Config s3Config,
     ScreenRepo screenRepo,
     ScreenService screenService,
-    UserService userService, AppConfig appConfig, MediaProcessingService mediaProcessingService) {
+    UserService userService, AppConfig appConfig, EntityConfigService entityConfigService, MediaProcessingService mediaProcessingService) {
     super(settings, s3Service, s3Config, screenRepo, tourRepo);
     this.tourRepo = tourRepo;
     this.userRepo = userRepo;
@@ -70,6 +69,7 @@ public class TourService extends ServiceBase {
     this.appConfig = appConfig;
     this.settings = settings;
     this.screenRepo = screenRepo;
+    this.entityConfigService = entityConfigService;
     this.mediaProcessingService = mediaProcessingService;
   }
 
@@ -102,23 +102,29 @@ public class TourService extends ServiceBase {
       .build();
 
     Tour storedTour = tourRepo.save(tour);
-    return RespTour.from(storedTour);
+    EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(tour.getBelongsToOrg());
+    return RespTour.from(storedTour, entityConfigKV);
   }
 
   @Transactional(readOnly = true)
   public RespTour getTourByRid(String rid, boolean shouldGetScreens, boolean shouldGetDeletedTour) {
-    Optional<Tour> maybeTour = tourRepo.findByRidAndDeletedEquals(rid, shouldGetDeletedTour ? TourDeleted.DELETED : TourDeleted.ACTIVE);
-    if (maybeTour.isEmpty()) {
+    Optional<TourWithConfig> maybeTourWithConfig = tourRepo.findTourWithConfigByRidAndDeleted(rid, shouldGetDeletedTour ? TourDeleted.DELETED : TourDeleted.ACTIVE, EntityConfigConfigType.GLOBAL_OPTS);
+    RespTour respTour = maybeTourWithConfig.map(tourWithConfig -> {
+      Tour tour = tourWithConfig.getTour();
+      EntityConfigKV entityConfigKV = tourWithConfig.getEntityConfigKV();
+      if (shouldGetScreens) {
+        Set<Screen> screens = tour.getScreens();
+        tour.setScreens(screens);
+        return RespTourWithScreens.from(tour, entityConfigKV);
+      }
+      return RespTour.from(tour, entityConfigKV);
+    }).orElse(null);
+
+    if (respTour == null) {
       log.error("Can't get tour by rid {}", rid);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
     }
-    if (shouldGetScreens) {
-      Tour tour = maybeTour.get();
-      Set<Screen> screens = tour.getScreens();
-      tour.setScreens(screens);
-      return RespTourWithScreens.from(tour);
-    }
-    return RespTour.from(maybeTour.get());
+    return respTour;
   }
 
   @Transactional
@@ -151,6 +157,7 @@ public class TourService extends ServiceBase {
         uploadTourManifestToS3(updatedTour);
         modifyPublishedTourEntityPath(oldRid, tour.getRid());
       }
+
       return RespTour.from(updatedTour);
     } catch (Exception e) {
       log.error("Error while trying to publish tour", e);
@@ -235,7 +242,8 @@ public class TourService extends ServiceBase {
     }
     Tour.TourBuilder<?, ?> updatedTourBuilder = savedTour.toBuilder().screens(clonedScreens);
     Tour updatedTour = updatedTourBuilder.build();
-    RespTourWithScreens resp = RespTourWithScreens.from(updatedTour);
+    EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(tour.getBelongsToOrg());
+    RespTourWithScreens resp = RespTourWithScreens.from(updatedTour, entityConfigKV);
     resp.setIdxm(Optional.of(sourceAndClonedScreenIdMap));
 
 
@@ -374,13 +382,14 @@ public class TourService extends ServiceBase {
       tour.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
       tour.setPublishedVersion(nextVersion);
 
-      RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour, commonConfig);
+      EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(tour.getBelongsToOrg());
+      RespTourWithScreens respTourWithScreens = RespTourWithScreens.from(tour, commonConfig, entityConfigKV);
       ApiResp<RespTourWithScreens> apiResp = ApiResp.<RespTourWithScreens>builder().data(respTourWithScreens).build();
       String tourResp = objectMapper.writeValueAsString(apiResp);
       uploadDataFileToS3(tourResp, tour.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
 
       Tour savedTour = tourRepo.save(tour);
-      return RespTour.from(savedTour);
+      return RespTour.from(savedTour, entityConfigKV);
     } catch (Exception e) {
       log.error("Error while trying to publish tour", e);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish tour");
@@ -460,13 +469,14 @@ public class TourService extends ServiceBase {
   }
 
   @Transactional
-  public Tour updateTourProperty(ReqTourPropUpdate body, User userEntity) {
+  public RespTour updateTourProperty(ReqTourPropUpdate body, User userEntity) {
     Tour tour = getEntityByRIdWithAuthValidation(Tour.class, body.tourRid(), userEntity);
     body.site().ifPresent(tour::setSite);
     body.inProgress().ifPresent(tour::setInProgress);
     body.responsive().ifPresent(tour::setResponsive);
     body.responsive2().ifPresent(tour::setResponsive2);
-    return tourRepo.save(tour);
+    Tour savedTour = tourRepo.save(tour);
+    return RespTour.from(savedTour);
   }
 
   @Transactional
@@ -483,9 +493,10 @@ public class TourService extends ServiceBase {
     return tourAssetFilePath.getS3UriToFile();
   }
 
+  @Transactional
   public RespTour getTourById(Long id) {
-    Optional<Tour> maybeTour = tourRepo.findById(id);
-    return maybeTour.map(RespTour::from).orElse(null);
+    Optional<TourWithConfig> maybeTourWithConfig = tourRepo.findTourWithConfigById(id, EntityConfigConfigType.GLOBAL_OPTS);
+    return maybeTourWithConfig.map(tourWithConfig -> RespTour.from(tourWithConfig.getTour(), tourWithConfig.getEntityConfigKV())).orElse(null);
   }
 
   @Transactional
@@ -515,5 +526,9 @@ public class TourService extends ServiceBase {
       log.error("Something went wrong while copying tour to another org {}", e.getMessage());
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while copying tour to another org");
     }
+  }
+
+  public EntityConfigKV getEntityConfigKVForGlobalOpts(Long orgId) {
+    return entityConfigService.getEntityConfig(ConfigEntityType.Org, orgId, EntityConfigConfigType.GLOBAL_OPTS);
   }
 }

@@ -1,6 +1,7 @@
 package com.sharefable.api.transport.resp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sharefable.api.entity.EntityConfigKV;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.transport.GenerateTSDef;
 import lombok.*;
@@ -23,8 +24,8 @@ public class RespTourWithScreens extends RespTour {
   private Optional<Map<String, String>> idxm;
   private RespCommonConfig cc;
 
-  public static RespTourWithScreens from(Tour tour) {
-    RespTourWithScreens resp = (RespTourWithScreens) RespTour.from(tour);
+  public static RespTourWithScreens from(Tour tour, EntityConfigKV entityConfigKV) {
+    RespTourWithScreens resp = (RespTourWithScreens) RespTour.from(tour, entityConfigKV);
     // `fromEntityToTransportObject` can't convert collection<type> to collection<resp_type>
     // hence this explicit conversion is necessary
     // Also although screen <-> tour is saved as many-many relationship in db / jpa, it's
@@ -37,8 +38,8 @@ public class RespTourWithScreens extends RespTour {
     return resp;
   }
 
-  public static RespTourWithScreens from(Tour tour, RespCommonConfig cc) {
-    RespTourWithScreens resp = from(tour);
+  public static RespTourWithScreens from(Tour tour, RespCommonConfig cc, EntityConfigKV entityConfigKV) {
+    RespTourWithScreens resp = from(tour, entityConfigKV);
     resp.setCc(cc);
     return resp;
   }

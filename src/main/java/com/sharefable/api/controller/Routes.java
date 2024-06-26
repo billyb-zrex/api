@@ -57,6 +57,8 @@ public interface Routes {
   String RECORD_EL_EDIT = __BEHIND_LOGIN__ + "/recordeledit";
   String RECORD_TOUR_EDIT = __BEHIND_LOGIN__ + "/recordtredit";
   String RECORD_TOUR_LOADER_EDIT = __BEHIND_LOGIN__ + "/recordtrloaderedit";
+  String UPDATE_GLOBAL_OPTS = __BEHIND_LOGIN__ + "/updtgopts";
+  String GET_GLOBAL_OPTS = __BEHIND_LOGIN__ + "/gopts";
   String RENAME_TOUR = __BEHIND_LOGIN__ + "/renametour";
   String RENAME_SCREEN = __BEHIND_LOGIN__ + "/renamescreen";
   String UPDATE_SCREEN_PROPERTY = __BEHIND_LOGIN__ + "/updatescreenproperty";

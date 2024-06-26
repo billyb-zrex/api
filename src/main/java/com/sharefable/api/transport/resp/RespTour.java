@@ -3,6 +3,7 @@ package com.sharefable.api.transport.resp;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
+import com.sharefable.api.entity.EntityConfigKV;
 import com.sharefable.api.entity.Tour;
 import com.sharefable.api.transport.*;
 import io.sentry.Sentry;
@@ -40,6 +41,8 @@ public class RespTour extends ResponseBase {
   private Responsiveness responsive2;
   private TourDeleted deleted;
   @OptionalPropInTS
+  private Object globalOpts;
+  @OptionalPropInTS
   private TourSettings settings;
 
   public static RespTour from(Tour tour) {
@@ -59,6 +62,12 @@ public class RespTour extends ResponseBase {
       Sentry.captureException(e);
       return Empty();
     }
+  }
+
+  public static RespTour from(Tour tour, EntityConfigKV entityConfigKV) {
+    RespTour resp = RespTour.from(tour);
+    resp.setGlobalOpts(entityConfigKV.getConfigVal());
+    return resp;
   }
 
   private static RespTour Empty() {

@@ -132,7 +132,7 @@ public class S3Config {
     Common,
     UserGenerated,
     PublishedTour,
-    Analytics
+    Analytics,
   }
 
   public enum DATA_FILE_CACHE_POLICY {

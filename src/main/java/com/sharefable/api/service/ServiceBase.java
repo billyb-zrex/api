@@ -112,7 +112,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
     TemplateFile tFile = getTemplateFileLocFor(type);
     try (InputStream resourceAsStream = getClass().getResourceAsStream(tFile.fromPath())) {
       if (resourceAsStream == null) {
-        log.error("No default data file is present while creating tour. Can't find schema file with path = {}", tFile.fromPath);
+        log.error("No default data file is present while creating tour. Can't find schema file with path = {}", tFile.fromPath());
         throw new RuntimeException("Can't find schema file");
       }
       String fileContent = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
@@ -121,7 +121,6 @@ public abstract class ServiceBase implements DefaultThumbnail {
       throw new RuntimeException(e);
     }
   }
-
 
   public AssetFilePath uploadDataFileToS3(String content, String prefixHash, S3Config.FileConfig config, S3Config.AssetType assetType) {
     AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, config.filename());
@@ -169,7 +168,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
   public enum DATA_FILE_TYPE {
     TOUR_INDEX,
     TOUR_LOADER,
-    SCREEN_EDIT
+    SCREEN_EDIT,
   }
 
   public record TemplateFile(String fromPath, S3Config.AssetType type, S3Config.FileConfig toFile) {

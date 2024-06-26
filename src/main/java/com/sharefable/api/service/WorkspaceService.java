@@ -46,6 +46,8 @@ public class WorkspaceService extends ServiceBase {
   private final SlackMsgService slackMsgService;
   private final EntityConfigKVRepo entityConfigKVRepo;
   private final AwsAmplifyCustomDomainService customDomainService;
+  private final EntityConfigService entityConfigService;
+  private final AppSettings settings;
   private final ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
@@ -61,7 +63,7 @@ public class WorkspaceService extends ServiceBase {
                           ApiKeyRepo apiKeyRepo,
                           SlackMsgService slackMsgService,
                           EntityConfigKVRepo entityConfigKVRepo,
-                          AwsAmplifyCustomDomainService customDomainService) {
+                          AwsAmplifyCustomDomainService customDomainService, EntityConfigService entityConfigService) {
     super(settings, s3Service, s3Config, screenRepo, tourRepo);
     this.orgRepo = orgRepo;
     this.userRepo = userRepo;
@@ -70,9 +72,11 @@ public class WorkspaceService extends ServiceBase {
     this.userService = userService;
     this.nfHookService = nfHookService;
     this.apiKeyRepo = apiKeyRepo;
+    this.settings = settings;
     this.slackMsgService = slackMsgService;
     this.entityConfigKVRepo = entityConfigKVRepo;
     this.customDomainService = customDomainService;
+    this.entityConfigService = entityConfigService;
   }
 
   // is in the format test CNAME d3uxmturbrrjns.cloudfront.net
@@ -108,6 +112,17 @@ public class WorkspaceService extends ServiceBase {
     }
     Org org = orgBuilder.build();
     Org savedOrg = orgRepo.save(org);
+
+    Object globalOpts = settings.getGlobalOpts();
+
+    EntityConfigKV config = EntityConfigKV.builder()
+      .entityType(ConfigEntityType.Org)
+      .entityId(savedOrg.getId())
+      .configType(EntityConfigConfigType.GLOBAL_OPTS)
+      .configKey("GLOBAL OPTS")
+      .configVal(globalOpts)
+      .build();
+    entityConfigKVRepo.save(config);
 
     nfHookService.sendNotification(NfEvents.NEW_ORG_CREATED, Map.of("id", savedOrg.getId().toString()));
 
@@ -186,6 +201,21 @@ public class WorkspaceService extends ServiceBase {
       respUser.setOrgAssociation(RespUser.UserOrgAssociation.Explicit);
     }
     return respUser;
+  }
+
+  @Transactional
+  public RespGlobalOpts updateGlobalOpts(ReqUpdateGlobalOpts body, User user) {
+    EntityConfigKV entityConfigKV = entityConfigService.getEntityConfig(ConfigEntityType.Org, user.getBelongsToOrg(), EntityConfigConfigType.GLOBAL_OPTS);
+    entityConfigKV.setConfigVal(body.editData());
+    EntityConfigKV savedEntityConfigKv = entityConfigKVRepo.save(entityConfigKV);
+
+    return RespGlobalOpts.builder().globalOpts(savedEntityConfigKv.getConfigVal()).build();
+  }
+
+  @Transactional
+  public RespGlobalOpts getGlobalOpts(User user) {
+    EntityConfigKV entityConfigKV = entityConfigService.getEntityConfig(ConfigEntityType.Org, user.getBelongsToOrg(), EntityConfigConfigType.GLOBAL_OPTS);
+    return RespGlobalOpts.builder().globalOpts(entityConfigKV.getConfigVal()).build();
   }
 
   public void getCommonConfig(RespCommonConfig.RespCommonConfigBuilder builder) {
@@ -577,4 +607,5 @@ public class WorkspaceService extends ServiceBase {
     entityConfigKVRepo.deleteAll(existingCustomFields);
     return getAllCustomFields(orgId);
   }
+
 }

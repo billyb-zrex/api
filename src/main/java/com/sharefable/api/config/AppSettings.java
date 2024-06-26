@@ -35,6 +35,7 @@ public class AppSettings {
   private int maxSSLCertPerClusterLimit;
   private List<CustomDomainProxyCluster> customDomainProxyClusters = new ArrayList<>();
   private Map<String, Object> featurePlanMatrix;
+  private Object globalOpts;
   @Setter
   private String publicEndpoint;
 
@@ -65,6 +66,7 @@ public class AppSettings {
 
     currentSchemaVersion = SchemaVersion.of(hm.get("CURRENT_SCHEMA_VERSION"));
     onboardingTourIds = hm.getOrDefault("ONBOARDING_TOUR_IDS", "");
+    globalOpts = hm.getOrDefault("DEFAULT_GLOBAL_OPTS", null);
 
     try {
       TypeReference<Map<String, Object>> typeRef = new TypeReference<>() {
@@ -91,13 +93,14 @@ public class AppSettings {
     String maxSsl = hm.getOrDefault("MAX_SSL_CERT_PER_CLUSTER", "40");
     maxSSLCertPerClusterLimit = Integer.parseInt(maxSsl);
 
-    log.info("Settings loaded currentSchemaVersion=[{}] customDomainProxyClusters=[{}] onboardingTourIds=[{}] migrationFlag=[{}] dataEntryFlag=[{}] featurePlanMatrix=[{}]",
+    log.info("Settings loaded currentSchemaVersion=[{}] customDomainProxyClusters=[{}] onboardingTourIds=[{}] migrationFlag=[{}] dataEntryFlag=[{}] featurePlanMatrix=[{}], globalOpts=[{}]",
       currentSchemaVersion,
       customDomainProxyClusters,
       onboardingTourIds,
       isMigrationFlatSet,
       isDataEntryFlagSet,
-      featurePlanMatrix
+      featurePlanMatrix,
+      globalOpts
     );
   }
 }
