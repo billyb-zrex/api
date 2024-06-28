@@ -17,4 +17,5 @@ import lombok.experimental.SuperBuilder;
 public class TourSettings {
   private Long vpdWidth;
   private Long vpdHeight;
+  private String primaryKey;
 }

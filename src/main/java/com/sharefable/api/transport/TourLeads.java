@@ -10,11 +10,12 @@ import lombok.experimental.SuperBuilder;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(callSuper = true)
-@SuperBuilder(toBuilder = true)
+@ToString
+@SuperBuilder
 @GenerateTSDef
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TourLeads {
-    private String aid;
-    private String email;
+  private String aid;
+  private String primaryKey;
+  private Object leadFormInfo;
 }

@@ -89,7 +89,7 @@ public class HubspotController {
         return null;
       }
 
-      List<AnalyticsUserAidMapping> aidMapping = analyticsUserAidMappingRepo.getAnalyticsUserAidMappingsByTourIdAndEmailOrderByUpdatedAtDesc(tour.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
+      List<AnalyticsUserAidMapping> aidMapping = analyticsUserAidMappingRepo.getAnalyticsUserAidMappingsByTourIdAndPrimaryKeyOrderByUpdatedAtDesc(tour.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
       if (aidMapping.isEmpty()) {
         log.error("no aid mapping is found for tourId [{}] and emailId[{}] ", tour.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
         return null;

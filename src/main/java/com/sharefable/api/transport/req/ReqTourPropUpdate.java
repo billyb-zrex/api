@@ -2,6 +2,7 @@ package com.sharefable.api.transport.req;
 
 import com.sharefable.api.transport.GenerateTSDef;
 import com.sharefable.api.transport.Responsiveness;
+import com.sharefable.api.transport.TourSettings;
 
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +13,7 @@ public record ReqTourPropUpdate(
   Optional<Map<String, Object>> site,
   Optional<Boolean> inProgress,
   Optional<Boolean> responsive,
-  Optional<Responsiveness> responsive2
+  Optional<Responsiveness> responsive2,
+  Optional<TourSettings> settings
 ) {
 }

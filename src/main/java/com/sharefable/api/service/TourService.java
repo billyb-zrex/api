@@ -475,6 +475,7 @@ public class TourService extends ServiceBase {
     body.inProgress().ifPresent(tour::setInProgress);
     body.responsive().ifPresent(tour::setResponsive);
     body.responsive2().ifPresent(tour::setResponsive2);
+    body.settings().ifPresent(tour::setSettings);
     Tour savedTour = tourRepo.save(tour);
     return RespTour.from(savedTour);
   }

@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-06-25 11:42:12.
+// Generated using typescript-generator version 2.35.1025 on 2024-06-28 14:55:07.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -120,7 +120,8 @@ export interface TourAnnWithViews {
 
 export interface TourLeads {
     aid: string;
-    email: string;
+    primaryKey: string;
+    leadFormInfo: any;
 }
 
 export interface TourManifest {
@@ -133,6 +134,7 @@ export interface TourManifest {
 export interface TourSettings {
     vpdWidth: number;
     vpdHeight: number;
+    primaryKey: string;
 }
 
 export interface VideoTranscodingJobInfo extends JobProcessingInfo {
@@ -186,6 +188,10 @@ export interface ReqCreateOrUpdateTenantIntegration {
     disabled?: boolean;
     tourId?: number;
     tenantConfig: { [index: string]: any };
+}
+
+export interface ReqCustomFields {
+    customFields: any;
 }
 
 export interface ReqDeleteTenantIntegration {
@@ -303,6 +309,7 @@ export interface ReqTourPropUpdate {
     inProgress?: boolean;
     responsive?: boolean;
     responsive2?: Responsiveness;
+    settings?: TourSettings;
 }
 
 export interface ReqTourRid {
@@ -345,12 +352,10 @@ export interface RespCommonConfig extends ResponseBase {
     screenAssetPath: string;
     tourAssetPath: string;
     pubTourAssetPath: string;
-    globalOptsAssetPath: string;
     dataFileName: string;
     loaderFileName: string;
     editFileName: string;
     manifestFileName: string;
-    globalOptsFileName: string;
     latestSchemaVersion: SchemaVersion;
 }
 
