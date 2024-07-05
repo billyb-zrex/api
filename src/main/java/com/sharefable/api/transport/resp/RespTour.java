@@ -66,7 +66,7 @@ public class RespTour extends ResponseBase {
 
   public static RespTour from(Tour tour, EntityConfigKV entityConfigKV) {
     RespTour resp = RespTour.from(tour);
-    resp.setGlobalOpts(entityConfigKV.getConfigVal());
+    resp.setGlobalOpts(entityConfigKV == null ? null : entityConfigKV.getConfigVal());
     return resp;
   }
 
