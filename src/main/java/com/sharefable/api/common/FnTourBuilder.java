@@ -1,7 +1,7 @@
 package com.sharefable.api.common;
 
-import com.sharefable.api.entity.Tour;
+import com.sharefable.api.entity.DemoEntity;
 
 public interface FnTourBuilder {
-    Tour.TourBuilder<?, ?> apply(Tour.TourBuilder<?, ?> builder);
+  DemoEntity.DemoEntityBuilder<?, ?> apply(DemoEntity.DemoEntityBuilder<?, ?> builder);
 }

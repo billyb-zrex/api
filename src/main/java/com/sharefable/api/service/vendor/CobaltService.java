@@ -2,11 +2,11 @@ package com.sharefable.api.service.vendor;
 
 import com.sharefable.api.config.AppConfig;
 import com.sharefable.api.config.vendor.CobaltConfig;
+import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.entity.HouseLeadInfo;
-import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.repo.DemoEntityRepo;
 import com.sharefable.api.repo.HouseLeadInfoRepo;
-import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.service.NfHookService;
 import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.TourDeleted;
@@ -31,16 +31,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CobaltService {
   private final CobaltConfig cobaltConfig;
-  private final TourRepo tourRepo;
+  private final DemoEntityRepo demoEntityRepo;
   private final RestTemplate restClient;
   private final HouseLeadInfoRepo houseLeadInfoRepo;
   private final NfHookService nfHookService;
   private final AppConfig appConfig;
 
   @Autowired
-  public CobaltService(CobaltConfig cobaltConfig, TourRepo tourRepo, RestTemplate restClient, HouseLeadInfoRepo houseLeadInfoRepo, NfHookService nfHookService, AppConfig appConfig) {
+  public CobaltService(CobaltConfig cobaltConfig, DemoEntityRepo demoEntityRepo, RestTemplate restClient, HouseLeadInfoRepo houseLeadInfoRepo, NfHookService nfHookService, AppConfig appConfig) {
     this.cobaltConfig = cobaltConfig;
-    this.tourRepo = tourRepo;
+    this.demoEntityRepo = demoEntityRepo;
     this.restClient = restClient;
     this.houseLeadInfoRepo = houseLeadInfoRepo;
     this.nfHookService = nfHookService;
@@ -90,7 +90,7 @@ public class CobaltService {
   }
 
   public void sendEventPublic(ReqCobaltEvent event, String tourRid) {
-    Optional<Tour> maybeTour = tourRepo.findByRidAndDeletedEquals(tourRid, TourDeleted.ACTIVE);
+    Optional<DemoEntity> maybeTour = demoEntityRepo.findByRidAndDeletedEquals(tourRid, TourDeleted.ACTIVE);
     if (maybeTour.isEmpty()) return;
 
     event.payload().put("demo_url", appConfig.getDns() + "/live/demo/" + maybeTour.get().getRid());

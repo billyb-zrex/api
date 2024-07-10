@@ -3,10 +3,10 @@ package com.sharefable.api.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.entity.*;
+import com.sharefable.api.repo.DemoEntityRepo;
 import com.sharefable.api.repo.OrgRepo;
 import com.sharefable.api.repo.PlatformIntegrationRepo;
 import com.sharefable.api.repo.TenantIntegrationRepo;
-import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.RespFatTenantIntegration;
 import com.sharefable.api.transport.req.ReqAddOrUpdatePlatformIntegrationConfig;
@@ -29,7 +29,7 @@ import java.util.stream.StreamSupport;
 public class IntegrationService {
   private final PlatformIntegrationRepo platformIntegrationRepo;
   private final TenantIntegrationRepo tenantIntegrationRepo;
-  private final TourRepo tourRepo;
+  private final DemoEntityRepo demoEntityRepo;
   private final NfHookService nfHookService;
   private final OrgRepo orgRepo;
 
@@ -143,7 +143,7 @@ public class IntegrationService {
       return;
     }
 
-    Optional<Tour> maybeTour = tourRepo.findById(tourId);
+    Optional<DemoEntity> maybeTour = demoEntityRepo.findById(tourId);
     if (maybeTour.isEmpty()) {
       log.error("Can't find tour with id {}. Skipping event to integration", tourId);
       return;

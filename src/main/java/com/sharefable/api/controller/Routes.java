@@ -97,6 +97,16 @@ public interface Routes {
   String DELETE_CUSTOM_FIELDS = __BEHIND_LOGIN__ + "/delcfields";
   String GET_FIELDS = __BEHIND_LOGIN__ + "/cfields";
 
+  /* === Demo Hub === */
+  String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";
+  String RENAME_DEMO_HUB = __BEHIND_LOGIN__ + "/renamedh";
+  String UPDATE_DEMO_HUB_PROP = __BEHIND_LOGIN__ + "/updtdhprops";
+  String DELETE_DEMO_HUB = __BEHIND_LOGIN__ + "/deldh";
+  String GET_ALL_DEMO_HUB = __BEHIND_LOGIN__ + "/dhs";
+  String GET_DEMO_HUB = "/dh";
+  String PUBLISH_DEMO_HUB = __BEHIND_LOGIN__ + "/pubdh";
+  String RECORD_EDIT_DEMO_HUB = __BEHIND_LOGIN__ + "/recorddhedit";
+
   /* === Cross service w/o authentication === */
 
   String GET_ALL_TOURS_BY_API_KEY = "/via/ak/tours";

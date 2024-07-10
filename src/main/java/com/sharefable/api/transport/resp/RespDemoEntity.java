@@ -1,10 +1,12 @@
 package com.sharefable.api.transport.resp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sharefable.api.common.EntityInfo;
+import com.sharefable.api.common.TopLevelEntityType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.S3Config;
+import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.entity.EntityConfigKV;
-import com.sharefable.api.entity.Tour;
 import com.sharefable.api.transport.*;
 import io.sentry.Sentry;
 import lombok.*;
@@ -22,7 +24,7 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Slf4j
 @GenerateTSDef
-public class RespTour extends ResponseBase {
+public class RespDemoEntity extends ResponseBase {
   private Long id;
   private String rid;
   private String assetPrefixHash;
@@ -40,19 +42,21 @@ public class RespTour extends ResponseBase {
   private Boolean responsive;
   private Responsiveness responsive2;
   private TourDeleted deleted;
+  private TopLevelEntityType entityType;
+  private EntityInfo info;
   @OptionalPropInTS
   private Object globalOpts;
   @OptionalPropInTS
   private TourSettings settings;
 
-  public static RespTour from(Tour tour) {
+  public static RespDemoEntity from(DemoEntity demoEntity) {
     try {
-      RespTour resp = (RespTour) Utils.fromEntityToTransportObject(tour);
+      RespDemoEntity resp = (RespDemoEntity) Utils.fromEntityToTransportObject(demoEntity);
 
       S3Config.EntityFilesConfig entityFilesConfig = S3Config.getEntityFiles();
-      resp.setPubDataFileName(entityFilesConfig.publishedDataFile().filename(tour.getPublishedVersion()));
-      resp.setPubLoaderFileName(entityFilesConfig.publishedLoaderFile().filename(tour.getPublishedVersion()));
-      resp.setPubEditFileName(entityFilesConfig.publishedEditFile().filename(tour.getPublishedVersion()));
+      resp.setPubDataFileName(entityFilesConfig.publishedDataFile().filename(demoEntity.getPublishedVersion()));
+      resp.setPubLoaderFileName(entityFilesConfig.publishedLoaderFile().filename(demoEntity.getPublishedVersion()));
+      resp.setPubEditFileName(entityFilesConfig.publishedEditFile().filename(demoEntity.getPublishedVersion()));
       resp.setPubTourEntityFileName(entityFilesConfig.publishedTourEntityFile().filename());
 
       return resp;
@@ -64,13 +68,13 @@ public class RespTour extends ResponseBase {
     }
   }
 
-  public static RespTour from(Tour tour, EntityConfigKV entityConfigKV) {
-    RespTour resp = RespTour.from(tour);
+  public static RespDemoEntity from(DemoEntity demoEntity, EntityConfigKV entityConfigKV) {
+    RespDemoEntity resp = from(demoEntity);
     resp.setGlobalOpts(entityConfigKV == null ? null : entityConfigKV.getConfigVal());
     return resp;
   }
 
-  private static RespTour Empty() {
-    return new RespTour();
+  private static RespDemoEntity Empty() {
+    return new RespDemoEntity();
   }
 }

@@ -57,14 +57,14 @@ public class WorkspaceService extends ServiceBase {
                           S3Config s3Config,
                           AppSettings settings,
                           ScreenRepo screenRepo,
-                          TourRepo tourRepo,
+                          DemoEntityRepo demoEntityRepo,
                           UserService userService,
                           NfHookService nfHookService,
                           ApiKeyRepo apiKeyRepo,
                           SlackMsgService slackMsgService,
                           EntityConfigKVRepo entityConfigKVRepo,
                           AwsAmplifyCustomDomainService customDomainService, EntityConfigService entityConfigService) {
-    super(settings, s3Service, s3Config, screenRepo, tourRepo);
+    super(settings, s3Service, s3Config, screenRepo, demoEntityRepo);
     this.orgRepo = orgRepo;
     this.userRepo = userRepo;
     this.s3Config = s3Config;
@@ -226,6 +226,9 @@ public class WorkspaceService extends ServiceBase {
       .screenAssetPath(pathConfig.screenAsset())
       .tourAssetPath(pathConfig.tourAsset())
       .pubTourAssetPath(pathConfig.tourPublishedAsset())
+      .demoHubAssetPath(pathConfig.demoHubAsset())
+      .pubDemoHubAssetPath(pathConfig.demoHubPublishedAsset())
+
       // Although we have now tourDataFile and screenDataFile treated differently when it comes to cache policy,
       // in client side we send dataFileName as index.json
       // In this case both tourDataFile and screenDataFile is same

@@ -14,6 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Slf4j
 @GenerateTSDef
-public class ReqTourPropUpdate extends EntityUpdateBase {
-  private String tourRid;
+public class ReqDemoHubPropUpdate extends EntityUpdateBase {
+  private String rid;
 }

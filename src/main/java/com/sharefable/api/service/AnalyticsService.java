@@ -2,6 +2,7 @@ package com.sharefable.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.AssetFilePath;
+import com.sharefable.api.common.TopLevelEntityType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
@@ -35,9 +36,9 @@ public class AnalyticsService extends ServiceBase {
   private final AnalyticsConversionRepo analyticsConversionRepo;
   private final AnalyticsUserAidMappingRepo analyticsUserAidMappingRepo;
   private final AnalyticsCtaClickedRepo analyticsCtaClickedRepo;
-  private final TourService tourService;
+  private final EntityService tourService;
   private final S3Config s3Config;
-  private final TourRepo tourRepo;
+  private final DemoEntityRepo demoEntityRepo;
   private final HouseLeadInfoRepo houseLeadInfoRepo;
   private final LeadInfoVendorMappingRepo leadInfoVendorMappingRepo;
 
@@ -46,23 +47,23 @@ public class AnalyticsService extends ServiceBase {
     AnalyticsMetricsRepo analyticsMetricsRepo,
     AnalyticsAnnClickRepo analyticsAnnClickRepo,
     AnalyticsConversionRepo analyticsConversionRepo,
-    TourService tourService,
+    EntityService tourService,
     AnalyticsUserAidMappingRepo analyticsUserAidMappingRepo,
     AnalyticsCtaClickedRepo analyticsCtaClickedRepo,
-    TourRepo tourRepo,
+    DemoEntityRepo demoEntityRepo,
     AppSettings settings,
     S3Service s3Service,
     ScreenRepo screenRepo,
     S3Config s3Config, HouseLeadInfoRepo houseLeadInfoRepo,
     LeadInfoVendorMappingRepo leadInfoVendorMappingRepo) {
-    super(settings, s3Service, s3Config, screenRepo, tourRepo);
+    super(settings, s3Service, s3Config, screenRepo, demoEntityRepo);
     this.analyticsMetricsRepo = analyticsMetricsRepo;
     this.analyticsAnnClickRepo = analyticsAnnClickRepo;
     this.analyticsConversionRepo = analyticsConversionRepo;
     this.analyticsUserAidMappingRepo = analyticsUserAidMappingRepo;
     this.analyticsCtaClickedRepo = analyticsCtaClickedRepo;
     this.tourService = tourService;
-    this.tourRepo = tourRepo;
+    this.demoEntityRepo = demoEntityRepo;
     this.s3Config = s3Config;
     this.houseLeadInfoRepo = houseLeadInfoRepo;
     this.leadInfoVendorMappingRepo = leadInfoVendorMappingRepo;
@@ -70,18 +71,18 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespTourView getTotalVisitorsForTour(String rid, Integer days, User user) {
-    Tour tour = tourService.getEntityByRIdWithAuthValidation(Tour.class, rid, user);
-    List<AnalyticsMetrics> metrics = analyticsMetricsRepo.findByTourId(tour.getId());
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    List<AnalyticsMetrics> metrics = analyticsMetricsRepo.findByTourId(demoEntity.getId());
     if (metrics.isEmpty()) {
-      log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
+      log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
       return RespTourView.Empty();
     }
     String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
-    Long totalVisitors = analyticsMetricsRepo.findTotalVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
-    Long uniqueViews = analyticsMetricsRepo.findUniqueVisitorsForTourId(tour.getId(), dateBeforeCertainDays);
-    List<TotalVisitorsByYmd> totalVisitorsByYmd = analyticsMetricsRepo.findTotalVisitorsByYmd(tour.getId(), dateBeforeCertainDays);
+    Long totalVisitors = analyticsMetricsRepo.findTotalVisitorsForTourId(demoEntity.getId(), dateBeforeCertainDays);
+    Long uniqueViews = analyticsMetricsRepo.findUniqueVisitorsForTourId(demoEntity.getId(), dateBeforeCertainDays);
+    List<TotalVisitorsByYmd> totalVisitorsByYmd = analyticsMetricsRepo.findTotalVisitorsByYmd(demoEntity.getId(), dateBeforeCertainDays);
     return RespTourView.builder()
-      .tourId(tour.getId())
+      .tourId(demoEntity.getId())
       .totalViews(totalVisitors)
       .uniqueViews(uniqueViews)
       .totalVisitorsByYmd(totalVisitorsByYmd)
@@ -90,19 +91,19 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespTourAnnViews getAnnViews(String rid, Integer days, User user) {
-    Tour tour = tourService.getEntityByRIdWithAuthValidation(Tour.class, rid, user);
-    List<AnalyticsAnnClick> annClick = analyticsAnnClickRepo.findByTourId(tour.getId());
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    List<AnalyticsAnnClick> annClick = analyticsAnnClickRepo.findByTourId(demoEntity.getId());
     if (annClick.isEmpty()) {
-      log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
+      log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
       return RespTourAnnViews.Empty();
     }
     String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
-    List<TourAnnWithViews> tourAnnWithViews = analyticsAnnClickRepo.findTotalViewsForAnn(tour.getId(), dateBeforeCertainDays);
+    List<TourAnnWithViews> tourAnnWithViews = analyticsAnnClickRepo.findTotalViewsForAnn(demoEntity.getId(), dateBeforeCertainDays);
     if (tourAnnWithViews.isEmpty()) {
       return RespTourAnnViews.Empty();
     }
     return RespTourAnnViews.builder()
-      .tourId(tour.getId())
+      .tourId(demoEntity.getId())
       .tourAnnWithViews(tourAnnWithViews)
       .build();
 
@@ -110,14 +111,14 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespTourAnnWithPercentile getTimeSpentForEachAnnotation(String rid, Integer days, User user) {
-    Tour tour = tourService.getEntityByRIdWithAuthValidation(Tour.class, rid, user);
-    List<AnalyticsAnnClick> annClick = analyticsAnnClickRepo.findByTourId(tour.getId());
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    List<AnalyticsAnnClick> annClick = analyticsAnnClickRepo.findByTourId(demoEntity.getId());
     if (annClick.isEmpty()) {
-      log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
+      log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
       return RespTourAnnWithPercentile.Empty();
     }
     String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
-    List<TourAnnViewsWithPercentile> annInfo = analyticsAnnClickRepo.findTotalViewWithPercentile(tour.getId(), dateBeforeCertainDays);
+    List<TourAnnViewsWithPercentile> annInfo = analyticsAnnClickRepo.findTotalViewWithPercentile(demoEntity.getId(), dateBeforeCertainDays);
     if (annInfo.isEmpty()) {
       return RespTourAnnWithPercentile.Empty();
     }
@@ -128,33 +129,33 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespConversion getTourConversion(String rid, Integer days, User user) {
-    Tour tour = tourService.getEntityByRIdWithAuthValidation(Tour.class, rid, user);
-    List<AnalyticsConversion> tourConversion = analyticsConversionRepo.findByTourId(tour.getId());
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    List<AnalyticsConversion> tourConversion = analyticsConversionRepo.findByTourId(demoEntity.getId());
     if (tourConversion.isEmpty()) {
-      log.warn("No analytics entry is present for this tour id {} at the time", tour.getId());
+      log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
       return RespConversion.Empty();
     }
     String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
-    List<ButtonClicks> buttonInfo = analyticsConversionRepo.findClicksForAllButtonIdInATour(tour.getId(), dateBeforeCertainDays);
+    List<ButtonClicks> buttonInfo = analyticsConversionRepo.findClicksForAllButtonIdInATour(demoEntity.getId(), dateBeforeCertainDays);
     if (buttonInfo.isEmpty()) {
       return RespConversion.Empty();
     }
     return RespConversion.builder()
-      .tourId(tour.getId())
+      .tourId(demoEntity.getId())
       .buttonsWithTotalClicks(buttonInfo)
       .build();
   }
 
   @Transactional(readOnly = true)
   public RespTourLeads getLeadsForATour(String rid, Integer days, User user) {
-    Tour tour = tourService.getEntityByRIdWithAuthValidation(Tour.class, rid, user);
-    List<AnalyticsUserAidMapping> analyticsUserAidMapping = analyticsUserAidMappingRepo.findByTourId(tour.getId());
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    List<AnalyticsUserAidMapping> analyticsUserAidMapping = analyticsUserAidMappingRepo.findByTourId(demoEntity.getId());
     if (analyticsUserAidMapping.isEmpty()) {
       return RespTourLeads.Empty();
     }
     String dateBeforeCertainDays = days > 0 ? Utils.calculateParticularUtcDateFromCurrentUtc(days) : LIFETIME;
-    List<TourLeads> allTourLeads = analyticsUserAidMappingRepo.findLeadsByYmd(tour.getId(), dateBeforeCertainDays);
-    Long uniqueEmails = analyticsUserAidMappingRepo.findUniqueEmails(tour.getId(), dateBeforeCertainDays);
+    List<TourLeads> allTourLeads = analyticsUserAidMappingRepo.findLeadsByYmd(demoEntity.getId(), dateBeforeCertainDays);
+    Long uniqueEmails = analyticsUserAidMappingRepo.findUniqueEmails(demoEntity.getId(), dateBeforeCertainDays);
     if (allTourLeads.isEmpty()) {
       return RespTourLeads.Empty();
     }
@@ -185,9 +186,9 @@ public class AnalyticsService extends ServiceBase {
   }
 
   public RespLeadActivityUrl getLeadActivityDataFile(String rid, String aid, User user) {
-    Tour tour = tourService.getEntityByRIdWithAuthValidation(Tour.class, rid, user);
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
     try {
-      Pair<String, String> leadAnalyticsPath = getLeadActivityPath(tour.getId(), aid);
+      Pair<String, String> leadAnalyticsPath = getLeadActivityPath(demoEntity.getId(), aid);
       String s3UriToFile = leadAnalyticsPath.getValue1();
       return RespLeadActivityUrl.builder()
         .leadActivityUrl(s3UriToFile)
@@ -221,14 +222,14 @@ public class AnalyticsService extends ServiceBase {
   @Transactional
   public void updateLeadInfo(ReqAddOrUpdateLeadInfo body) {
     Long tourId = body.tourId();
-    Optional<Tour> maybeTour = tourRepo.findById(tourId);
+    Optional<DemoEntity> maybeTour = demoEntityRepo.findById(tourId);
     if (maybeTour.isEmpty()) {
       log.warn("Tour with id {} not found", tourId);
       return;
     }
 
-    Tour tour = maybeTour.get();
-    Long orgId = tour.getBelongsToOrg();
+    DemoEntity demoEntity = maybeTour.get();
+    Long orgId = demoEntity.getBelongsToOrg();
 
 
     Optional<HouseLeadInfo> maybeHouseLeadInfo = houseLeadInfoRepo.findByOrgIdAndLeadEmailId(orgId, body.emailId());
@@ -238,7 +239,7 @@ public class AnalyticsService extends ServiceBase {
         .orgId(orgId)
         .leadEmailId(body.emailId())
         .info360(Set.of(
-          Lead360.Empty(tour.getId()),
+          Lead360.Empty(demoEntity.getId()),
           Lead360.Empty()
         ))
         .build();

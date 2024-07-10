@@ -1,17 +1,14 @@
 package com.sharefable.api.service;
 
-import com.sharefable.api.common.AssetFilePath;
-import com.sharefable.api.common.DefaultThumbnail;
-import com.sharefable.api.common.ImageType;
-import com.sharefable.api.common.Utils;
+import com.sharefable.api.common.*;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
+import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.entity.EntityBaseWithOwnership;
 import com.sharefable.api.entity.Screen;
-import com.sharefable.api.entity.Tour;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.repo.DemoEntityRepo;
 import com.sharefable.api.repo.ScreenRepo;
-import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.TourDeleted;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -34,19 +31,20 @@ public abstract class ServiceBase implements DefaultThumbnail {
   private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX = "/data-schema/v=%s/tour/index.json";
   private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_LOADER = "/data-schema/v=%s/tour/loader.json";
   private static final String PATH_TO_SCHEMA_FILE_FOR_SCREEN_EDIT = "/data-schema/v=%s/screen/edits.json";
+  private static final String PATH_TO_SCHEMA_FILE_FOR_DEMOHUB_INDEX = "/data-schema/v=%s/demoHub/index.json";
 
   private final S3Service s3Service;
   private final S3Config s3Config;
   private final AppSettings settings;
   private final ScreenRepo screenRepo;
-  private final TourRepo tourRepo;
+  private final DemoEntityRepo demoEntityRepo;
 
-  protected ServiceBase(AppSettings settings, S3Service s3Service, S3Config s3Config, ScreenRepo screenRepo, TourRepo tourRepo) {
+  protected ServiceBase(AppSettings settings, S3Service s3Service, S3Config s3Config, ScreenRepo screenRepo, DemoEntityRepo demoEntityRepo) {
     this.s3Service = s3Service;
     this.s3Config = s3Config;
     this.settings = settings;
     this.screenRepo = screenRepo;
-    this.tourRepo = tourRepo;
+    this.demoEntityRepo = demoEntityRepo;
   }
 
   @Transactional(propagation = Propagation.MANDATORY)
@@ -96,6 +94,12 @@ public abstract class ServiceBase implements DefaultThumbnail {
         S3Config.AssetType.Screen,
         S3Config.getEntityFiles().editFile()
       );
+
+      case DEMO_HUB -> new TemplateFile(
+        String.format(PATH_TO_SCHEMA_FILE_FOR_DEMOHUB_INDEX, schemaVersion),
+        S3Config.AssetType.DemoHub,
+        S3Config.getEntityFiles().demoHubDataFile()
+      );
     };
   }
 
@@ -131,14 +135,14 @@ public abstract class ServiceBase implements DefaultThumbnail {
     return assetFilePath;
   }
 
-  protected <T extends EntityBaseWithOwnership> T getEntityByRIdWithAuthValidation(Class<T> cls, String rid, User user) {
+  protected <T extends EntityBaseWithOwnership> T getEntityByRIdWithAuthValidation(Class<T> cls, String rid, User user, TopLevelEntityType type) {
     Optional<? extends EntityBaseWithOwnership> maybeEntity;
     String entityType;
     if (cls.isAssignableFrom(Screen.class)) {
       maybeEntity = screenRepo.findByRid(rid);
       entityType = "screen";
-    } else if (cls.isAssignableFrom(Tour.class)) {
-      maybeEntity = tourRepo.findByRid(rid);
+    } else if (cls.isAssignableFrom(DemoEntity.class)) {
+      maybeEntity = demoEntityRepo.findByRidAndEntityType(rid, type);
       entityType = "tour";
     } else {
       throw new IllegalArgumentException("{} not yet supported" + cls.getName());
@@ -150,8 +154,8 @@ public abstract class ServiceBase implements DefaultThumbnail {
     }
 
     if (entityType.equals("tour")) {
-      Tour tour = (Tour) maybeEntity.get();
-      if (tour.getDeleted() == TourDeleted.DELETED) {
+      DemoEntity demoEntity = (DemoEntity) maybeEntity.get();
+      if (demoEntity.getDeleted() == TourDeleted.DELETED) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tour with rid " + rid + " is not found");
       }
     }
@@ -169,6 +173,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
     TOUR_INDEX,
     TOUR_LOADER,
     SCREEN_EDIT,
+    DEMO_HUB
   }
 
   public record TemplateFile(String fromPath, S3Config.AssetType type, S3Config.FileConfig toFile) {

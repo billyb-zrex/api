@@ -20,38 +20,38 @@ import java.util.Set;
 @SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespScreen.class)
 public class Screen extends EntityBaseWithOwnership {
-    @Column(nullable = false)
-    private String assetPrefixHash;
+  @Column(nullable = false)
+  private String assetPrefixHash;
 
-    @Column(nullable = false)
-    private String displayName;
+  @Column(nullable = false)
+  private String displayName;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(nullable = false, name = "created_by")
-    private User createdBy;
+  @ManyToOne(fetch = FetchType.EAGER, optional = false)
+  @JoinColumn(nullable = false, name = "created_by")
+  private User createdBy;
 
-    private String thumbnail;
+  private String thumbnail;
 
-    @Column(nullable = false)
-    private Long parentScreenId;
+  @Column(nullable = false)
+  private Long parentScreenId;
 
-    @Column(nullable = false)
-    private String url;
+  @Column(nullable = false)
+  private String url;
 
-    private String icon;
+  private String icon;
 
-    @Column(nullable = false)
-    private Boolean responsive;
+  @Column(nullable = false)
+  private Boolean responsive;
 
-    // Read: com.sharefable.api.transport.ScreenType doc
-    @Enumerated(value = EnumType.ORDINAL)
-    @Column(nullable = false)
-    private ScreenType type;
+  // Read: com.sharefable.api.transport.ScreenType doc
+  @Enumerated(value = EnumType.ORDINAL)
+  @Column(nullable = false)
+  private ScreenType type;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "screens_tours_join",
-        joinColumns = @JoinColumn(name = "screen_id"),
-        inverseJoinColumns = @JoinColumn(name = "tour_id"))
-    private Set<Tour> tours;
+  @ManyToMany(fetch = FetchType.LAZY)
+  @JoinTable(
+    name = "screens_tours_join",
+    joinColumns = @JoinColumn(name = "screen_id"),
+    inverseJoinColumns = @JoinColumn(name = "tour_id"))
+  private Set<DemoEntity> demoEntities;
 }

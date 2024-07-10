@@ -5,12 +5,12 @@ import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.vendor.HubspotConfig;
 import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.AnalyticsUserAidMapping;
+import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.entity.Lead360;
 import com.sharefable.api.entity.LeadInfoVendorMapping;
-import com.sharefable.api.entity.Tour;
 import com.sharefable.api.repo.AnalyticsUserAidMappingRepo;
+import com.sharefable.api.repo.DemoEntityRepo;
 import com.sharefable.api.repo.LeadInfoVendorMappingRepo;
-import com.sharefable.api.repo.TourRepo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class HubspotController {
   private final HubspotConfig hubspotConfig;
   private final LeadInfoVendorMappingRepo leadInfoVendorMappingRepo;
   private final AnalyticsUserAidMappingRepo analyticsUserAidMappingRepo;
-  private final TourRepo tourRepo;
+  private final DemoEntityRepo demoEntityRepo;
 
   private boolean isValidHubspotRequest(String signature, HttpServletRequest request) {
     String webhookUrl = appSettings.getPublicEndpoint() + request.getRequestURI() + "?" + request.getQueryString();
@@ -75,36 +75,36 @@ public class HubspotController {
     Set<Lead360> lead360s = leadInfoVendorMapping.getHouseLeadInfo().getInfo360();
     List<Long> tourIds = lead360s.stream().map(Lead360::getTourId).filter(tourId -> tourId != 0).toList();
 
-    List<Tour> allTours = tourRepo.findAllByIdIn(tourIds);
-    Map<Long, Tour> tourMap = new HashMap<>();
-    for (Tour tour : allTours) {
-      tourMap.put(tour.getId(), tour);
+    List<DemoEntity> allDemoEntities = demoEntityRepo.findAllByIdIn(tourIds);
+    Map<Long, DemoEntity> tourMap = new HashMap<>();
+    for (DemoEntity demoEntity : allDemoEntities) {
+      tourMap.put(demoEntity.getId(), demoEntity);
     }
 
     LeadResult[] leadResults = lead360s.stream().map(lead360 -> {
       if (lead360.getTourId() == 0) return null;
-      Tour tour = tourMap.get(lead360.getTourId());
-      if (tour == null) {
+      DemoEntity demoEntity = tourMap.get(lead360.getTourId());
+      if (demoEntity == null) {
         log.error("tour is present in lead360 but not found in tours. id={}", lead360.getTourId());
         return null;
       }
 
-      List<AnalyticsUserAidMapping> aidMapping = analyticsUserAidMappingRepo.getAnalyticsUserAidMappingsByTourIdAndPrimaryKeyOrderByUpdatedAtDesc(tour.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
+      List<AnalyticsUserAidMapping> aidMapping = analyticsUserAidMappingRepo.getAnalyticsUserAidMappingsByTourIdAndPrimaryKeyOrderByUpdatedAtDesc(demoEntity.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
       if (aidMapping.isEmpty()) {
-        log.error("no aid mapping is found for tourId [{}] and emailId[{}] ", tour.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
+        log.error("no aid mapping is found for tourId [{}] and emailId[{}] ", demoEntity.getId(), leadInfoVendorMapping.getHouseLeadInfo().getLeadEmailId());
         return null;
       }
       AnalyticsUserAidMapping mapping = aidMapping.get(0);
 
       return new LeadResult(
         lead360.getId(),
-        tour.getDisplayName(),
-        String.format("https://app.sharefable.com/demo/%s", tour.getRid()),
+        demoEntity.getDisplayName(),
+        String.format("https://app.sharefable.com/demo/%s", demoEntity.getRid()),
         lead360.getCompletionPercentage(),
         lead360.getCtaClickRate() == 1 ? "Yes" : "No",
         lead360.getLastInteractedAt() != null ? lead360.getLastInteractedAt().getTime() : lead360.getUpdatedAt().getTime(),
         lead360.getTimeSpentSec(),
-        String.format("https://app.sharefable.com/a/demo/%s/leads#%s", tour.getRid(), mapping.getAid())
+        String.format("https://app.sharefable.com/a/demo/%s/leads#%s", demoEntity.getRid(), mapping.getAid())
       );
     }).filter(Objects::nonNull).toArray(LeadResult[]::new);
 

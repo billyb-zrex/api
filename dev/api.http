@@ -129,7 +129,7 @@ Content-Type: application/json
 
 {
   "newName": "Lights out and away we go",
-  "description": "I am a testing tour",
+  "description": "I am a testing demoEntity",
   "rid": "hacker-news-z9czhtl128zka745"
 }
 
@@ -182,7 +182,7 @@ Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "tourRid": "untitled-etxa2y6h1fw0tkh2"
+  "tourRid": "notion-18l1kvc98vqxvqxz"
 }
 
 ### get tour by rid
@@ -326,7 +326,7 @@ Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "tourRid": "publish-test-zt33uweystk4wzwa"
+  "tourRid": "notion-18l1kvc98vqxvqxz"
 }
 
 ### Create default tour
@@ -340,8 +340,8 @@ Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "duplicateTourName": "Copy of tour",
-  "fromTourRid": "my-first-tour-google-c-uko1xzaxzb5k6a0b"
+  "duplicateTourName": "Copy of tourwe",
+  "fromTourRid": "google-0ugf4mhcuylazmk7"
 }
 
 ### Update tour progress property
@@ -350,9 +350,10 @@ Authorization: {{auth-header}}
 Content-Type: application/json
 
 {
-  "tourRid": "update-tour-hqufywi26muug4o3",
+  "tourRid": "notion-18l1kvc98vqxvqxz",
   "inProgress": 0,
   "responsive": 1,
+  "info": "1234.jpeg",
   "site": {
     "logo": "image00009.png",
     "navLink": "https://www.google.com",
@@ -511,7 +512,7 @@ POST {{api-host}}/v1/m/tpub
 Content-Type: application/json
 
 {
-  "tourRid": ""
+  "rid": ""
 }
 
 ### get tenant integration config grouped by platform integration config
@@ -544,7 +545,7 @@ POST {{api-host}}/v1/f/new/apikey
 Content-Type: application/json
 Authorization: {{auth-header}}
 
-### Update tour props
+### Update demoEntity props
 POST {{api-host}}/v1/f/updtorgprops
 Content-Type: application/json
 Authorization: {{auth-header}}
@@ -732,5 +733,77 @@ Authorization: {{auth-header}}
 
 ### get global opts
 GET {{api-host}}/v1/f/gopts
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+
+### Create a demo hub
+POST {{api-host}}/v1/f/demohub
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "name": "new demo hub"
+}
+
+### rename a demo hub
+POST {{api-host}}/v1/f/renamedh
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "newName": "First demo hub",
+  "rid": "new-demo-hub-3bfajutrlk86ctlt"
+}
+
+### update a demo hub property
+POST {{api-host}}/v1/f/updtdhprops
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "rid": "update-demoEntity-hqufywi26muug4o3",
+  "info": "_234.jpeg",
+  "inProgress": 0,
+  "responsive": 1,
+  "site": {
+    "logo": "image00009.png",
+    "navLink": "https://www.google.com",
+    "ctaText": "test",
+    "ctaLink": "https://www.google.com",
+    "background": "#fffff",
+    "headerBackground": "#fffff"
+  }
+}
+
+### get all demo hubs
+GET {{api-host}}/v1/f/dhs
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+### get a demo hubs
+GET {{api-host}}/v1/dh?rid=new2-demo-hub-e7ajt4xwmganmbdq
+Content-Type: application/json
+
+### delete a demo hub
+POST {{api-host}}/v1/f/deldh
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "rid": "new2-demo-hub-e7ajt4xwmganmbdq"
+}
+
+### publish a demo hub
+POST {{api-host}}/v1/f/pubdh
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "rid": "new123-demo-hub-rename-blaqdiuzzkrn964w"
+}
+
+### update a demo hub's index.json
+GET {{api-host}}/v1/f/recorddhedit?rid=new-demo-hub-zd2hlgqkxurey15m
 Content-Type: application/json
 Authorization: {{auth-header}}

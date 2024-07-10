@@ -2,9 +2,9 @@ package com.sharefable.api.service;
 
 import com.sharefable.api.entity.EntityBaseWithReadableId;
 import com.sharefable.api.entity.EntityHolding;
+import com.sharefable.api.repo.DemoEntityRepo;
 import com.sharefable.api.repo.EntityHoldingRepo;
 import com.sharefable.api.repo.ScreenRepo;
-import com.sharefable.api.repo.TourRepo;
 import com.sharefable.api.transport.EntityHoldingInfoBase;
 import com.sharefable.api.transport.EntityType;
 import com.sharefable.api.transport.req.ReqEntityAssetAssn;
@@ -18,14 +18,14 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class EntityHoldingService {
-  private final TourRepo tourRepo;
+  private final DemoEntityRepo demoEntityRepo;
 
   private final ScreenRepo screenRepo;
 
   private final EntityHoldingRepo entityHoldingRepo;
 
-  public EntityHoldingService(TourRepo tourRepo, ScreenRepo screenRepo, EntityHoldingRepo entityHoldingRepo) {
-    this.tourRepo = tourRepo;
+  public EntityHoldingService(DemoEntityRepo demoEntityRepo, ScreenRepo screenRepo, EntityHoldingRepo entityHoldingRepo) {
+    this.demoEntityRepo = demoEntityRepo;
     this.screenRepo = screenRepo;
     this.entityHoldingRepo = entityHoldingRepo;
   }
@@ -35,7 +35,7 @@ public class EntityHoldingService {
     if (body.getEntityType() == EntityType.Screen) {
       maybeEntity = screenRepo.findByRid(body.getEntityRid());
     } else if (body.getEntityType() == EntityType.Tour) {
-      maybeEntity = tourRepo.findByRid(body.getEntityRid());
+      maybeEntity = demoEntityRepo.findByRid(body.getEntityRid());
     } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No association is mentioned");
     }

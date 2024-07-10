@@ -1,0 +1,140 @@
+{
+  "v": 1,
+  "logo": {
+    "type": 1,
+    "from": "",
+    "_val": "https://s3.amazonaws.com/app.sharefable.com/favicon.png"
+  },
+  "companyName": {
+    "type": 1,
+    "from": "",
+    "_val": "Fable"
+  },
+  "fontFamily": {
+    "type": 1,
+    "from": "",
+    "_val": ""
+  },
+  "baseFontSize": 16,
+  "cta": [
+    {
+      "text": "See all demos",
+      "id": "see-all-demos",
+      "iconPlacement": "left",
+      "__linkType": "open_ext_url",
+      "link": "https://google.com",
+      "__definedBy": "system",
+      "type": "outline",
+      "style": {
+        "bgColor": "#66cdf5",
+        "borderColor": "#66cdf5",
+        "fontColor": "#000000",
+        "borderRadius": 4
+      }
+    },
+    {
+      "text": "Book a demo",
+      "id": "book-a-demo",
+      "iconPlacement": "left",
+      "__linkType": "open_ext_url",
+      "link": "https://yahoo.com",
+      "__definedBy": "system",
+      "type": "solid",
+      "style": {
+        "bgColor": "#66cdf5",
+        "borderColor": "#66cdf5",
+        "fontColor": "#000000",
+        "borderRadius": 4
+      }
+    }
+  ],
+  "see_all_page": {
+    "showLeadForm": false,
+    "header": {
+      "title": "",
+      "style": {
+        "bgColor": "#ffffff",
+        "borderColor": "#66cdf5",
+        "fontColor": "#000000"
+      },
+      "ctas": []
+    },
+    "body": {
+      "text": "",
+      "style": {
+        "bgColor": "#ffffff",
+        "fontColor": "#000000"
+      }
+    },
+    "sections": [
+      {
+        "title": "section 1",
+        "slug": "section-1",
+        "desc": "sec 1 desc",
+        "simpleStyle": {
+          "bgColor": "#ffffff",
+          "borderColor": "#66cdf5",
+          "fontColor": "#000000",
+          "borderRadius": 4
+        },
+        "demos": [],
+        "id": "RHisuxqAi6gDQhb5xEi_3"
+      },
+      {
+        "title": "section 2",
+        "slug": "section-2",
+        "desc": "sec 2 desc",
+        "simpleStyle": {
+          "bgColor": "#ffffff",
+          "borderColor": "#66cdf5",
+          "fontColor": "#000000",
+          "borderRadius": 4
+        },
+        "demos": [],
+        "id": "DJvUDaZjGHmJiYhisbJTj"
+      }
+    ],
+    "demoCardStyles": {
+      "bgColor": "#ffffff",
+      "borderColor": "#66cdf5",
+      "fontColor": "#000000",
+      "borderRadius": 4
+    },
+    "demoModalStyles": {
+      "overlay": {
+        "bgColor": "#ffffff",
+        "fontColor": "#000000"
+      },
+      "body": {
+        "bgColor": "#ffffff",
+        "borderColor": "#66cdf5",
+        "fontColor": "#000000",
+        "borderRadius": 4
+      }
+    }
+  },
+  "qualification_page": {
+    "header": {
+      "title": "",
+      "style": {
+        "bgColor": "#ffffff",
+        "borderColor": "#66cdf5",
+        "fontColor": "#000000"
+      },
+      "ctas": []
+    },
+    "body": {
+      "text": "",
+      "style": {
+        "bgColor": "#ffffff",
+        "fontColor": "#000000"
+      }
+    },
+    "qualifications": []
+  },
+  "leadform": {
+    "primaryKey": "email",
+    "bodyContent": "",
+    "displayText": ""
+  }
+}

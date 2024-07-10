@@ -24,6 +24,7 @@ import org.springframework.core.env.Environment;
 public class S3Config {
   private static final String TOUR_DATA_FILE_NAME = "index.json";
   private static final String SCREEN_DATA_FILE_NAME = "index.json";
+  private static final String DEMOHUB_DATA_FILE_NAME = "index.json";
   private static final String EDIT_FILE_NAME = "edits.json";
   private static final String LOADER_FILE_NAME = "loader.json";
   private static final String IMAGE_FILE_NAME = "index.img";
@@ -36,10 +37,12 @@ public class S3Config {
   private static final String PATH_FOR_COMMON_ASSET = "/cmn";
   private static final String PATH_FOR_PROXY_ASSET = "/proxy_asset";
   private static final String PATH_FOR_PUBLISHED_TOUR_ASSET = "/ptour/%s";
+  private static final String PATH_FOR_PUBLISHED_DEMO_HUB_ASSET = "/pdh/%s";
   private static final String PATH_FOR_SCREEN_ASSET = "/srn/%s";
   private static final String PATH_FOR_TOUR_ASSET = "/tour/%s";
   private static final String PATH_FOR_USER_UPLOADED_ASSET = "/usr/org/%s";
   private static final String PATH_FOR_LEAD_LEVEL_ANALYTICS = "/ula/%s";
+  private static final String PATH_FOR_DEMOHUB_ASSET = "/dh/%s";
   private String region;
   private String rootQualifier;
   private String assetBucketName;
@@ -60,7 +63,8 @@ public class S3Config {
       new FileConfig(PUBLISHED_LOADER_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache, String::format), // always cache published loader file
       new FileConfig(PUBLISHED_TOUR_ENTITY_FILE_NAME, DATA_FILE_CACHE_POLICY.StaleOk), // cache with revalidate tour entity file
       new FileConfig(MANIFEST_FILE, DATA_FILE_CACHE_POLICY.NoCache),
-      new FileConfig(LEAD_ACTIVITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
+      new FileConfig(LEAD_ACTIVITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
+      new FileConfig(DEMOHUB_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
   }
 
   public static String getCachePolicyStr(DATA_FILE_CACHE_POLICY policy) {
@@ -80,6 +84,8 @@ public class S3Config {
       case PublishedTour -> PATH_FOR_PUBLISHED_TOUR_ASSET;
       case UserGenerated -> PATH_FOR_USER_UPLOADED_ASSET;
       case Analytics -> PATH_FOR_LEAD_LEVEL_ANALYTICS;
+      case DemoHub -> PATH_FOR_DEMOHUB_ASSET;
+      case PublishedDemoHub -> PATH_FOR_PUBLISHED_DEMO_HUB_ASSET;
     };
   }
 
@@ -94,7 +100,9 @@ public class S3Config {
       AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Screen, "")).getS3UriToFile(),
       AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Tour, "")).getS3UriToFile(),
       AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.PublishedTour, "")).getS3UriToFile(),
-      AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Analytics, "")).getS3UriToFile()
+      AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Analytics, "")).getS3UriToFile(),
+      AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.DemoHub, "")).getS3UriToFile(),
+      AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.PublishedDemoHub, "")).getS3UriToFile()
     );
   }
 
@@ -133,6 +141,8 @@ public class S3Config {
     UserGenerated,
     PublishedTour,
     Analytics,
+    DemoHub,
+    PublishedDemoHub
   }
 
   public enum DATA_FILE_CACHE_POLICY {
@@ -146,7 +156,9 @@ public class S3Config {
     String screenAsset,
     String tourAsset,
     String tourPublishedAsset,
-    String leadAnalytics) {
+    String leadAnalytics,
+    String demoHubAsset,
+    String demoHubPublishedAsset) {
   }
 
   public static class FileConfig {
@@ -190,6 +202,7 @@ public class S3Config {
     FileConfig publishedLoaderFile,
     FileConfig publishedTourEntityFile,
     FileConfig manifestFile,
-    FileConfig leadActivityDataFile) {
+    FileConfig leadActivityDataFile,
+    FileConfig demoHubDataFile) {
   }
 }

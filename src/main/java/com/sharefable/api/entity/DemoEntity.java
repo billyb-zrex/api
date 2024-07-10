@@ -1,9 +1,11 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.common.EntityInfo;
+import com.sharefable.api.common.TopLevelEntityType;
 import com.sharefable.api.transport.Responsiveness;
 import com.sharefable.api.transport.TourDeleted;
 import com.sharefable.api.transport.TourSettings;
-import com.sharefable.api.transport.resp.RespTourWithScreens;
+import com.sharefable.api.transport.resp.RespDemoEntityWithSubEntities;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,8 +24,8 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @SuperBuilder(toBuilder = true)
-@TransportObjRef(cls = RespTourWithScreens.class)
-public class Tour extends EntityBaseWithOwnership {
+@TransportObjRef(cls = RespDemoEntityWithSubEntities.class)
+public class DemoEntity extends EntityBaseWithOwnership {
   @Column(nullable = false)
   private String assetPrefixHash;
 
@@ -45,15 +47,18 @@ public class Tour extends EntityBaseWithOwnership {
   private Boolean onboarding;
 
   private Boolean inProgress;
+
   @Type(JsonType.class)
   @Column(columnDefinition = "json")
   private Map<String, Object> site;
 
   @Column(nullable = false)
   private Boolean responsive;
+
   @Enumerated(value = EnumType.STRING)
   @Column(nullable = false)
   private Responsiveness responsive2;
+
   @Type(JsonType.class)
   @Column(columnDefinition = "json")
   private TourSettings settings;
@@ -61,6 +66,14 @@ public class Tour extends EntityBaseWithOwnership {
   @Enumerated(EnumType.ORDINAL)
   @Column(nullable = false)
   private TourDeleted deleted;
+
+  @Enumerated(EnumType.ORDINAL)
+  @Column(nullable = false)
+  private TopLevelEntityType entityType;
+
+  @Type(JsonType.class)
+  @Column(columnDefinition = "json")
+  private EntityInfo info;
 
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))
