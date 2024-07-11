@@ -765,6 +765,7 @@ Authorization: {{auth-header}}
   "rid": "update-demoEntity-hqufywi26muug4o3",
   "info": "_234.jpeg",
   "inProgress": 0,
+  "lastInteractedAt": "2024-07-11T07:31:08.499Z",
   "responsive": 1,
   "site": {
     "logo": "image00009.png",

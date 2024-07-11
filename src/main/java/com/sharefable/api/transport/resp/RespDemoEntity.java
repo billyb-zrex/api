@@ -44,6 +44,7 @@ public class RespDemoEntity extends ResponseBase {
   private TourDeleted deleted;
   private TopLevelEntityType entityType;
   private EntityInfo info;
+  private Timestamp lastInteractedAt;
   @OptionalPropInTS
   private Object globalOpts;
   @OptionalPropInTS

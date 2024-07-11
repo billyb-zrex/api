@@ -117,7 +117,7 @@ public class TourController {
       throw new ResponseStatusException(HttpStatusCode.valueOf(404));
     }
     RespCommonConfig commonConfig = wsController.getCommonConfig().getData();
-    RespDemoEntity resp = entityService.publishTour(body, commonConfig);
+    RespDemoEntity resp = entityService.publishEntity(body, commonConfig, TopLevelEntityType.TOUR);
     return ApiResp.<RespDemoEntity>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 

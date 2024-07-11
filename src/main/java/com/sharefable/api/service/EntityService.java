@@ -144,7 +144,7 @@ public class EntityService extends ServiceBase {
       fileTobeEdited == EditTour.INDEX ? S3Config.getEntityFiles().tourDataFile() : S3Config.getEntityFiles().loaderFile(),
       S3Config.AssetType.Tour);
 
-    demoEntity.setUpdatedAt(Utils.getCurrentUtcTimestamp());
+    demoEntity.setLastInteractedAt(Utils.getCurrentUtcTimestamp());
     DemoEntity updatedDemoEntity = demoEntityRepo.save(demoEntity);
     return RespDemoEntity.from(updatedDemoEntity);
   }
@@ -326,6 +326,10 @@ public class EntityService extends ServiceBase {
   @Transactional
   public RespDemoEntity publishEntity(String rid, User userEntity, RespCommonConfig commonConfig, TopLevelEntityType entityType) {
     DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity, entityType);
+    return publishEntityBasedOnEntityType(demoEntity, commonConfig, entityType);
+  }
+
+  protected RespDemoEntity publishEntityBasedOnEntityType(DemoEntity demoEntity, RespCommonConfig commonConfig, TopLevelEntityType entityType) {
     if (entityType == TopLevelEntityType.TOUR) {
       return copyDataForPublishTour(demoEntity, commonConfig);
     } else {
@@ -334,10 +338,10 @@ public class EntityService extends ServiceBase {
   }
 
   @Transactional
-  public RespDemoEntity publishTour(ReqTourRid body, RespCommonConfig commonConfig) {
-    Optional<DemoEntity> maybeTour = demoEntityRepo.findByRidAndDeletedEquals(body.tourRid(), TourDeleted.ACTIVE);
-    if (maybeTour.isEmpty()) throw new RuntimeException("tour not present");
-    return copyDataForPublishTour(maybeTour.get(), commonConfig);
+  public RespDemoEntity publishEntity(ReqTourRid body, RespCommonConfig commonConfig, TopLevelEntityType entityType) {
+    Optional<DemoEntity> maybeTour = demoEntityRepo.findByRidAndDeletedAndEntityType(body.tourRid(), TourDeleted.ACTIVE, entityType);
+    if (maybeTour.isEmpty()) throw new RuntimeException("entity not present");
+    return publishEntityBasedOnEntityType(maybeTour.get(), commonConfig, entityType);
   }
 
   @Transactional
@@ -356,26 +360,37 @@ public class EntityService extends ServiceBase {
         HttpHeaders.CONTENT_TYPE, "application/json",
         HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedDataFile().cachePolicy())
       ));
-      demoEntity.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
-      demoEntity.setPublishedVersion(nextVersion);
-
-      EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
-      RespDemoEntityWithSubEntities respTour = RespDemoEntityWithSubEntities.from(demoEntity, commonConfig, entityConfigKV);
-      ApiResp<RespDemoEntityWithSubEntities> apiResp = ApiResp.<RespDemoEntityWithSubEntities>builder().data(respTour).build();
-      String tourResp = objectMapper.writeValueAsString(apiResp);
-
-      uploadDataFileToS3(tourResp, demoEntity.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedDemoHub);
-
-      DemoEntity savedDemoEntity = demoEntityRepo.save(demoEntity);
-      return RespDemoEntity.from(savedDemoEntity, entityConfigKV);
+      return updateEntityAndUploadTos3(demoEntity, nextVersion, commonConfig);
     } catch (Exception e) {
       log.error("Error while trying to publish demo hub", e);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish demo hub");
     }
   }
 
+  protected RespDemoEntity updateEntityAndUploadTos3(DemoEntity demoEntity, Integer nextVersion, RespCommonConfig commonConfig) {
+    demoEntity.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
+    demoEntity.setPublishedVersion(nextVersion);
+
+    EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
+    RespDemoEntityWithSubEntities respTour = RespDemoEntityWithSubEntities.from(demoEntity, commonConfig, entityConfigKV);
+    ApiResp<RespDemoEntityWithSubEntities> apiResp = ApiResp.<RespDemoEntityWithSubEntities>builder().data(respTour).build();
+
+    try {
+      String tourResp = objectMapper.writeValueAsString(apiResp);
+      uploadDataFileToS3(tourResp, demoEntity.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(),
+        demoEntity.getEntityType() == TopLevelEntityType.DEMO_HUB ? S3Config.AssetType.PublishedDemoHub : S3Config.AssetType.PublishedTour);
+
+      DemoEntity savedDemoEntity = demoEntityRepo.save(demoEntity);
+      return RespDemoEntity.from(savedDemoEntity, entityConfigKV);
+    } catch (Exception e) {
+      log.error("Error while trying to publish entity", e);
+      throw new RuntimeException(e.getMessage());
+    }
+  }
+
   public RespUploadUrl getPreSignedUrlToUpdateDemoHub(String rid, User userEntity) {
     DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity, TopLevelEntityType.DEMO_HUB);
+
     AssetFilePath filePath = s3Config.getQualifiedPathFor(
       S3Config.AssetType.DemoHub,
       demoEntity.getAssetPrefixHash(),
@@ -444,17 +459,7 @@ public class EntityService extends ServiceBase {
       }
       Utils.runInParallel(tourInfoCopier.toArray(new Callable[0]));
 
-      demoEntity.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
-      demoEntity.setPublishedVersion(nextVersion);
-
-      EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
-      RespDemoEntityWithSubEntities respDemoEntityWithSubEntities = RespDemoEntityWithSubEntities.from(demoEntity, commonConfig, entityConfigKV);
-      ApiResp<RespDemoEntityWithSubEntities> apiResp = ApiResp.<RespDemoEntityWithSubEntities>builder().data(respDemoEntityWithSubEntities).build();
-      String tourResp = objectMapper.writeValueAsString(apiResp);
-      uploadDataFileToS3(tourResp, demoEntity.getRid(), S3Config.getEntityFiles().publishedTourEntityFile(), S3Config.AssetType.PublishedTour);
-
-      DemoEntity savedDemoEntity = demoEntityRepo.save(demoEntity);
-      return RespDemoEntity.from(savedDemoEntity, entityConfigKV);
+      return updateEntityAndUploadTos3(demoEntity, nextVersion, commonConfig);
     } catch (Exception e) {
       log.error("Error while trying to publish tour", e);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to publish tour");
@@ -542,6 +547,7 @@ public class EntityService extends ServiceBase {
     body.getResponsive2().ifPresent(demoEntity::setResponsive2);
     body.getSettings().ifPresent(demoEntity::setSettings);
     body.getInfo().ifPresent(demoEntity::setInfo);
+    body.getLastInteractedAt().ifPresent(lastInteractedAt -> demoEntity.setLastInteractedAt(Utils.getCurrentUtcTimestamp()));
     DemoEntity savedDemoEntity = demoEntityRepo.save(demoEntity);
     return RespDemoEntity.from(savedDemoEntity);
   }

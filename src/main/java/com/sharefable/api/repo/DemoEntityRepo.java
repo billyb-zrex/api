@@ -24,6 +24,8 @@ public interface DemoEntityRepo extends CrudRepository<DemoEntity, Long> {
 
   Optional<DemoEntity> findByRidAndDeletedEquals(String rid, TourDeleted deleted);
 
+  Optional<DemoEntity> findByRidAndDeletedAndEntityType(String rid, TourDeleted deleted, TopLevelEntityType entityType);
+
   @Query("SELECT new com.sharefable.api.common.TourWithConfig(t, e) " +
     "FROM DemoEntity t " +
     "LEFT OUTER JOIN EntityConfigKV e ON t.belongsToOrg = e.entityId AND e.configType = :type " +

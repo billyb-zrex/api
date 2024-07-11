@@ -74,6 +74,8 @@ public class DemoEntity extends EntityBaseWithOwnership {
   @Type(JsonType.class)
   @Column(columnDefinition = "json")
   private EntityInfo info;
+  
+  private Timestamp lastInteractedAt;
 
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   @JoinTable(name = "screens_tours_join", joinColumns = @JoinColumn(name = "tour_id"), inverseJoinColumns = @JoinColumn(name = "screen_id"))

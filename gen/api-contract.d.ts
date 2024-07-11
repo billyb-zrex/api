@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-07-10 15:13:18.
+// Generated using typescript-generator version 2.35.1025 on 2024-07-11 14:33:43.
 
 export interface ApiResp<T> {
     status: ResponseStatus;
@@ -155,6 +155,7 @@ export interface EntityUpdateBase {
     responsive2?: Responsiveness;
     settings?: TourSettings;
     info?: EntityInfo;
+    lastInteractedAt?: Date;
 }
 
 export interface ReqActivateOrDeactivateUser {
@@ -208,6 +209,10 @@ export interface ReqDeleteTenantIntegration {
 }
 
 export interface ReqDemoHubPropUpdate extends EntityUpdateBase {
+    rid: string;
+}
+
+export interface ReqDemoHubRid {
     rid: string;
 }
 
@@ -402,6 +407,7 @@ export interface RespDemoEntity extends ResponseBase {
     deleted: TourDeleted;
     entityType: TopLevelEntityType;
     info: EntityInfo;
+    lastInteractedAt: Date;
     globalOpts?: any;
     settings?: TourSettings;
 }

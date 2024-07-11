@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,5 +35,6 @@ public class EntityUpdateBase {
   Optional<TourSettings> settings = Optional.empty();
 
   Optional<EntityInfo> info = Optional.empty();
+  Optional<Timestamp> lastInteractedAt = Optional.empty();
 
 }
