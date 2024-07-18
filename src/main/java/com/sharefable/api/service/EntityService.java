@@ -5,12 +5,10 @@ import com.sharefable.api.common.*;
 import com.sharefable.api.config.AppConfig;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
-import com.sharefable.api.entity.DemoEntity;
-import com.sharefable.api.entity.EntityConfigKV;
-import com.sharefable.api.entity.Screen;
-import com.sharefable.api.entity.User;
+import com.sharefable.api.entity.*;
 import com.sharefable.api.repo.DemoEntityRepo;
 import com.sharefable.api.repo.ScreenRepo;
+import com.sharefable.api.repo.SubscriptionRepo;
 import com.sharefable.api.repo.UserRepo;
 import com.sharefable.api.transport.*;
 import com.sharefable.api.transport.req.*;
@@ -21,6 +19,7 @@ import com.sharefable.api.transport.resp.RespUploadUrl;
 import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -50,7 +49,7 @@ public class EntityService extends ServiceBase {
   private final AppSettings settings;
   private final ScreenRepo screenRepo;
   private final EntityConfigService entityConfigService;
-  private final MediaProcessingService mediaProcessingService;
+  private final SubscriptionRepo subscriptionRepo;
 
   @Autowired
   public EntityService(
@@ -60,7 +59,8 @@ public class EntityService extends ServiceBase {
     S3Config s3Config,
     ScreenRepo screenRepo,
     ScreenService screenService,
-    UserService userService, AppConfig appConfig, EntityConfigService entityConfigService, MediaProcessingService mediaProcessingService) {
+    UserService userService, AppConfig appConfig,
+    EntityConfigService entityConfigService, SubscriptionRepo subscriptionRepo) {
     super(settings, s3Service, s3Config, screenRepo, demoEntityRepo);
     this.demoEntityRepo = demoEntityRepo;
     this.userRepo = userRepo;
@@ -72,7 +72,7 @@ public class EntityService extends ServiceBase {
     this.settings = settings;
     this.screenRepo = screenRepo;
     this.entityConfigService = entityConfigService;
-    this.mediaProcessingService = mediaProcessingService;
+    this.subscriptionRepo = subscriptionRepo;
   }
 
   @Transactional
@@ -367,12 +367,31 @@ public class EntityService extends ServiceBase {
     }
   }
 
-  protected RespDemoEntity updateEntityAndUploadTos3(DemoEntity demoEntity, Integer nextVersion, RespCommonConfig commonConfig) {
+  public Pair<Boolean, RespDemoEntity> refreshAndPublishEntityDataFile(String rid, RespCommonConfig commonConfig) {
+    Optional<DemoEntity> maybeTour = demoEntityRepo.findByRidAndDeleted(rid, TourDeleted.ACTIVE);
+    DemoEntity demoEntity = maybeTour.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (demoEntity.getLastPublishedDate() == null) {
+      EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
+      RespDemoEntity respTour = RespDemoEntity.from(demoEntity, entityConfigKV);
+      return Pair.with(false, respTour);
+    }
+    return Pair.with(true, updateEntityAndUploadTos3(demoEntity, demoEntity.getPublishedVersion(), commonConfig));
+  }
+
+  public RespDemoEntity updateEntityAndUploadTos3(DemoEntity demoEntity, Integer nextVersion, RespCommonConfig commonConfig) {
     demoEntity.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
     demoEntity.setPublishedVersion(nextVersion);
 
     EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
     RespDemoEntityWithSubEntities respTour = RespDemoEntityWithSubEntities.from(demoEntity, commonConfig, entityConfigKV);
+
+    // Based on subscription plan get log class
+    Subscription sub = subscriptionRepo.getSubscriptionByOrgId(demoEntity.getBelongsToOrg());
+    ClientLogClass logClass = switch (sub.getPaymentPlan()) {
+      case SOLO, STARTUP, LIFETIME_TIER1, LIFETIME_TIER2 -> ClientLogClass.Basic;
+      case LIFETIME_TIER3, LIFETIME_TIER4, LIFETIME_TIER5, BUSINESS -> ClientLogClass.Full;
+    };
+    respTour.setLogClass(logClass);
     ApiResp<RespDemoEntityWithSubEntities> apiResp = ApiResp.<RespDemoEntityWithSubEntities>builder().data(respTour).build();
 
     try {

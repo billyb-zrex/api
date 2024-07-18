@@ -1,7 +1,7 @@
 package com.sharefable.api.controller.v1;
 
 import com.sharefable.api.common.ApiResp;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.service.LogService;
 import com.sharefable.api.transport.ReqNewLog;
 import lombok.RequiredArgsConstructor;

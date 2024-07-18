@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.common.TransportObjRef;
 import com.sharefable.api.transport.resp.RespApiKey;
 import jakarta.persistence.*;
 import lombok.*;

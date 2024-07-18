@@ -1,4 +1,4 @@
-package com.sharefable.api;
+package com.sharefable;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -15,15 +15,15 @@ import java.time.Duration;
 @EnableAsync
 public class Main {
 
-    public static void main(String[] args) {
-        SpringApplication.run(Main.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(Main.class, args);
+  }
 
-    @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder
-            .setConnectTimeout(Duration.ofSeconds(10))
-            .setReadTimeout(Duration.ofSeconds(60))
-            .build();
-    }
+  @Bean
+  public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    return builder
+      .setConnectTimeout(Duration.ofSeconds(10))
+      .setReadTimeout(Duration.ofSeconds(60))
+      .build();
+  }
 }

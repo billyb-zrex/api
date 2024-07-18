@@ -1,7 +1,7 @@
 package com.sharefable.api.config;
 
 import com.sharefable.api.auth.AudienceValidator;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

@@ -4,7 +4,7 @@ import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.common.TopLevelEntityType;
 import com.sharefable.api.config.AppSettings;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.entity.ApiKey;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.EntityService;

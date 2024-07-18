@@ -1,7 +1,7 @@
 package com.sharefable.api.controller.v1;
 
 import com.sharefable.api.common.ApiResp;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.service.Lead360Service;
 import com.sharefable.api.transport.req.ReqHouseLeadInfoWithInfo360;
 import lombok.RequiredArgsConstructor;

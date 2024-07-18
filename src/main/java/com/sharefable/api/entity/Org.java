@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.common.TransportObjRef;
 import com.sharefable.api.transport.OrgInfo;
 import com.sharefable.api.transport.resp.RespOrg;
 import io.hypersistence.utils.hibernate.type.json.JsonType;

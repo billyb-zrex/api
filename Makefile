@@ -12,7 +12,7 @@ setup:
 	docker-compose --profile ${APP_ENV} up -d
 
 db-schema-migrate:
-	docker-compose up schema;
+	docker-compose up schema_api && docker-compose up schema_analytics;
 
 gen:
 	mvn process-classes

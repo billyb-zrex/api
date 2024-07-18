@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.ForObjectType;
 import com.sharefable.api.common.LogType;
 import com.sharefable.api.config.AppConfig;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.entity.Subscription;
 import com.sharefable.api.service.LogService;
 import com.sharefable.api.service.SubscriptionService;

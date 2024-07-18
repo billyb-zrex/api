@@ -1,6 +1,7 @@
 package com.sharefable.api.entity;
 
 import com.sharefable.api.common.PlatformIntegrationType;
+import com.sharefable.api.common.TransportObjRef;
 import com.sharefable.api.transport.resp.RespPlatformIntegration;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;

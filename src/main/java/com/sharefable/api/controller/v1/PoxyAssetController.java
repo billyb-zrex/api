@@ -1,7 +1,7 @@
 package com.sharefable.api.controller.v1;
 
 import com.sharefable.api.common.ApiResp;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.service.ProxyAssetService;
 import com.sharefable.api.transport.ParsedReqProxyAsset;
 import com.sharefable.api.transport.req.ReqProxyAsset;
@@ -20,23 +20,23 @@ import java.util.Optional;
 @RequestMapping(Routes.API_V1)
 @Slf4j
 public class PoxyAssetController {
-    private final ProxyAssetService proxyAssetService;
+  private final ProxyAssetService proxyAssetService;
 
-    @Autowired
-    public PoxyAssetController(ProxyAssetService proxyAssetService) {
-        this.proxyAssetService = proxyAssetService;
+  @Autowired
+  public PoxyAssetController(ProxyAssetService proxyAssetService) {
+    this.proxyAssetService = proxyAssetService;
+  }
+
+
+  @RequestMapping(value = Routes.PROXY_ASSET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespProxyAsset> proxyAsset(@RequestBody ReqProxyAsset body) {
+    Optional<ParsedReqProxyAsset> parsedBody = ParsedReqProxyAsset.from(body);
+    if (parsedBody.isEmpty()) {
+      return ApiResp.<RespProxyAsset>builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
+        .errStr("Could not create proxy asset").build();
     }
 
-
-    @RequestMapping(value = Routes.PROXY_ASSET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResp<RespProxyAsset> proxyAsset(@RequestBody ReqProxyAsset body) {
-        Optional<ParsedReqProxyAsset> parsedBody = ParsedReqProxyAsset.from(body);
-        if (parsedBody.isEmpty()) {
-            return ApiResp.<RespProxyAsset>builder().status(ApiResp.ResponseStatus.Failure).errCode(ApiResp.ErrorCode.IllegalArgs)
-                .errStr("Could not create proxy asset").build();
-        }
-
-        RespProxyAsset proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get());
-        return ApiResp.<RespProxyAsset>builder().status(ApiResp.ResponseStatus.Success).data(proxyAsset).build();
-    }
+    RespProxyAsset proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get());
+    return ApiResp.<RespProxyAsset>builder().status(ApiResp.ResponseStatus.Success).data(proxyAsset).build();
+  }
 }

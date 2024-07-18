@@ -3,7 +3,7 @@ package com.sharefable.api.controller.v1;
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.common.TopLevelEntityType;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.EntityService;
 import com.sharefable.api.transport.TourDeleted;

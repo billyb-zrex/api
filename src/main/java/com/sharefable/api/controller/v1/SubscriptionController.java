@@ -5,7 +5,7 @@ import com.chargebee.models.Subscription;
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.PaymentConfig;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.SubscriptionService;
 import com.sharefable.api.transport.PaymentTerms;

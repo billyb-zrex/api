@@ -1,8 +1,8 @@
 package com.sharefable.api.controller.v1;
 
+import com.sharefable.Routes;
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
-import com.sharefable.api.controller.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.AnalyticsService;
 import com.sharefable.api.transport.req.ReqAddOrUpdateLeadInfo;
@@ -73,6 +73,7 @@ public class AnalyticsController {
     return ApiResp.<RespLeadActivityUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 
+  @Deprecated
   @RequestMapping(value = Routes.LOG_USER_EVENTS_DIRECT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<String> logEvents(@RequestParam("sub") String encodedSub, @RequestBody String userEventLogs) {
     String dSub = URLDecoder.decode(encodedSub, StandardCharsets.UTF_8);

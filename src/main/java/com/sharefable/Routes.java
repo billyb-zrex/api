@@ -1,4 +1,4 @@
-package com.sharefable.api.controller;
+package com.sharefable;
 
 public interface Routes {
   String API_V1 = "/v1";
@@ -12,11 +12,14 @@ public interface Routes {
 
   /* === Routes w/o authentication === */
   String HEALTH = "/health";
+  String DEBUG = "/debug";
   String GET_COMMON_CONFIG = "/cconfig";
   String GET_SCREEN = "/screen";
   String GET_TOUR = "/tour";
+  String REPUBLISH_DATA_FILE_ONLY = "repub/entity/rid/{rid}";
   String GET_TOUR_BY_ID = "/tour/by/id/{id}";
   String LOG_USER_EVENTS = "/lue";
+  @Deprecated
   String LOG_USER_EVENTS_DIRECT = "/lued";
   String NF_HOOK = "/nfhook";
   String REFRESH_SETTINGS = "/refreshsettings";
@@ -126,4 +129,8 @@ public interface Routes {
   // INFO although this is named as cobalt event, this event is fable's internal event and is used in multiple areas
   String COBALT_EVENT_PUB = COBALT + "/evnt";
   String FORCE_CREATE_LINKED_ACCOUNT = COBALT + "/forcecreatelinkedaccount";
+  //Job related api
+  String CREATE_JOB = "/fat/a/job";
+  String UPDATE_JOB = "/fat/a/job/{id}";
+  String GET_LAST_SUCCESSFUL_JOB = "/fat/a/job/last_success/{type}";
 }

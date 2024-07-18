@@ -808,3 +808,11 @@ Authorization: {{auth-header}}
 GET {{api-host}}/v1/f/recorddhedit?rid=new-demo-hub-zd2hlgqkxurey15m
 Content-Type: application/json
 Authorization: {{auth-header}}
+
+### update a demo hub's index.json
+GET {{api-host}}/v1/fat/a/job/last_success/REFRESH_ENTITY_METRICS_MATERIALIZED_VIEW
+Content-Type: application/json
+
+### republish only data file of a demo
+GET {{api-host}}/v1/repub/entity/rid/justo-4qny0oztew0be17c
+Content-Type: application/json

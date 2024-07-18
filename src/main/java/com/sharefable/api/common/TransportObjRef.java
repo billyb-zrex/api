@@ -1,4 +1,4 @@
-package com.sharefable.api.entity;
+package com.sharefable.api.common;
 
 import com.sharefable.api.transport.resp.ResponseBase;
 
@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface TransportObjRef {
-    Class<? extends ResponseBase> cls();
+  Class<? extends ResponseBase> cls();
 }

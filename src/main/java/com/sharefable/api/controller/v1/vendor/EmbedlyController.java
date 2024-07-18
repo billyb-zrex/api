@@ -1,6 +1,6 @@
 package com.sharefable.api.controller.v1.vendor;
 
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.common.TransportObjRef;
 import com.sharefable.api.transport.resp.RespProxyAsset;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,11 +18,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @TransportObjRef(cls = RespProxyAsset.class)
 public class ProxyAsset extends EntityBaseWithReadableId {
-    @Column(nullable = false)
-    private String fullOriginUrl;
+  @Column(nullable = false)
+  private String fullOriginUrl;
 
-    private String proxyUri;
+  private String proxyUri;
 
-    @Column(nullable = false)
-    private Integer httpStatus;
+  @Column(nullable = false)
+  private Integer httpStatus;
 }

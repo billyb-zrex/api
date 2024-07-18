@@ -2,6 +2,7 @@ package com.sharefable.api.entity;
 
 import com.sharefable.api.common.EntityInfo;
 import com.sharefable.api.common.TopLevelEntityType;
+import com.sharefable.api.common.TransportObjRef;
 import com.sharefable.api.transport.Responsiveness;
 import com.sharefable.api.transport.TourDeleted;
 import com.sharefable.api.transport.TourSettings;
@@ -74,7 +75,7 @@ public class DemoEntity extends EntityBaseWithOwnership {
   @Type(JsonType.class)
   @Column(columnDefinition = "json")
   private EntityInfo info;
-  
+
   private Timestamp lastInteractedAt;
 
   @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)

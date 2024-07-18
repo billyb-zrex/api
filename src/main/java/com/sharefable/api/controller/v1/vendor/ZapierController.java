@@ -2,7 +2,7 @@ package com.sharefable.api.controller.v1.vendor;
 
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.common.PlatformIntegrationType;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.entity.ApiKey;
 import com.sharefable.api.repo.ApiKeyRepo;
 import com.sharefable.api.service.IntegrationService;

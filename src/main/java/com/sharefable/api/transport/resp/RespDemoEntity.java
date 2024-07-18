@@ -40,6 +40,7 @@ public class RespDemoEntity extends ResponseBase {
   private String pubTourEntityFileName;
   private Map<String, Object> site;
   private Boolean responsive;
+  private ClientLogClass logClass;
   private Responsiveness responsive2;
   private TourDeleted deleted;
   private TopLevelEntityType entityType;
@@ -59,6 +60,7 @@ public class RespDemoEntity extends ResponseBase {
       resp.setPubLoaderFileName(entityFilesConfig.publishedLoaderFile().filename(demoEntity.getPublishedVersion()));
       resp.setPubEditFileName(entityFilesConfig.publishedEditFile().filename(demoEntity.getPublishedVersion()));
       resp.setPubTourEntityFileName(entityFilesConfig.publishedTourEntityFile().filename());
+      resp.setLogClass(ClientLogClass.na);
 
       return resp;
     } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |

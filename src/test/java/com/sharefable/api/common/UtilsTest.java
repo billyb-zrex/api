@@ -5,7 +5,6 @@ import com.chargebee.Result;
 import com.chargebee.models.Customer;
 import com.chargebee.models.Subscription;
 import com.sharefable.api.entity.EntityBase;
-import com.sharefable.api.entity.TransportObjRef;
 import com.sharefable.api.transport.resp.ResponseBase;
 import lombok.*;
 import lombok.experimental.SuperBuilder;

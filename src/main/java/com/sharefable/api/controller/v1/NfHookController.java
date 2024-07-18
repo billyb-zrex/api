@@ -1,6 +1,6 @@
 package com.sharefable.api.controller.v1;
 
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.service.NfHookService;
 import com.sharefable.api.transport.req.ReqNfHook;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequiredArgsConstructor
 public class NfHookController {
-    private final NfHookService nfHookService;
+  private final NfHookService nfHookService;
 
-    @RequestMapping(value = Routes.NF_HOOK, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String processNfEvent(@RequestBody ReqNfHook body) {
-        boolean result = nfHookService.sendNotification(body);
-        return result ? "ok" : "maybe";
-    }
+  @RequestMapping(value = Routes.NF_HOOK, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public String processNfEvent(@RequestBody ReqNfHook body) {
+    boolean result = nfHookService.sendNotification(body);
+    return result ? "ok" : "maybe";
+  }
 }

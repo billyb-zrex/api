@@ -1,7 +1,7 @@
 package com.sharefable.api.controller.v1;
 
-import com.sharefable.api.controller.Routes;
-import com.sharefable.api.service.InsightService;
+import com.sharefable.Routes;
+import com.sharefable.api.service.FirehoseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -16,12 +16,12 @@ import java.util.Base64;
 @RequestMapping(Routes.API_V1)
 @Slf4j
 public class InsightController {
-    private final InsightService firehoseService;
+  private final FirehoseService firehoseService;
 
-    @RequestMapping(value = Routes.LOG_USER_EVENTS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public void sendEvents(@RequestParam("sub") String encodedSub, @RequestBody String userEventLogs) {
-        String dSub = URLDecoder.decode(encodedSub, StandardCharsets.UTF_8);
-        String sub = new String(Base64.getDecoder().decode(dSub));
-        firehoseService.sendEventsToFirehose(sub, userEventLogs);
-    }
+  @RequestMapping(value = Routes.LOG_USER_EVENTS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public void sendEvents(@RequestParam("sub") String encodedSub, @RequestBody String userEventLogs) {
+    String dSub = URLDecoder.decode(encodedSub, StandardCharsets.UTF_8);
+    String sub = new String(Base64.getDecoder().decode(dSub));
+    firehoseService.sendEventsToFirehose(sub, userEventLogs);
+  }
 }

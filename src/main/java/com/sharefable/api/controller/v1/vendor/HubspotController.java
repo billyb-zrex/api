@@ -3,7 +3,7 @@ package com.sharefable.api.controller.v1.vendor;
 import com.sharefable.api.common.LeadInfoKey;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.vendor.HubspotConfig;
-import com.sharefable.api.controller.Routes;
+import com.sharefable.Routes;
 import com.sharefable.api.entity.AnalyticsUserAidMapping;
 import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.entity.Lead360;
