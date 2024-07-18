@@ -75,7 +75,7 @@ jobs:
         run: >
           echo "export DB_USER=$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.${{ vars.SSM_PROJ_API }}.DB_USER" --query 'Parameter.Value' --output text)" >> env.now &&
           echo "export DB_CONN_URL_DOCKER=$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.${{ vars.SSM_PROJ_API }}.DB_CONN_URL" --query 'Parameter.Value' --output text)" >> env.now &&
-          echo "export DB_PWD=\\$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.${{ vars.SSM_PROJ_API }}.DB_PWD" --query 'Parameter.Value' --output text)" >> env.now
+          echo "export DB_PWD=\\$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.${{ vars.SSM_PROJ_API }}.DB_PWD" --query 'Parameter.Value' --output text)" >> env.now &&
           echo "export ANALYTICS_DB_USER=$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.analytics.ANALYTICS_DB_USER" --query 'Parameter.Value' --output text)" >> env.now &&
           echo "export ANALYTICS_DB_CONN_URL_DOCKER=$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.analytics.ANALYTICS_DB_CONN_URL" --query 'Parameter.Value' --output text)" >> env.now &&
           echo "export ANALYTICS_DB_PWD=\\$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.analytics.ANALYTICS_DB_PWD" --query 'Parameter.Value' --output text)" >> env.now
