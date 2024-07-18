@@ -81,7 +81,7 @@ jobs:
           echo "export ANALYTICS_DB_PWD=\\$(aws ssm get-parameter --region ${{ vars.DEFAULT_REGION }} --name "${{ env.DEPLOY_ENV }}.fable-analytics.ANALYTICS_DB_PWD" --query 'Parameter.Value' --output text)" >> env.now
 
       - name: Env file content
-        run: sed -n 1,2,4,5p env.now
+        run: sed -n '1,2p;4,5p' env.now
 
       - name: Running migration script
         run: make db-schema-migrate
