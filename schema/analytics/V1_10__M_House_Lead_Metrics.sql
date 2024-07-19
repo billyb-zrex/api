@@ -15,6 +15,7 @@ BEGIN
        time_spent_data AS (
          -- we first find out how the latest data for each session and then sum up the time spent in each session
          -- then we sum up time spent across all sessions
+         -- TODO if required instead of scanning the whole data process only last 3 months of data
          SELECT aid, enc_entity_id, SUM(max_metric1) AS time_spent_sec
          FROM (SELECT aid, enc_entity_id, sid, SUM(max_metric1) AS max_metric1
                FROM (SELECT aid, enc_entity_id, sid, target, MAX(metric1) AS max_metric1
@@ -44,21 +45,21 @@ BEGIN
                             AND aid IN (SELECT aid FROM active_lead)
                             AND enc_entity_id IN (SELECT enc_entity_id FROM active_lead)
                           GROUP BY aid, enc_entity_id)
-UPDATE al.d_house_lead
-SET session_created       = COALESCE(sd.sessions_created, 0),
-    time_spent_sec        = COALESCE(tsd.time_spent_sec, 0),
-    completion_percentage = COALESCE(cd.completion_percentage, 0),
-    cta_click_rate        = COALESCE(ccd.cta_click_rate, 0),
-    metric_inited         = true
+  UPDATE al.d_house_lead
+  SET session_created       = COALESCE(sd.sessions_created, 0),
+      time_spent_sec        = COALESCE(tsd.time_spent_sec, 0),
+      completion_percentage = COALESCE(cd.completion_percentage, 0),
+      cta_click_rate        = COALESCE(ccd.cta_click_rate, 0),
+      metric_inited         = true
   FROM al.d_house_lead hl
          LEFT JOIN session_data sd
-ON hl.aid = sd.aid AND hl.enc_entity_id = sd.enc_entity_id
-  LEFT JOIN time_spent_data tsd
-  ON hl.aid = tsd.aid AND hl.enc_entity_id = tsd.enc_entity_id
-  LEFT JOIN completion_data cd
-  ON hl.aid = cd.aid AND hl.enc_entity_id = cd.enc_entity_id
-  LEFT JOIN cta_click_data ccd
-  ON hl.aid = ccd.aid AND hl.enc_entity_id = ccd.enc_entity_id;
+                   ON hl.aid = sd.aid AND hl.enc_entity_id = sd.enc_entity_id
+         LEFT JOIN time_spent_data tsd
+                   ON hl.aid = tsd.aid AND hl.enc_entity_id = tsd.enc_entity_id
+         LEFT JOIN completion_data cd
+                   ON hl.aid = cd.aid AND hl.enc_entity_id = cd.enc_entity_id
+         LEFT JOIN cta_click_data ccd
+                   ON hl.aid = ccd.aid AND hl.enc_entity_id = ccd.enc_entity_id;
 END;
 $$ LANGUAGE plpgsql;
 

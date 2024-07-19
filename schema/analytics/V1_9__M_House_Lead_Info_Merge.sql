@@ -36,7 +36,7 @@ BEGIN
       FROM (
              -- there might be multiple user_assign in activity between two runs,
              -- in this case aggregate the data to a single row by merging user_info json
-             SELECT aid, enc_entity_id, jsonb_object_merge2(payload) as payload2
+             SELECT aid, enc_entity_id, al.jsonb_object_merge2(payload) as payload2
              FROM al.activity
              WHERE event = 'user_assign'
                AND updated_at >= low_wm

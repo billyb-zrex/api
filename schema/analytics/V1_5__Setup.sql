@@ -1,8 +1,8 @@
 /*
     Custom aggregation function to aggregate multiple rows and merge the jsonb column for those row
 */
-DROP AGGREGATE IF EXISTS jsonb_object_merge2(jsonb);
-CREATE AGGREGATE jsonb_object_merge2(jsonb) (
+DROP AGGREGATE IF EXISTS al.jsonb_object_merge2(jsonb);
+CREATE AGGREGATE al.jsonb_object_merge2(jsonb) (
   SFUNC = 'jsonb_concat',
   STYPE = jsonb,
   INITCOND = '{}'
@@ -11,7 +11,7 @@ CREATE AGGREGATE jsonb_object_merge2(jsonb) (
 -- ---------------------------------------------------------------------
 -- ---------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION update_last_interacted_at_on_activity_change()
+CREATE OR REPLACE FUNCTION al.update_last_interacted_at_on_activity_change()
   RETURNS TRIGGER AS $$
 BEGIN
 UPDATE al.d_house_lead
@@ -25,4 +25,4 @@ $$ LANGUAGE plpgsql;
 -- Whenever an activity is recorded in `activity` table update the associated house lead (if any)
 CREATE TRIGGER activity_update_last_interacted_at
   AFTER INSERT ON al.activity
-  FOR EACH ROW EXECUTE FUNCTION update_last_interacted_at_on_activity_change();
+  FOR EACH ROW EXECUTE FUNCTION al.update_last_interacted_at_on_activity_change();
