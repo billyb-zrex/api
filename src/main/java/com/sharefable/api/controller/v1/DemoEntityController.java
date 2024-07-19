@@ -23,7 +23,7 @@ public class DemoEntityController {
   private final WorkspaceController wsController;
 
   @RequestMapping(value = Routes.REPUBLISH_DATA_FILE_ONLY, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  public ApiResp<Pair<Boolean, RespDemoEntity>> getAllTours(@PathVariable("rid") String rid) {
+  public ApiResp<Pair<Boolean, RespDemoEntity>> republishDataFile(@PathVariable("rid") String rid) {
     RespCommonConfig commonConfig = wsController.getCommonConfig().getData();
     Pair<Boolean, RespDemoEntity> resp = entityService.refreshAndPublishEntityDataFile(rid, commonConfig);
     return ApiResp.<Pair<Boolean, RespDemoEntity>>builder().status(ApiResp.ResponseStatus.Success)
