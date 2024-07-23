@@ -1,14 +1,12 @@
 package com.sharefable.analytics.controller.v1;
 
 import com.sharefable.Routes;
+import com.sharefable.analytics.entity.Activity;
 import com.sharefable.analytics.entity.MEntityMetrics;
 import com.sharefable.analytics.entity.MEntityMetricsDaily;
 import com.sharefable.analytics.entity.MEntitySubEntityDistribution;
-import com.sharefable.analytics.entity.MHouseLead;
-import com.sharefable.analytics.repo.MEntityMetricsDailyRepo;
-import com.sharefable.analytics.repo.MEntityMetricsRepo;
-import com.sharefable.analytics.repo.MEntitySubEntityDistRepo;
-import com.sharefable.analytics.repo.MHouseLeadRepo;
+import com.sharefable.analytics.repo.*;
+import com.sharefable.analytics.transport.HouseLeadWithRichInfo;
 import com.sharefable.analytics.transport.RespEntityMetrics;
 import com.sharefable.analytics.transport.RespHouseLead;
 import com.sharefable.api.auth.AuthUser;
@@ -19,10 +17,7 @@ import com.sharefable.api.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +32,7 @@ public class InsightController2 {
   private final MHouseLeadRepo mHouseLeadRepo;
   private final MEntityMetricsDailyRepo mEntityMetricsDailyRepo;
   private final MEntitySubEntityDistRepo mEntitySubEntityDistRepo;
+  private final ActivityRepo activityRepo;
 
   @RequestMapping(value = Routes.ENTITY_METRICS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespEntityMetrics> saveActivity(@RequestParam("rid") String rid, @AuthUser User user) {
@@ -53,8 +49,8 @@ public class InsightController2 {
   @RequestMapping(value = Routes.LEADS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<List<RespHouseLead>> getLeadsForTour(@RequestParam("rid") String rid, @AuthUser User user) {
     DemoEntity entity = demoEntityController.getEntityAfterValidation(rid, user);
-    List<MHouseLead> leads = mHouseLeadRepo.getMHouseLeadsByEntityId(entity.getId());
-    List<RespHouseLead> resp = leads.stream().map(RespHouseLead::from).toList();
+    List<HouseLeadWithRichInfo> leads = mHouseLeadRepo.getHouseLeadsForEntity(entity.getId());
+    List<RespHouseLead> resp = leads.stream().map(l -> RespHouseLead.from(l.getLead(), l.getInfo())).toList();
     return ApiResp.<List<RespHouseLead>>builder().status(ApiResp.ResponseStatus.Success)
       .data(resp).build();
   }
@@ -74,5 +70,13 @@ public class InsightController2 {
     List<MEntitySubEntityDistribution> resp = mEntitySubEntityDistRepo.getMEntitySubEntityDistributionsByEntityId(entity.getId());
     return ApiResp.<List<MEntitySubEntityDistribution>>builder().status(ApiResp.ResponseStatus.Success)
       .data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.ACTIVITY_DATA, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<Activity>> getActivityData(@PathVariable("entityRid") String entityRid, @PathVariable("aid") String aid, @AuthUser User user) {
+    DemoEntity entity = demoEntityController.getEntityAfterValidation(entityRid, user);
+    List<Activity> activities = activityRepo.getActivitiesByAidAndEncEntityIdOrderByUpdatedAtDesc(aid, entity.getId());
+    return ApiResp.<List<Activity>>builder().status(ApiResp.ResponseStatus.Success)
+      .data(activities).build();
   }
 }

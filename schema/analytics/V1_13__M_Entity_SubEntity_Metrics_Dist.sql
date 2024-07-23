@@ -8,6 +8,7 @@
 DROP TABLE IF EXISTS al.d_entity_subentity_metrics CASCADE;
 DROP FUNCTION IF EXISTS al.update_entity_subentity_metrics;
 
+DROP MATERIALIZED VIEW IF EXISTS al.entity_subentity_distribution CASCADE;
 CREATE MATERIALIZED VIEW al.entity_subentity_distribution AS
 WITH ranked_activity AS (SELECT enc_entity_id,
                                 sid,

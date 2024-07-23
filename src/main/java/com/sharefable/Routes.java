@@ -110,6 +110,7 @@ public interface Routes {
   String LEADS = __BEHIND_LOGIN__ + "/leads";
   String ENTITY_METRICS_DAILY = __BEHIND_LOGIN__ + "/entity_metrics_daily";
   String ENTITY_SUBENTITY_DIST_METRICS = __BEHIND_LOGIN__ + "/entity_subentity_dist_metrics";
+  String ACTIVITY_DATA = __BEHIND_LOGIN__ + "/activity_data/{entityRid}/{aid}";
 
   /* === Demo Hub === */
   String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";

@@ -1,5 +1,6 @@
 package com.sharefable.analytics.entity;
 
+import com.sharefable.api.transport.GenerateTSDef;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -15,5 +16,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @ToString
 @SuperBuilder(toBuilder = true)
+@GenerateTSDef
 public class Activity extends ActivityBase {
 }

@@ -1,6 +1,14 @@
+DROP FUNCTION IF EXISTS al.update_house_lead_metrics;
+
 CREATE OR REPLACE FUNCTION al.update_house_lead_metrics(low_wm TIMESTAMP, high_wm TIMESTAMP)
-  RETURNS VOID AS
+  RETURNS TABLE
+          (
+            v INTEGER
+          )
+AS
 $$
+DECLARE
+  v INTEGER := 2;
 BEGIN
   WITH active_lead AS (SELECT *
                        FROM al.d_house_lead
@@ -44,22 +52,32 @@ BEGIN
                           WHERE event = 'cta_clicked'
                             AND aid IN (SELECT aid FROM active_lead)
                             AND enc_entity_id IN (SELECT enc_entity_id FROM active_lead)
-                          GROUP BY aid, enc_entity_id)
-  UPDATE al.d_house_lead
-  SET session_created       = COALESCE(sd.sessions_created, 0),
-      time_spent_sec        = COALESCE(tsd.time_spent_sec, 0),
-      completion_percentage = COALESCE(cd.completion_percentage, 0),
-      cta_click_rate        = COALESCE(ccd.cta_click_rate, 0),
+                          GROUP BY aid, enc_entity_id),
+       big_table AS (SELECT hl.aid,
+                            hl.enc_entity_id,
+                            sd.sessions_created,
+                            tsd.time_spent_sec,
+                            cd.completion_percentage,
+                            ccd.cta_click_rate
+                     FROM al.d_house_lead hl
+                            INNER JOIN session_data sd
+                                       ON hl.aid = sd.aid AND hl.enc_entity_id = sd.enc_entity_id
+                            INNER JOIN time_spent_data tsd
+                                       ON hl.aid = tsd.aid AND hl.enc_entity_id = tsd.enc_entity_id
+                            INNER JOIN completion_data cd
+                                       ON hl.aid = cd.aid AND hl.enc_entity_id = cd.enc_entity_id
+                            LEFT JOIN cta_click_data ccd
+                                      ON hl.aid = ccd.aid AND hl.enc_entity_id = ccd.enc_entity_id)
+  UPDATE al.d_house_lead hl
+  SET session_created       = COALESCE(bg.sessions_created, 0),
+      time_spent_sec        = COALESCE(bg.time_spent_sec, 0),
+      completion_percentage = COALESCE(bg.completion_percentage, 0),
+      cta_click_rate        = COALESCE(bg.cta_click_rate, 0),
       metric_inited         = true
-  FROM al.d_house_lead hl
-         LEFT JOIN session_data sd
-                   ON hl.aid = sd.aid AND hl.enc_entity_id = sd.enc_entity_id
-         LEFT JOIN time_spent_data tsd
-                   ON hl.aid = tsd.aid AND hl.enc_entity_id = tsd.enc_entity_id
-         LEFT JOIN completion_data cd
-                   ON hl.aid = cd.aid AND hl.enc_entity_id = cd.enc_entity_id
-         LEFT JOIN cta_click_data ccd
-                   ON hl.aid = ccd.aid AND hl.enc_entity_id = ccd.enc_entity_id;
+  FROM big_table bg
+  WHERE hl.aid = bg.aid
+    AND hl.enc_entity_id = bg.enc_entity_id;
+  RETURN QUERY SELECT v;
 END;
 $$ LANGUAGE plpgsql;
 

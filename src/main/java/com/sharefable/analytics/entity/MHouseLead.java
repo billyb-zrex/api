@@ -32,6 +32,7 @@ public class MHouseLead extends EntityBase {
   private Integer sessionCreated;
   private Integer timeSpentSec;
   private Timestamp lastInteractedAt;
+  private Integer completionPercentage;
   private Integer ctaClickRate;
 
   @Type(JsonType.class)

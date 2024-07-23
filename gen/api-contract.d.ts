@@ -1,6 +1,9 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-07-23 05:52:42.
+// Generated using typescript-generator version 2.35.1025 on 2024-07-23 16:23:36.
+
+export interface Activity extends ActivityBase {
+}
 
 export interface AnalyticsJob {
     id: number;
@@ -83,7 +86,9 @@ export interface RespHouseLead extends ResponseBase {
     timeSpentSec: number;
     lastInteractedAt: Date;
     ctaClickRate: number;
+    completionPercentage: number;
     info: any;
+    richInfo: DeviceAndGeoInfo;
 }
 
 export interface ApiResp<T> {
@@ -690,10 +695,45 @@ export interface LinkedApps {
     reauth_required: boolean;
 }
 
+export interface ActivityBase {
+    createdAt: Date;
+    updatedAt: Date;
+    id: number;
+    eventTime: Date;
+    ingestionTime: Date;
+    encEntityId: number;
+    event: string;
+    aid: string;
+    target: string;
+    sid: string;
+    metric1: number;
+    tz: string;
+    payload: any;
+}
+
 export interface EntityBase {
     createdAt: Date;
     updatedAt: Date;
     id: number;
+}
+
+export interface DeviceAndGeoInfo {
+    isMobile: boolean;
+    isTablet: boolean;
+    isSmartTv: boolean;
+    isDesktopViewer: boolean;
+    isIosViewer: boolean;
+    isAndroidViewer: boolean;
+    country: string;
+    countryName: string;
+    countryRegion: string;
+    countryRegionName: string;
+    city: string;
+    postalCode: string;
+    timeZone: string;
+    latitude: number;
+    longitude: number;
+    address: string;
 }
 
 export interface ResponseBase {
