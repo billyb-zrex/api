@@ -17,9 +17,9 @@ WITH ranked_activity AS (SELECT enc_entity_id,
                                   WHEN event = 'time_spent_in_ann' THEN 'ann'
                                   WHEN event = 'time_spent_in_module' THEN 'mod'
                                   WHEN event = 'completion' THEN 'completion'
-                                  END                                                                AS sub_entity_type,
-                                coalesce(target, payload ->> 'ann_id', 'tour')                       as sub_entity_id,
-                                CASE WHEN metric1 > 300 THEN 300 ELSE metric1 END                    as metric1,
+                                  END                                                                       AS sub_entity_type,
+                                coalesce(target, payload ->> 'ann_id', 'tour')                              as sub_entity_id,
+                                CASE WHEN metric1 > 300 THEN 300 ELSE metric1 END                           as metric1,
                                 ROW_NUMBER()
                                   -- `activity_dt` contains redundant data. We calculate data based on largest metric
                                   -- WARN right now it works because redundant data consists of monotonically increasing
@@ -28,7 +28,7 @@ WITH ranked_activity AS (SELECT enc_entity_id,
                                   -- even though we perform daily cleanup on this table, the order of cleanup job
                                   -- and this job might be independent. Hence this table we have to perform this additional
                                   -- step of figuring out the latest data.
-                                OVER (PARTITION BY enc_entity_id, sid, target ORDER BY metric1 DESC) AS rnk
+                                OVER (PARTITION BY enc_entity_id, sid, target, event ORDER BY metric1 DESC) AS rnk
                          FROM al.activity_dt
                          -- list of events to process. if we are processing more events update it here
                          WHERE event IN ('time_spent_in_ann', 'time_spent_in_module', 'completion')
