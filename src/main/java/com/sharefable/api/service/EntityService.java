@@ -136,7 +136,7 @@ public class EntityService extends ServiceBase {
 
   @Transactional
   public RespDemoEntity updateEditForTour(ReqRecordEdit body, User userEntity, EditTour fileTobeEdited) {
-    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.rid(), userEntity, TopLevelEntityType.TOUR);
+    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.rid(), userEntity);
 
     uploadDataFileToS3(
       body.editData(),
@@ -151,7 +151,7 @@ public class EntityService extends ServiceBase {
 
   @Transactional
   public RespDemoEntity renameEntity(ReqRenameGeneric body, User userEntity, TopLevelEntityType type) {
-    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.rid(), userEntity, type);
+    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.rid(), userEntity);
     String oldRid = demoEntity.getRid();
     String newName = body.newName();
     demoEntity.setDisplayName(newName);
@@ -188,7 +188,7 @@ public class EntityService extends ServiceBase {
 
   @Transactional
   public RespDemoEntityWithSubEntities duplicateTour(ReqDuplicateTour body, User user) {
-    DemoEntity fromDemoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.fromTourRid(), user, TopLevelEntityType.TOUR);
+    DemoEntity fromDemoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.fromTourRid(), user);
     return this.duplicateTour(fromDemoEntity, user, tour -> tour.onboarding(false).displayName(body.duplicateTourName()).description(""), false);
   }
 
@@ -316,7 +316,7 @@ public class EntityService extends ServiceBase {
 
   @Transactional
   public List<RespDemoEntity> removeEntity(String rid, User userEntity, TopLevelEntityType type) {
-    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity, type);
+    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity);
     demoEntity.setDeleted(TourDeleted.DELETED);
     demoEntityRepo.save(demoEntity);
     return getAllEntityForOrg(userEntity.getBelongsToOrg(), TourDeleted.ACTIVE, type);
@@ -325,7 +325,7 @@ public class EntityService extends ServiceBase {
 
   @Transactional
   public RespDemoEntity publishEntity(String rid, User userEntity, RespCommonConfig commonConfig, TopLevelEntityType entityType) {
-    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity, entityType);
+    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity);
     return publishEntityBasedOnEntityType(demoEntity, commonConfig, entityType);
   }
 
@@ -408,7 +408,7 @@ public class EntityService extends ServiceBase {
   }
 
   public RespUploadUrl getPreSignedUrlToUpdateDemoHub(String rid, User userEntity) {
-    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity, TopLevelEntityType.DEMO_HUB);
+    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity);
 
     AssetFilePath filePath = s3Config.getQualifiedPathFor(
       S3Config.AssetType.DemoHub,
@@ -559,7 +559,7 @@ public class EntityService extends ServiceBase {
 
   @Transactional
   public RespDemoEntity updateEntityProperties(String rid, User userEntity, TopLevelEntityType type, EntityUpdateBase body) {
-    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity, type);
+    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity);
     body.getSite().ifPresent(demoEntity::setSite);
     body.getInProgress().ifPresent(demoEntity::setInProgress);
     body.getResponsive().ifPresent(demoEntity::setResponsive);

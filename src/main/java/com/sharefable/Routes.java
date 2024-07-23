@@ -18,6 +18,7 @@ public interface Routes {
   String GET_TOUR = "/tour";
   String REPUBLISH_DATA_FILE_ONLY = "repub/entity/rid/{rid}";
   String GET_TOUR_BY_ID = "/tour/by/id/{id}";
+  @Deprecated
   String LOG_USER_EVENTS = "/lue";
   @Deprecated
   String LOG_USER_EVENTS_DIRECT = "/lued";
@@ -78,11 +79,17 @@ public interface Routes {
   String ACTIVATE_OR_DEACTIVATE_USER = __BEHIND_LOGIN__ + "/aodusr";
   String GEN_CHECKOUT_URL = __BEHIND_LOGIN__ + "/genchckouturl";
   String PUBLISH_TOUR = __BEHIND_LOGIN__ + "/tpub";
+  @Deprecated
   String TOTAL_VIEWS = __BEHIND_LOGIN__ + "/totalviews";
+  @Deprecated
   String ANN_VIEWS = __BEHIND_LOGIN__ + "/annviews";
+  @Deprecated
   String STEPS_DURATION = __BEHIND_LOGIN__ + "/stpsdur";
+  @Deprecated
   String CONVERSION = __BEHIND_LOGIN__ + "/convrsn";
+  @Deprecated
   String GET_ALL_TOUR_LEADS = __BEHIND_LOGIN__ + "/gettrleads";
+  @Deprecated
   String GET_LEAD_ACTIVITY_DATA_FILE = __BEHIND_LOGIN__ + "/getleadactvitydatafile";
   String TOKEN_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/tknlnkdacc";
   String LIST_APPS_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/lstapp";
@@ -99,6 +106,10 @@ public interface Routes {
   String ADD_NEW_CUSTOM_FIELDS = __BEHIND_LOGIN__ + "/addcfields";
   String DELETE_CUSTOM_FIELDS = __BEHIND_LOGIN__ + "/delcfields";
   String GET_FIELDS = __BEHIND_LOGIN__ + "/cfields";
+  String ENTITY_METRICS = __BEHIND_LOGIN__ + "/entity_metrics";
+  String LEADS = __BEHIND_LOGIN__ + "/leads";
+  String ENTITY_METRICS_DAILY = __BEHIND_LOGIN__ + "/entity_metrics_daily";
+  String ENTITY_SUBENTITY_DIST_METRICS = __BEHIND_LOGIN__ + "/entity_subentity_dist_metrics";
 
   /* === Demo Hub === */
   String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";

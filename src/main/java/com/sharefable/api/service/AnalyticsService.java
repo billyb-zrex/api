@@ -2,7 +2,6 @@ package com.sharefable.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharefable.api.common.AssetFilePath;
-import com.sharefable.api.common.TopLevelEntityType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
@@ -71,7 +70,7 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespTourView getTotalVisitorsForTour(String rid, Integer days, User user) {
-    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
     List<AnalyticsMetrics> metrics = analyticsMetricsRepo.findByTourId(demoEntity.getId());
     if (metrics.isEmpty()) {
       log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
@@ -91,7 +90,7 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespTourAnnViews getAnnViews(String rid, Integer days, User user) {
-    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
     List<AnalyticsAnnClick> annClick = analyticsAnnClickRepo.findByTourId(demoEntity.getId());
     if (annClick.isEmpty()) {
       log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
@@ -111,7 +110,7 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespTourAnnWithPercentile getTimeSpentForEachAnnotation(String rid, Integer days, User user) {
-    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
     List<AnalyticsAnnClick> annClick = analyticsAnnClickRepo.findByTourId(demoEntity.getId());
     if (annClick.isEmpty()) {
       log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
@@ -129,7 +128,7 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespConversion getTourConversion(String rid, Integer days, User user) {
-    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
     List<AnalyticsConversion> tourConversion = analyticsConversionRepo.findByTourId(demoEntity.getId());
     if (tourConversion.isEmpty()) {
       log.warn("No analytics entry is present for this tour id {} at the time", demoEntity.getId());
@@ -148,7 +147,7 @@ public class AnalyticsService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public RespTourLeads getLeadsForATour(String rid, Integer days, User user) {
-    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
     List<AnalyticsUserAidMapping> analyticsUserAidMapping = analyticsUserAidMappingRepo.findByTourId(demoEntity.getId());
     if (analyticsUserAidMapping.isEmpty()) {
       return RespTourLeads.Empty();
@@ -186,7 +185,7 @@ public class AnalyticsService extends ServiceBase {
   }
 
   public RespLeadActivityUrl getLeadActivityDataFile(String rid, String aid, User user) {
-    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user, TopLevelEntityType.TOUR);
+    DemoEntity demoEntity = tourService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
     try {
       Pair<String, String> leadAnalyticsPath = getLeadActivityPath(demoEntity.getId(), aid);
       String s3UriToFile = leadAnalyticsPath.getValue1();

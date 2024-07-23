@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.FnScreenBuilder;
-import com.sharefable.api.common.TopLevelEntityType;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
@@ -218,7 +217,7 @@ public class ScreenService extends ServiceBase {
 
   @Transactional
   public RespScreen createThumbnailFromImage(ReqThumbnailCreation body, User user) {
-    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user, TopLevelEntityType.TOUR);
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
 
     String prefixHash = screen.getAssetPrefixHash();
     String base64Prefix = "data:image/jpeg;base64,";
@@ -262,8 +261,8 @@ public class ScreenService extends ServiceBase {
 
   @Transactional
   public RespScreen assignScreenToTour(ReqScreenTour body, User user) {
-    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user, TopLevelEntityType.TOUR);
-    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.tourRid(), user, TopLevelEntityType.TOUR);
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.screenRid(), user);
+    DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.tourRid(), user);
 
     Set<DemoEntity> demoEntities = screen.getDemoEntities();
     demoEntities.add(demoEntity);
@@ -286,7 +285,7 @@ public class ScreenService extends ServiceBase {
 
   @Transactional
   public RespScreen updateEditForScreen(ReqRecordEdit body, User userEntity) {
-    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity, TopLevelEntityType.TOUR);
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
 
     uploadDataFileToS3(
       body.editData(),
@@ -302,7 +301,7 @@ public class ScreenService extends ServiceBase {
 
   @Transactional
   public RespScreen renameScreen(ReqRenameGeneric body, User userEntity) {
-    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity, TopLevelEntityType.TOUR);
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
     String newName = body.newName();
     screen.setDisplayName(newName);
     screen.setRid(Utils.createReadableId(newName));
@@ -312,7 +311,7 @@ public class ScreenService extends ServiceBase {
 
   @Transactional
   public RespScreen updateScreenProperty(ReqUpdateScreenProperty body, User userEntity) {
-    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity, TopLevelEntityType.TOUR);
+    Screen screen = getEntityByRIdWithAuthValidation(Screen.class, body.rid(), userEntity);
     if (body.propName().equals("responsive")) {
       screen.setResponsive((Boolean) body.propValue());
     }

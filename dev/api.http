@@ -816,3 +816,24 @@ Content-Type: application/json
 ### republish only data file of a demo
 GET {{api-host}}/v1/repub/entity/rid/justo-4qny0oztew0be17c
 Content-Type: application/json
+
+### analtyics
+#GET {{api-host}}/v1/f/entity_metrics?rid=justo-4qny0oztew0be17c
+GET {{api-host}}/v1/f/entity_metrics?rid=mixpanel-testing-yxsbfnk8ic13g3pc
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+### analtyics
+GET {{api-host}}/v1/f/leads?rid=justo-4qny0oztew0be17c
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+### analtyics
+GET {{api-host}}/v1/f/entity_metrics_daily?rid=justo-4qny0oztew0be17c
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+### analtyics
+GET {{api-host}}/v1/f/entity_subentity_dist_metrics?rid=justo-4qny0oztew0be17c
+Content-Type: application/json
+Authorization: {{auth-header}}

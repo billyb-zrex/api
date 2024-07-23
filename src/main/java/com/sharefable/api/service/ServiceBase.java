@@ -1,6 +1,9 @@
 package com.sharefable.api.service;
 
-import com.sharefable.api.common.*;
+import com.sharefable.api.common.AssetFilePath;
+import com.sharefable.api.common.DefaultThumbnail;
+import com.sharefable.api.common.ImageType;
+import com.sharefable.api.common.Utils;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.DemoEntity;
@@ -135,14 +138,14 @@ public abstract class ServiceBase implements DefaultThumbnail {
     return assetFilePath;
   }
 
-  protected <T extends EntityBaseWithOwnership> T getEntityByRIdWithAuthValidation(Class<T> cls, String rid, User user, TopLevelEntityType type) {
+  public <T extends EntityBaseWithOwnership> T getEntityByRIdWithAuthValidation(Class<T> cls, String rid, User user) {
     Optional<? extends EntityBaseWithOwnership> maybeEntity;
     String entityType;
     if (cls.isAssignableFrom(Screen.class)) {
       maybeEntity = screenRepo.findByRid(rid);
       entityType = "screen";
     } else if (cls.isAssignableFrom(DemoEntity.class)) {
-      maybeEntity = demoEntityRepo.findByRidAndEntityType(rid, type);
+      maybeEntity = demoEntityRepo.findByRid(rid);
       entityType = "tour";
     } else {
       throw new IllegalArgumentException("{} not yet supported" + cls.getName());

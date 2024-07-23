@@ -2,6 +2,8 @@ package com.sharefable.api.controller.v1;
 
 import com.sharefable.Routes;
 import com.sharefable.api.common.ApiResp;
+import com.sharefable.api.entity.DemoEntity;
+import com.sharefable.api.entity.User;
 import com.sharefable.api.service.EntityService;
 import com.sharefable.api.transport.resp.RespCommonConfig;
 import com.sharefable.api.transport.resp.RespDemoEntity;
@@ -28,5 +30,9 @@ public class DemoEntityController {
     Pair<Boolean, RespDemoEntity> resp = entityService.refreshAndPublishEntityDataFile(rid, commonConfig);
     return ApiResp.<Pair<Boolean, RespDemoEntity>>builder().status(ApiResp.ResponseStatus.Success)
       .data(resp).build();
+  }
+
+  public DemoEntity getEntityAfterValidation(String rid, User user) {
+    return entityService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
   }
 }
