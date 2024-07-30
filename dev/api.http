@@ -163,6 +163,9 @@ Content-Type: application/json
   "settings": {
     "vpdWidth": 360,
     "vpdHeight": 450
+  },
+  "info": {
+    "thumbnail": "https://www"
   }
 }
 

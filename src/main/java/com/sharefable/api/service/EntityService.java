@@ -101,6 +101,7 @@ public class EntityService extends ServiceBase {
       .deleted(TourDeleted.ACTIVE)
       .responsive2(Responsiveness.NoChoice)
       .publishedVersion(0)
+      .info(req.info().orElse(null))
       .assetPrefixHash(prefixHash)
       .belongsToOrg(createdByUser.getBelongsToOrg())
       .onboarding(false)
