@@ -54,9 +54,14 @@ public class ProxyAssetService {
   }
 
   @Transactional
-  public RespProxyAsset createProxyAsset(ParsedReqProxyAsset body) {
+  public RespProxyAsset createProxyAsset(ParsedReqProxyAsset body, int depth) {
     String origin = body.getOrigin();
     String hashedOrigin = DigestUtils.sha1Hex(origin);
+
+    if (depth >= 20) {
+      log.error("The depth of css file is greater than the pre defined depth {}", origin);
+      return RespProxyAsset.WithError(origin);
+    }
 
     try {
       boolean shouldIgnore = Utils.isUrlPresentInIgnoreList(new URL(origin), ignoreList);
@@ -128,7 +133,7 @@ public class ProxyAssetService {
             log.error("Cant form redirect url {}", redirectTo);
             return RespProxyAsset.WithError(origin);
           } else {
-            return createProxyAsset(redirectProxyAsset.get());
+            return createProxyAsset(redirectProxyAsset.get(), ++depth);
           }
         } else {
           log.error("Asset returns redirection status {} but location not found", status);
@@ -140,7 +145,7 @@ public class ProxyAssetService {
         byte[] contentBody = resp.getBody();
 
         if (contentType.contains("css") && contentEncoding.isEmpty()) {
-          String resolvedBody = resolveNestedProxyForCssFile(new String(contentBody), body);
+          String resolvedBody = resolveNestedProxyForCssFile(new String(contentBody), body, ++depth);
           contentBody = resolvedBody.getBytes(StandardCharsets.UTF_8);
         }
 
@@ -190,7 +195,7 @@ public class ProxyAssetService {
   }
 
   @Transactional
-  public String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body) {
+  public String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body, int depth) {
     String respbody = content;
     ArrayList<Pair<String, String>> nestedUrls = new ArrayList<>();
     // format of url(...) or url("...") or url('...')
@@ -226,7 +231,7 @@ public class ProxyAssetService {
       log.info("Resolving nested css {} {}/{}", url, i++, l);
       Optional<ParsedReqProxyAsset> nestedParsedReqBody = body.updateUrl(url);
       if (nestedParsedReqBody.isEmpty()) continue;
-      RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get());
+      RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get(), depth);
       if (!StringUtils.isBlank(nestedProxyUri.getProxyUri())) {
         respbody = respbody.replace(replaceTarget,
           StringUtils.startsWithIgnoreCase(replaceTarget, "@import") ? "@import '" + nestedProxyUri.getProxyUri() + "'" : "url(" + nestedProxyUri.getProxyUri() + ")");

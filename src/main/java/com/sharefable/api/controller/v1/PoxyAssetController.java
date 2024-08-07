@@ -1,7 +1,7 @@
 package com.sharefable.api.controller.v1;
 
-import com.sharefable.api.common.ApiResp;
 import com.sharefable.Routes;
+import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.service.ProxyAssetService;
 import com.sharefable.api.transport.ParsedReqProxyAsset;
 import com.sharefable.api.transport.req.ReqProxyAsset;
@@ -36,7 +36,7 @@ public class PoxyAssetController {
         .errStr("Could not create proxy asset").build();
     }
 
-    RespProxyAsset proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get());
+    RespProxyAsset proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get(), 0);
     return ApiResp.<RespProxyAsset>builder().status(ApiResp.ResponseStatus.Success).data(proxyAsset).build();
   }
 }
