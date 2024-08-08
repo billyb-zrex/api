@@ -1,3 +1,4 @@
+-- support both payload.ann_id and payload.anId
 
 DROP MATERIALIZED VIEW IF EXISTS al.entity_subentity_distribution CASCADE;
 CREATE MATERIALIZED VIEW al.entity_subentity_distribution AS

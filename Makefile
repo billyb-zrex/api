@@ -3,16 +3,16 @@
 include env.now
 
 teardown:
-	docker-compose down;
+	docker compose down;
 
 clean-data:
 	docker rm fable-db; docker rm fable-db-flyway; docker volume rm api_mysql-data
 
 setup:
-	docker-compose --profile ${APP_ENV} up -d
+	docker compose --profile ${APP_ENV} up -d
 
 db-schema-migrate:
-	docker-compose up schema_api && docker-compose up schema_analytics;
+	docker compose up schema_api && docker compose up schema_analytics;
 
 gen:
 	mvn process-classes
@@ -27,8 +27,8 @@ gen:
 # --------------------------------------------------------------
 env:
 	@echo "Generating env file"
-	@echo "docker-compose version must be >= 1.28.0. docker-compose version found (see below)"
-	@docker-compose --version
+	@echo "docker compose version must be >= 1.28.0. docker compose version found (see below)"
+	@docker compose --version
 
 	@if [ "$(staging)" ]; then \
         cp env.staging env.now; \
