@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
@@ -36,7 +37,7 @@ public class PoxyAssetController {
         .errStr("Could not create proxy asset").build();
     }
 
-    RespProxyAsset proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get(), 0);
+    RespProxyAsset proxyAsset = proxyAssetService.createProxyAsset(parsedBody.get(), 0, new HashMap<>());
     return ApiResp.<RespProxyAsset>builder().status(ApiResp.ResponseStatus.Success).data(proxyAsset).build();
   }
 }

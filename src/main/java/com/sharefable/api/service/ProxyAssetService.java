@@ -54,13 +54,13 @@ public class ProxyAssetService {
   }
 
   @Transactional
-  public RespProxyAsset createProxyAsset(ParsedReqProxyAsset body, int depth) {
+  public RespProxyAsset createProxyAsset(ParsedReqProxyAsset body, int depth, Map<String, RespProxyAsset> proxiedAsset) {
     String origin = body.getOrigin();
     String hashedOrigin = DigestUtils.sha1Hex(origin);
 
-    if (depth >= 20) {
+    if (depth >= 8) {
       log.error("The depth of css file is greater than the pre defined depth {}", origin);
-      return RespProxyAsset.WithError(origin);
+      return RespProxyAsset.from(origin);
     }
 
     try {
@@ -92,8 +92,8 @@ public class ProxyAssetService {
       }
       return respProxyAsset;
     }
-    try {
 
+    try {
       HttpHeaders headers = new HttpHeaders();
       if (!StringUtils.isBlank(body.getCookie())) {
         headers.add(HttpHeaders.COOKIE, body.getCookie());
@@ -133,7 +133,7 @@ public class ProxyAssetService {
             log.error("Cant form redirect url {}", redirectTo);
             return RespProxyAsset.WithError(origin);
           } else {
-            return createProxyAsset(redirectProxyAsset.get(), ++depth);
+            return createProxyAsset(redirectProxyAsset.get(), ++depth, proxiedAsset);
           }
         } else {
           log.error("Asset returns redirection status {} but location not found", status);
@@ -145,7 +145,7 @@ public class ProxyAssetService {
         byte[] contentBody = resp.getBody();
 
         if (contentType.contains("css") && contentEncoding.isEmpty()) {
-          String resolvedBody = resolveNestedProxyForCssFile(new String(contentBody), body, ++depth);
+          String resolvedBody = resolveNestedProxyForCssFile(new String(contentBody), body, ++depth, proxiedAsset);
           contentBody = resolvedBody.getBytes(StandardCharsets.UTF_8);
         }
 
@@ -165,6 +165,8 @@ public class ProxyAssetService {
         AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(S3Config.AssetType.ProxyAsset, fileName);
         assetFilePath = s3Service.upload(assetFilePath, contentBody, metadata);
 
+        if (proxiedAsset.containsKey(hashedOrigin)) return proxiedAsset.get(hashedOrigin);
+
         ProxyAsset asset = ProxyAsset.builder()
           .rid(hashedOrigin)
           .fullOriginUrl(origin)
@@ -177,6 +179,7 @@ public class ProxyAssetService {
         if (body.getBody().get()) {
           respProxyAsset.setContent(Optional.of(new String(resp.getBody())));
         }
+        proxiedAsset.put(hashedOrigin, respProxyAsset);
         return respProxyAsset;
       } else {
         log.error("Cannot get asset {} . Empty body or not okay status. Status = {}", origin, status);
@@ -195,7 +198,7 @@ public class ProxyAssetService {
   }
 
   @Transactional
-  public String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body, int depth) {
+  public String resolveNestedProxyForCssFile(String content, ParsedReqProxyAsset body, int depth, Map<String, RespProxyAsset> proxiedAsset) {
     String respbody = content;
     ArrayList<Pair<String, String>> nestedUrls = new ArrayList<>();
     // format of url(...) or url("...") or url('...')
@@ -231,7 +234,7 @@ public class ProxyAssetService {
       log.info("Resolving nested css {} {}/{}", url, i++, l);
       Optional<ParsedReqProxyAsset> nestedParsedReqBody = body.updateUrl(url);
       if (nestedParsedReqBody.isEmpty()) continue;
-      RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get(), depth);
+      RespProxyAsset nestedProxyUri = createProxyAsset(nestedParsedReqBody.get(), depth, proxiedAsset);
       if (!StringUtils.isBlank(nestedProxyUri.getProxyUri())) {
         respbody = respbody.replace(replaceTarget,
           StringUtils.startsWithIgnoreCase(replaceTarget, "@import") ? "@import '" + nestedProxyUri.getProxyUri() + "'" : "url(" + nestedProxyUri.getProxyUri() + ")");
