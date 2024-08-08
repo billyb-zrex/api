@@ -82,6 +82,11 @@ public class EntityService extends ServiceBase {
   }
 
   @Transactional
+  public List<DemoEntity> getAllPublishedEntity(Long orgId) {
+    return demoEntityRepo.findAllByBelongsToOrgAndDeletedAndLastPublishedDateNotNull(orgId, TourDeleted.ACTIVE);
+  }
+
+  @Transactional
   public RespDemoEntity createNewEntity(ReqNewTour req, User createdByUser, TopLevelEntityType type) {
     String prefixHash = Utils.createUuidWord();
     if (type == TopLevelEntityType.TOUR) {

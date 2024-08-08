@@ -18,6 +18,8 @@ public interface DemoEntityRepo extends CrudRepository<DemoEntity, Long> {
 
   List<DemoEntity> findAllByBelongsToOrgOrderByUpdatedAtDesc(Long belongsToOrgId);
 
+  List<DemoEntity> findAllByBelongsToOrgAndDeletedAndLastPublishedDateNotNull(Long orgId, TourDeleted deleted);
+
   Optional<DemoEntity> findByRid(String rid);
 
   Optional<DemoEntity> findByRidAndEntityType(String rid, TopLevelEntityType type);

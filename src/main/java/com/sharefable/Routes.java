@@ -79,18 +79,6 @@ public interface Routes {
   String ACTIVATE_OR_DEACTIVATE_USER = __BEHIND_LOGIN__ + "/aodusr";
   String GEN_CHECKOUT_URL = __BEHIND_LOGIN__ + "/genchckouturl";
   String PUBLISH_TOUR = __BEHIND_LOGIN__ + "/tpub";
-  @Deprecated
-  String TOTAL_VIEWS = __BEHIND_LOGIN__ + "/totalviews";
-  @Deprecated
-  String ANN_VIEWS = __BEHIND_LOGIN__ + "/annviews";
-  @Deprecated
-  String STEPS_DURATION = __BEHIND_LOGIN__ + "/stpsdur";
-  @Deprecated
-  String CONVERSION = __BEHIND_LOGIN__ + "/convrsn";
-  @Deprecated
-  String GET_ALL_TOUR_LEADS = __BEHIND_LOGIN__ + "/gettrleads";
-  @Deprecated
-  String GET_LEAD_ACTIVITY_DATA_FILE = __BEHIND_LOGIN__ + "/getleadactvitydatafile";
   String TOKEN_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/tknlnkdacc";
   String LIST_APPS_FOR_LINKED_ACCOUNT = __BEHIND_LOGIN__ + COBALT + "/lstapp";
   String COBALT_EVENT_AUTHED = __BEHIND_LOGIN__ + COBALT + "/evnt";
@@ -111,6 +99,7 @@ public interface Routes {
   String ENTITY_METRICS_DAILY = __BEHIND_LOGIN__ + "/entity_metrics_daily";
   String ENTITY_SUBENTITY_DIST_METRICS = __BEHIND_LOGIN__ + "/entity_subentity_dist_metrics";
   String ACTIVITY_DATA = __BEHIND_LOGIN__ + "/activity_data/{entityRid}/{aid}";
+  String GET_ORG_LEVEL_LEAD_ANALYTICS = __BEHIND_LOGIN__ + "/org/lead_analytics";
 
   /* === Demo Hub === */
   String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";
@@ -125,9 +114,7 @@ public interface Routes {
   /* === Cross service w/o authentication === */
 
   String GET_ALL_TOURS_BY_API_KEY = "/via/ak/tours";
-  String UPLOAD_LEAD_LEVEL_ANALYTICS = "/updleadanalytics";
-  String ADD_OR_UPDATE_LEAD_INFO = "/ldinf";
-  String HUBSPOT_DATA_FETCH_URL_HOOK = HUBSPOT + "/dfu";
+  //  String HUBSPOT_DATA_FETCH_URL_HOOK = HUBSPOT + "/dfu";
   String APP_SUMO_WEBHOOK = APP_SUMO + "/whk";
   String APP_SUMO_REDIRECT_URL = APP_SUMO + "/redir";
   String ZAPIER_WEBHOOK_REG = ZAPIER + "/reghook";

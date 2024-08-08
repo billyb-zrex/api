@@ -5,7 +5,9 @@ import com.sharefable.analytics.common.DeviceAndGeoInfo;
 import com.sharefable.analytics.entity.AidRichInfo;
 import com.sharefable.analytics.entity.MHouseLead;
 import com.sharefable.api.common.Utils;
+import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.transport.GenerateTSDef;
+import com.sharefable.api.transport.OptionalPropInTS;
 import com.sharefable.api.transport.resp.ResponseBase;
 import io.sentry.Sentry;
 import lombok.*;
@@ -33,6 +35,8 @@ public class RespHouseLead extends ResponseBase {
   private Integer completionPercentage;
   private Object info;
   private DeviceAndGeoInfo richInfo;
+  @OptionalPropInTS
+  private LeadOwnerEntity owner;
 
   public static RespHouseLead from(MHouseLead houseLead, AidRichInfo info) {
     try {
@@ -44,6 +48,15 @@ public class RespHouseLead extends ResponseBase {
       Sentry.captureException(e);
       return Empty();
     }
+  }
+
+  public static RespHouseLead from(MHouseLead houseLead, AidRichInfo info, DemoEntity owner) {
+    RespHouseLead resp = from(houseLead, info);
+    LeadOwnerEntity leadOwner = LeadOwnerEntity.builder()
+      .rid(owner.getRid())
+      .displayName(owner.getDisplayName()).build();
+    resp.setOwner(leadOwner);
+    return resp;
   }
 
   private static RespHouseLead Empty() {

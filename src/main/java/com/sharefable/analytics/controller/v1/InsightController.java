@@ -14,19 +14,22 @@ import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.controller.v1.DemoEntityController;
 import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.transport.RespAggregateLeadAnalytics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(Routes.API_V1)
 @RequiredArgsConstructor
 @Slf4j
-public class InsightController2 {
+public class InsightController {
   private final DemoEntityController demoEntityController;
   private final MEntityMetricsRepo mEntityMetricsRepo;
   private final MHouseLeadRepo mHouseLeadRepo;
@@ -78,5 +81,22 @@ public class InsightController2 {
     List<Activity> activities = activityRepo.getActivitiesByAidAndEncEntityIdOrderByUpdatedAtDesc(aid, entity.getId());
     return ApiResp.<List<Activity>>builder().status(ApiResp.ResponseStatus.Success)
       .data(activities).build();
+  }
+
+  @RequestMapping(value = Routes.GET_ORG_LEVEL_LEAD_ANALYTICS, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespAggregateLeadAnalytics> getOrgLevelLeadAnalytics(@AuthUser User user) {
+    List<DemoEntity> publishedDemoEntityForOrg = demoEntityController.getPublishedDemoEntityForOrg(user);
+
+    Map<Long, DemoEntity> hm = new HashMap<>(publishedDemoEntityForOrg.size());
+    for (DemoEntity demoEntity : publishedDemoEntityForOrg) hm.put(demoEntity.getId(), demoEntity);
+
+    List<HouseLeadWithRichInfo> leads = mHouseLeadRepo.getHouseLeadsForEntity(hm.keySet());
+    List<RespHouseLead> respHouseLeads = leads.stream().map(l ->
+      RespHouseLead.from(l.getLead(), l.getInfo(), hm.get(l.getLead().getEntityId()))).toList();
+    RespAggregateLeadAnalytics resp = RespAggregateLeadAnalytics.builder()
+      .noOfDemos(publishedDemoEntityForOrg.size())
+      .leads(respHouseLeads)
+      .build();
+    return ApiResp.<RespAggregateLeadAnalytics>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 }

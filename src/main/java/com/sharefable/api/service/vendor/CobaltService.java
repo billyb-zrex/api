@@ -3,12 +3,9 @@ package com.sharefable.api.service.vendor;
 import com.sharefable.api.config.AppConfig;
 import com.sharefable.api.config.vendor.CobaltConfig;
 import com.sharefable.api.entity.DemoEntity;
-import com.sharefable.api.entity.HouseLeadInfo;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.repo.DemoEntityRepo;
-import com.sharefable.api.repo.HouseLeadInfoRepo;
 import com.sharefable.api.service.NfHookService;
-import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.TourDeleted;
 import com.sharefable.api.transport.req.ReqCobaltEvent;
 import com.sharefable.api.transport.req.ReqNewLinkedAccount;
@@ -24,7 +21,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,16 +33,14 @@ public class CobaltService {
   private final CobaltConfig cobaltConfig;
   private final DemoEntityRepo demoEntityRepo;
   private final RestTemplate restClient;
-  private final HouseLeadInfoRepo houseLeadInfoRepo;
   private final NfHookService nfHookService;
   private final AppConfig appConfig;
 
   @Autowired
-  public CobaltService(CobaltConfig cobaltConfig, DemoEntityRepo demoEntityRepo, RestTemplate restClient, HouseLeadInfoRepo houseLeadInfoRepo, NfHookService nfHookService, AppConfig appConfig) {
+  public CobaltService(CobaltConfig cobaltConfig, DemoEntityRepo demoEntityRepo, RestTemplate restClient, NfHookService nfHookService, AppConfig appConfig) {
     this.cobaltConfig = cobaltConfig;
     this.demoEntityRepo = demoEntityRepo;
     this.restClient = restClient;
-    this.houseLeadInfoRepo = houseLeadInfoRepo;
     this.nfHookService = nfHookService;
     this.appConfig = appConfig;
 
@@ -122,10 +120,10 @@ public class CobaltService {
 
   @Transactional
   public void createLinkedAccountIfNotExist(ReqNewLinkedAccount body) {
-    List<HouseLeadInfo> maybeHouseLeadInfo = houseLeadInfoRepo.findHouseLeadInfoByOrgId(body.orgId());
-    if (maybeHouseLeadInfo.isEmpty()) {
-      nfHookService.sendNotification(NfEvents.NEW_ORG_CREATED, Map.of("id", body.orgId().toString()));
-    }
+//    List<HouseLeadInfo> maybeHouseLeadInfo = houseLeadInfoRepo.findHouseLeadInfoByOrgId(body.orgId());
+//    if (maybeHouseLeadInfo.isEmpty()) {
+//      nfHookService.sendNotification(NfEvents.NEW_ORG_CREATED, Map.of("id", body.orgId().toString()));
+//    }
   }
 
   private HttpHeaders getCommonHeaders() {

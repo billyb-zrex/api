@@ -15,7 +15,7 @@ import java.util.Base64;
 @RequiredArgsConstructor
 @RequestMapping(Routes.API_V1)
 @Slf4j
-public class InsightController {
+public class InsightControllerOld {
   private final FirehoseService firehoseService;
 
   @RequestMapping(value = Routes.LOG_USER_EVENTS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)

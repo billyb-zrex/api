@@ -1,5 +1,5 @@
 ### refresh settings
-POST https://api.service.staging.sharefable.com/v1/refreshsettings
+POST https://api.service.sharefable.com/v1/refreshsettings
 Content-Type: application/json
 
 ### add platform integration config -- webhook

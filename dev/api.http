@@ -840,3 +840,8 @@ Authorization: {{auth-header}}
 GET {{api-host}}/v1/f/entity_subentity_dist_metrics?rid=justo-4qny0oztew0be17c
 Content-Type: application/json
 Authorization: {{auth-header}}
+
+### analtyics
+GET {{api-host}}/v1/f/org/lead_analytics
+Content-Type: application/json
+Authorization: {{auth-header}}

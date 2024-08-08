@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(Routes.API_V1)
 @Slf4j
@@ -34,5 +36,9 @@ public class DemoEntityController {
 
   public DemoEntity getEntityAfterValidation(String rid, User user) {
     return entityService.getEntityByRIdWithAuthValidation(DemoEntity.class, rid, user);
+  }
+
+  public List<DemoEntity> getPublishedDemoEntityForOrg(User user) {
+    return entityService.getAllPublishedEntity(user.getBelongsToOrg());
   }
 }
