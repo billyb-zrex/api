@@ -344,15 +344,7 @@ public class WorkspaceService extends ServiceBase {
 
   @Transactional(readOnly = true)
   public List<RespOrg> getAllOrgForUser(User user) {
-    Pair<String, Boolean> domainInf = Utils.getDomainFromEmailForRespectiveEmail(user.getEmail());
-    String emailDomain = domainInf.getValue0();
-    boolean isWorkEmail = domainInf.getValue1();
-    Set<Org> orgs = new HashSet<>();
-    if (isWorkEmail) {
-      orgs.addAll(orgRepo.findOrgByDomain(emailDomain));
-    }
-    orgs.addAll(user.getOrgs() != null ? user.getOrgs() : Set.of());
-
+    Set<Org> orgs = new HashSet<>(user.getOrgs() != null ? user.getOrgs() : Set.of());
     return orgs.stream().map(RespOrg::from).collect(Collectors.toList());
   }
 

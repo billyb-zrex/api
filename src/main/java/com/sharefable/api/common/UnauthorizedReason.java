@@ -4,5 +4,6 @@ import com.sharefable.api.transport.GenerateTSDef;
 
 @GenerateTSDef
 public enum UnauthorizedReason {
-  OrgSuggestedButInvalidAssociation
+  OrgSuggestedButInvalidAssociation,
+  EmailIdExistsButLoginMethodDoesNotMatch
 }

@@ -38,8 +38,19 @@ public class UserService {
   // used from AuthUser annotation
   public User getOrCreateUserFromJwt(Jwt jwt) throws JsonProcessingException {
     UserClaimFromAuth0 userClaimFromAuth0 = getUserClaimsFromAuth0(jwt);
+    String subject = jwt.getSubject();
     User user = userRepo.findUserByEmail(userClaimFromAuth0.email())
-      .orElseGet(() -> createNewUser(userClaimFromAuth0, jwt.getSubject()));
+      .orElseGet(() -> createNewUser(userClaimFromAuth0, subject));
+
+    if (!StringUtils.equalsIgnoreCase(user.getAuthId(), subject)) {
+      // If user has logged in using one auth provider (google) and tries to login using another login
+      // provider (email<>password) ask user to login using existing auth
+      log.error("{} is trying to login using subject {} but subject already exists {}",
+        user.getEmail(), user.getAuthId(), subject);
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, objectMapper.writeValueAsString(
+        Map.of("r", UnauthorizedReason.EmailIdExistsButLoginMethodDoesNotMatch)
+      ));
+    }
 
     Long orgId = OrgContext.getCurrentOrgId();
     User updatedUser = settingUserBelongsTo(user, orgId);
