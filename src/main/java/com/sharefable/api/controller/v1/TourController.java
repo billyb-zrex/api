@@ -1,10 +1,10 @@
 package com.sharefable.api.controller.v1;
 
+import com.sharefable.Routes;
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.common.TopLevelEntityType;
 import com.sharefable.api.config.AppSettings;
-import com.sharefable.Routes;
 import com.sharefable.api.entity.ApiKey;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.EntityService;
@@ -67,7 +67,7 @@ public class TourController {
 
   @RequestMapping(value = Routes.RECORD_TOUR_EDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
-  public ApiResp<RespDemoEntity> recordEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
+  public ApiResp<RespDemoEntity> recordTourIndexEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
     RespDemoEntity resp = entityService.updateEditForTour(body, user, EditTour.INDEX);
     return ApiResp.<RespDemoEntity>builder().data(resp).build();
   }
@@ -76,6 +76,13 @@ public class TourController {
   //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
   public ApiResp<RespDemoEntity> recordLoaderEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
     RespDemoEntity resp = entityService.updateEditForTour(body, user, EditTour.LOADER);
+    return ApiResp.<RespDemoEntity>builder().data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.RECORD_TOUR_EDIT_FILE, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  //@PreAuthorize("hasAuthority(@Perm.WRITE_TOUR)")
+  public ApiResp<RespDemoEntity> recordGlobalEdit(@RequestBody ReqRecordEdit body, @AuthUser User user) {
+    RespDemoEntity resp = entityService.updateEditForTour(body, user, EditTour.EDITS);
     return ApiResp.<RespDemoEntity>builder().data(resp).build();
   }
 

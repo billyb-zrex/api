@@ -92,6 +92,7 @@ public class EntityService extends ServiceBase {
     if (type == TopLevelEntityType.TOUR) {
       uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
       uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
+      uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.TOUR_EDITS);
     } else {
       uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.DEMO_HUB);
     }
@@ -144,10 +145,16 @@ public class EntityService extends ServiceBase {
   public RespDemoEntity updateEditForTour(ReqRecordEdit body, User userEntity, EditTour fileTobeEdited) {
     DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.rid(), userEntity);
 
+    S3Config.FileConfig fileConfig = switch (fileTobeEdited) {
+      case LOADER -> S3Config.getEntityFiles().loaderFile();
+      case EDITS -> S3Config.getEntityFiles().editFile();
+      case INDEX -> S3Config.getEntityFiles().tourDataFile();
+    };
+
     uploadDataFileToS3(
       body.editData(),
       demoEntity.getAssetPrefixHash(),
-      fileTobeEdited == EditTour.INDEX ? S3Config.getEntityFiles().tourDataFile() : S3Config.getEntityFiles().loaderFile(),
+      fileConfig,
       S3Config.AssetType.Tour);
 
     demoEntity.setLastInteractedAt(Utils.getCurrentUtcTimestamp());

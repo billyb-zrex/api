@@ -60,6 +60,7 @@ public interface Routes {
   String UPLOAD_LINK = __BEHIND_LOGIN__ + "/getuploadlink";
   String RECORD_EL_EDIT = __BEHIND_LOGIN__ + "/recordeledit";
   String RECORD_TOUR_EDIT = __BEHIND_LOGIN__ + "/recordtredit";
+  String RECORD_TOUR_EDIT_FILE = __BEHIND_LOGIN__ + "/recordtrgbedit";
   String RECORD_TOUR_LOADER_EDIT = __BEHIND_LOGIN__ + "/recordtrloaderedit";
   String UPDATE_GLOBAL_OPTS = __BEHIND_LOGIN__ + "/updtgopts";
   String GET_GLOBAL_OPTS = __BEHIND_LOGIN__ + "/gopts";

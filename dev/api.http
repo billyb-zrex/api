@@ -256,6 +256,16 @@ Content-Type: application/json
   "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"logo\": { \"url\": \"https://s3.amazonaws.com/app.sharefable.com/favicon.png\"}, \"loader\": { \"url\": \"https://sample.com\", \"type\": \"gif\"}}"
 }
 
+### update edit file of tour
+POST {{api-host}}/v1/f/recordtreditfile
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "rid": "edits-checl-6aqgcvbve98c1gan",
+  "editData": "{\"v\": \"2023-01-10\", \"lastUpdatedAtUtc\": -1, \"logo\": { \"url\": \"https://s3.amazonaws.com/app.sharefable.com/favicon.png\"}, \"loader\": { \"url\": \"https://sample.com\", \"type\": \"gif\"}}"
+}
+
 ### update global opts file
 POST {{api-host}}/v1/f/recordgbsedit
 Authorization: {{auth-header}}

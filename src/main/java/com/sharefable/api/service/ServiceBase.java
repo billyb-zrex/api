@@ -33,6 +33,7 @@ import java.util.*;
 public abstract class ServiceBase implements DefaultThumbnail {
   private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_INDEX = "/data-schema/v=%s/tour/index.json";
   private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_LOADER = "/data-schema/v=%s/tour/loader.json";
+  private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_EDITS = "/data-schema/v=%s/tour/edits.json";
   private static final String PATH_TO_SCHEMA_FILE_FOR_SCREEN_EDIT = "/data-schema/v=%s/screen/edits.json";
   private static final String PATH_TO_SCHEMA_FILE_FOR_DEMOHUB_INDEX = "/data-schema/v=%s/demoHub/index.json";
 
@@ -102,6 +103,12 @@ public abstract class ServiceBase implements DefaultThumbnail {
         String.format(PATH_TO_SCHEMA_FILE_FOR_DEMOHUB_INDEX, schemaVersion),
         S3Config.AssetType.DemoHub,
         S3Config.getEntityFiles().demoHubDataFile()
+      );
+
+      case TOUR_EDITS -> new TemplateFile(
+        String.format(PATH_TO_SCHEMA_FILE_FOR_TOUR_EDITS, schemaVersion),
+        S3Config.AssetType.Tour,
+        S3Config.getEntityFiles().editFile()
       );
     };
   }
@@ -175,6 +182,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
   public enum DATA_FILE_TYPE {
     TOUR_INDEX,
     TOUR_LOADER,
+    TOUR_EDITS,
     SCREEN_EDIT,
     DEMO_HUB
   }
