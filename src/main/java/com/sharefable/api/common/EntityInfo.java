@@ -15,4 +15,5 @@ import lombok.ToString;
 @GenerateTSDef
 public class EntityInfo {
   private String thumbnail;
+  private FrameSettings frameSettings;
 }
