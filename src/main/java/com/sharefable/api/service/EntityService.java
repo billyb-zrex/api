@@ -166,10 +166,14 @@ public class EntityService extends ServiceBase {
   public RespDemoEntity renameEntity(ReqRenameGeneric body, User userEntity, TopLevelEntityType type) {
     DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, body.rid(), userEntity);
     String oldRid = demoEntity.getRid();
+    String oldName = demoEntity.getDisplayName();
     String newName = body.newName();
+
+    boolean isSame = Utils.compareDisplayName(oldName, newName);
+    if (!isSame) demoEntity.setRid(Utils.createReadableId(newName));
+
     demoEntity.setDisplayName(newName);
     demoEntity.setDescription(body.description().isPresent() ? body.description().get() : demoEntity.getDescription());
-    demoEntity.setRid(Utils.createReadableId(newName));
 
     try {
       DemoEntity updatedDemoEntity = demoEntityRepo.save(demoEntity);
@@ -177,7 +181,7 @@ public class EntityService extends ServiceBase {
         if (type == TopLevelEntityType.TOUR) {
           uploadTourManifestToS3(updatedDemoEntity);
         }
-        modifyPublishedTourEntityPath(oldRid, demoEntity.getRid(), type);
+        if (!isSame) modifyPublishedTourEntityPath(oldRid, updatedDemoEntity.getRid(), type);
       }
 
       return RespDemoEntity.from(updatedDemoEntity);

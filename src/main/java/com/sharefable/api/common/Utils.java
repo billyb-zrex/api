@@ -146,6 +146,11 @@ public interface Utils {
     return str.trim().replaceAll("\\s+", " ");
   }
 
+  static boolean compareDisplayName(String oldName, String newName) {
+    return oldName != null && newName != null &&
+      normalizeWhitespace(oldName).equalsIgnoreCase(normalizeWhitespace(newName));
+  }
+
   static boolean isParentScreen(Screen screen) {
     return screen.getParentScreenId() == 0;
   }
