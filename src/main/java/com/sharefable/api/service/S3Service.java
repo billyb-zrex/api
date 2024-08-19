@@ -7,6 +7,7 @@ import com.amazonaws.util.IOUtils;
 import com.sharefable.api.common.AssetFilePath;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -21,14 +22,12 @@ import java.util.Map;
 public class S3Service {
 
   private final AmazonS3 client;
+  private final AmazonS3 pvtClient;
 
   @Autowired
-  S3Service(AmazonS3 s3) {
+  S3Service(AmazonS3 s3, @Qualifier("pvt") AmazonS3 pvtClient) {
     this.client = s3;
-  }
-
-  public AssetFilePath upload(AssetFilePath filePath, byte[] content) {
-    return upload(filePath, content, new HashMap<>());
+    this.pvtClient = pvtClient;
   }
 
   private ObjectMetadata getS3ObjectMetadata(HashMap<String, String> assetMetadata) {
@@ -85,13 +84,14 @@ public class S3Service {
   }
 
   public URL preSignedUrl(AssetFilePath filePath, String contentType) {
+    boolean pvt = filePath.isPrivateFile();
     GeneratePresignedUrlRequest req =
       new GeneratePresignedUrlRequest(filePath.getBucketName(), filePath.getFullQualifiedPath());
-    Date expireAt = DateUtils.addMinutes(new Date(), 10);
+    Date expireAt = DateUtils.addMinutes(new Date(), pvt ? 30 : 10);
     req.setExpiration(expireAt);
     req.setMethod(HttpMethod.PUT);
     req.setContentType(contentType);
-    return client.generatePresignedUrl(req);
+    return (pvt ? pvtClient : client).generatePresignedUrl(req);
   }
 
   public byte[] getObjectContent(AssetFilePath filePath) throws IOException {

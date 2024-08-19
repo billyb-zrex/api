@@ -58,6 +58,7 @@ public interface Routes {
   String DELETE_TOUR = __BEHIND_LOGIN__ + "/deltour";
   String UPDATE_TOUR_PROPERTY = __BEHIND_LOGIN__ + "/updtrprop";
   String UPLOAD_LINK = __BEHIND_LOGIN__ + "/getuploadlink";
+  String PVT_UPLOAD_LINK = __BEHIND_LOGIN__ + "/getpvtuploadlink";
   String RECORD_EL_EDIT = __BEHIND_LOGIN__ + "/recordeledit";
   String RECORD_TOUR_EDIT = __BEHIND_LOGIN__ + "/recordtredit";
   String RECORD_TOUR_EDIT_FILE = __BEHIND_LOGIN__ + "/recordtrgbedit";
@@ -111,6 +112,9 @@ public interface Routes {
   String GET_DEMO_HUB = "/dh";
   String PUBLISH_DEMO_HUB = __BEHIND_LOGIN__ + "/pubdh";
   String RECORD_EDIT_DEMO_HUB = __BEHIND_LOGIN__ + "/recorddhedit";
+  String NEW_LLM_RUN = __BEHIND_LOGIN__ + "/llmrun";
+  String GET_LLM_RUNS = __BEHIND_LOGIN__ + "/llmruns/{thread_id}";
+  String UPDATE_LLM_RUN = __BEHIND_LOGIN__ + "/updatellmrun";
 
   /* === Cross service w/o authentication === */
 

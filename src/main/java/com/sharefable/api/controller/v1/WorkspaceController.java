@@ -1,12 +1,13 @@
 package com.sharefable.api.controller.v1;
 
+import com.sharefable.Routes;
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.AppSettings;
-import com.sharefable.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.ObjectValidationResult;
+import com.sharefable.api.transport.PvtAssetType;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.*;
 import lombok.RequiredArgsConstructor;
@@ -94,6 +95,18 @@ public class WorkspaceController {
     return ApiResp.<RespUploadUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 
+  @RequestMapping(value = Routes.PVT_UPLOAD_LINK, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespUploadUrl> getPrivatePresignedUrl(
+    @RequestParam("te") String contentTypeEncoded,
+    @RequestParam("pre") String prefix,
+    @RequestParam("fe") String encodedFilename,
+    @RequestParam("t") PvtAssetType assetType) {
+    String contentType = new String(org.springframework.util.Base64Utils.decodeFromString(contentTypeEncoded), StandardCharsets.UTF_8);
+    String filename = new String(org.springframework.util.Base64Utils.decodeFromString(encodedFilename), StandardCharsets.UTF_8);
+    RespUploadUrl resp = wsService.getPvtPreSignedUrl(contentType, prefix, filename, assetType);
+    return ApiResp.<RespUploadUrl>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
   @RequestMapping(value = Routes.GET_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespOrg> updateUserName(@RequestParam("if") Integer implicitFetch, @AuthUser User user) {
     RespOrg org = implicitFetch == 1 ? wsService.getOrgByEmail(user.getEmail()) : wsService.getOrgForUser(user);
@@ -178,13 +191,13 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.PROBE_VANITY_DOMAIN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespVanityDomain> probeDomains(@RequestBody ReqCreateOrDeleteNewVanityDomain req, @AuthUser User user) {
-    RespVanityDomain resp = wsService.getAndUpdateStatusForVanityDomain(req, user.getBelongsToOrg(), user);
+    RespVanityDomain resp = wsService.getAndUpdateStatusForVanityDomain(req, user.getBelongsToOrg());
     return ApiResp.<RespVanityDomain>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 
   @RequestMapping(value = Routes.DEL_VANITY_DOMAIN, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<List<RespVanityDomain>> deleteNewVanityDomains(@RequestBody ReqCreateOrDeleteNewVanityDomain req, @AuthUser User user) {
-    List<RespVanityDomain> resp = wsService.deleteVanityDomain(req, user.getBelongsToOrg(), user);
+    List<RespVanityDomain> resp = wsService.deleteVanityDomain(req, user.getBelongsToOrg());
     return ApiResp.<List<RespVanityDomain>>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 

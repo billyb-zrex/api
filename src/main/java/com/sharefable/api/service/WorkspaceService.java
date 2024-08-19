@@ -14,6 +14,7 @@ import com.sharefable.api.repo.*;
 import com.sharefable.api.service.vendor.SlackMsgService;
 import com.sharefable.api.transport.InviteCode;
 import com.sharefable.api.transport.NfEvents;
+import com.sharefable.api.transport.PvtAssetType;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.*;
 import io.sentry.Sentry;
@@ -254,12 +255,18 @@ public class WorkspaceService extends ServiceBase {
       .build();
   }
 
-  public List<RespUser> getAllUsersInOrg(Long orgId) {
-    Set<User> users = userRepo.getUsersByBelongsToOrgAndActiveIsTrue(orgId);
-    Set<User> inactiveUsers = userRepo.getUsersByBelongsToOrgAndActiveIsFalse(orgId);
-    users.addAll(inactiveUsers);
-
-    return users.stream().map(RespUser::from).collect(Collectors.toList());
+  public RespUploadUrl getPvtPreSignedUrl(String contentType, String prefix, String filename, PvtAssetType assetType) {
+    AssetFilePath filePath = s3Config.getQualifiedPathFor(switch (assetType) {
+      case MarkedImgs -> S3Config.AssetType.PvtTourLlmOpsAssets;
+      case TourInputData -> S3Config.AssetType.PvtTourInputData;
+    }, prefix, filename);
+    URL url = s3Service.preSignedUrl(filePath, contentType);
+    log.warn("content type {} url {}", contentType, url);
+    return RespUploadUrl.builder()
+      .url(url.toString())
+      .expiry("default")
+      .filename(filename)
+      .build();
   }
 
   public RespUser activateOrDeactivateUser(Long targetUserId, Boolean activate, User reqByUser) {
@@ -489,7 +496,7 @@ public class WorkspaceService extends ServiceBase {
   }
 
   @Transactional
-  public List<RespVanityDomain> deleteVanityDomain(ReqCreateOrDeleteNewVanityDomain req, Long orgId, User user) {
+  public List<RespVanityDomain> deleteVanityDomain(ReqCreateOrDeleteNewVanityDomain req, Long orgId) {
     Pair<Optional<Pair<VanityDomain, EntityConfigKV>>, List<VanityDomain>> maybeDomain = getDomainIfExists(orgId, req.getApexDomainName(), req.getDomainName());
     if (maybeDomain.getValue0().isEmpty()) return getAllVanityDomains(orgId);
 
@@ -510,7 +517,7 @@ public class WorkspaceService extends ServiceBase {
   }
 
   @Transactional
-  public RespVanityDomain getAndUpdateStatusForVanityDomain(ReqCreateOrDeleteNewVanityDomain req, Long orgId, User user) {
+  public RespVanityDomain getAndUpdateStatusForVanityDomain(ReqCreateOrDeleteNewVanityDomain req, Long orgId) {
     Pair<Optional<Pair<VanityDomain, EntityConfigKV>>, List<VanityDomain>> maybeDomain = getDomainIfExists(orgId, req.getApexDomainName(), req.getDomainName());
 
     if (maybeDomain.getValue0().isEmpty()) return null;

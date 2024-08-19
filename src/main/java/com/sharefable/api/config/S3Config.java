@@ -10,10 +10,11 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Primary;
 
 @Configuration
 @ConfigurationProperties(prefix = "com.sharefable.api.s3")
@@ -43,13 +44,17 @@ public class S3Config {
   private static final String PATH_FOR_USER_UPLOADED_ASSET = "/usr/org/%s";
   private static final String PATH_FOR_LEAD_LEVEL_ANALYTICS = "/ula/%s";
   private static final String PATH_FOR_DEMOHUB_ASSET = "/dh/%s";
+  private static final String PATH_FOR_PVT_TOUR_INPUT = "/tour_data/%s/ip";
+  private static final String PATH_FOR_PVT_LLM_OPS = "/tour_data/%s/llmops";
   private String region;
   private String rootQualifier;
   private String assetBucketName;
+  private String pvtAssetBucketName;
+  private String pvtAssetBucketRegion;
   private String cdn;
 
   @Autowired
-  private Environment env;
+  private AppConfig appConfig;
 
   public static EntityFilesConfig getEntityFiles() {
     return new EntityFilesConfig(
@@ -86,6 +91,8 @@ public class S3Config {
       case Analytics -> PATH_FOR_LEAD_LEVEL_ANALYTICS;
       case DemoHub -> PATH_FOR_DEMOHUB_ASSET;
       case PublishedDemoHub -> PATH_FOR_PUBLISHED_DEMO_HUB_ASSET;
+      case PvtTourInputData -> PATH_FOR_PVT_TOUR_INPUT;
+      case PvtTourLlmOpsAssets -> PATH_FOR_PVT_LLM_OPS;
     };
   }
 
@@ -106,9 +113,18 @@ public class S3Config {
     );
   }
 
-  private String getPrefixPath(AssetType type, String prefix) {
+  private String getPrefixPath(AssetType type, String prefix, boolean addEnvQualifier) {
     String path = getPathForAssetType(type);
-    return rootQualifier + String.format(path, prefix);
+
+    String pathWithoutEnvQualifier = rootQualifier + String.format(path, prefix);
+    if (addEnvQualifier) {
+      return appConfig.getActiveProfile().toLowerCase() + "/" + pathWithoutEnvQualifier;
+    }
+    return pathWithoutEnvQualifier;
+  }
+
+  private String getPrefixPath(AssetType type, String prefix) {
+    return getPrefixPath(type, prefix, false);
   }
 
   private AssetFilePath getAssetFilePathWithCommonProps() {
@@ -119,9 +135,20 @@ public class S3Config {
     return assetFilePath;
   }
 
+  private AssetFilePath getPrivateAssetFilePathWithCommonProps() {
+    AssetFilePath assetFilePath = new AssetFilePath();
+    assetFilePath.setBucketName(pvtAssetBucketName);
+    assetFilePath.setRegionName(pvtAssetBucketRegion);
+    assetFilePath.setPrivateFile(true);
+    return assetFilePath;
+  }
+
   public AssetFilePath getQualifiedPathFor(AssetType type, String prefix, String filePath) {
-    AssetFilePath assetFilePath = getAssetFilePathWithCommonProps();
-    String prefixPath = getPrefixPath(type, prefix);
+    AssetFilePath assetFilePath = switch (type) {
+      case PvtTourInputData, PvtTourLlmOpsAssets -> getPrivateAssetFilePathWithCommonProps();
+      default -> getAssetFilePathWithCommonProps();
+    };
+    String prefixPath = getPrefixPath(type, prefix, assetFilePath.isPrivateFile());
     assetFilePath.setPrefixPathForType(prefixPath);
     assetFilePath.setFilePath(filePath);
     assetFilePath.setFullQualifiedPath(prefixPath + StringUtils.prependIfMissing(filePath, "/"));
@@ -129,8 +156,15 @@ public class S3Config {
   }
 
   @Bean
+  @Primary
   AmazonS3 s3Client() {
     return AmazonS3ClientBuilder.standard().withRegion(region).build();
+  }
+
+  @Bean
+  @Qualifier("pvt")
+  AmazonS3 pvtS3Client() {
+    return AmazonS3ClientBuilder.standard().withRegion(pvtAssetBucketRegion).build();
   }
 
   public enum AssetType {
@@ -142,7 +176,9 @@ public class S3Config {
     PublishedTour,
     Analytics,
     DemoHub,
-    PublishedDemoHub
+    PublishedDemoHub,
+    PvtTourInputData,
+    PvtTourLlmOpsAssets,
   }
 
   public enum DATA_FILE_CACHE_POLICY {

@@ -20,9 +20,18 @@ public class AssetFilePath {
   String prefixPathForType;
   // File path after the prefix path data/index.json
   String filePath;
+  boolean privateFile = false;
 
   public static AssetFilePath from(AssetFilePath halfConstructedPath, String qualifiedPath) {
-    return new AssetFilePath(halfConstructedPath.cdn, halfConstructedPath.regionName, halfConstructedPath.bucketName, qualifiedPath, "", "");
+    return new AssetFilePath(
+      halfConstructedPath.cdn,
+      halfConstructedPath.regionName,
+      halfConstructedPath.bucketName,
+      qualifiedPath,
+      "",
+      "",
+      halfConstructedPath.privateFile
+    );
   }
 
   public static AssetFilePath from(AssetFilePath assetFilePath) {
@@ -32,7 +41,8 @@ public class AssetFilePath {
       assetFilePath.bucketName,
       assetFilePath.fullQualifiedPath,
       assetFilePath.prefixPathForType,
-      assetFilePath.filePath
+      assetFilePath.filePath,
+      assetFilePath.isPrivateFile()
     );
   }
 

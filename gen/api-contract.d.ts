@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-08-08 18:24:51.
+// Generated using typescript-generator version 2.35.1025 on 2024-08-16 18:56:24.
 
 export interface Activity extends ActivityBase {
 }
@@ -101,6 +101,15 @@ export interface ApiResp<T> {
 
 export interface EntityInfo {
     thumbnail: string;
+}
+
+export interface LLMOps extends EntityBase {
+    orgId: number;
+    entityId: number;
+    threadId: string;
+    status: LLMOpsStatus;
+    data: any;
+    meta: any;
 }
 
 export interface AudioTranscodingJobInfo extends JobProcessingInfo {
@@ -354,6 +363,13 @@ export interface ReqNewInvite {
     expireAfter?: number;
 }
 
+export interface ReqNewLLMRun {
+    threadId: string;
+    entityId?: number;
+    data: any;
+    meta: any;
+}
+
 export interface ReqNewLinkedAccount {
     orgId: number;
 }
@@ -433,6 +449,13 @@ export interface ReqTransferTour {
 
 export interface ReqUpdateGlobalOpts {
     editData: string;
+}
+
+export interface ReqUpdateLLMRun {
+    id: number;
+    status?: LLMOpsStatus;
+    data?: any;
+    meta?: any;
 }
 
 export interface ReqUpdateOrg {
@@ -814,6 +837,11 @@ export const enum JobType {
     REFRESH_CRAWLER = "REFRESH_CRAWLER",
 }
 
+export const enum PvtAssetType {
+    TourInputData = "TourInputData",
+    MarkedImgs = "MarkedImgs",
+}
+
 export const enum SchemaVersion {
     V1 = "2023-01-10",
 }
@@ -856,6 +884,12 @@ export const enum ResponseStatus {
 export const enum ErrorCode {
     IllegalArgs = 100,
     NotFound = 101,
+}
+
+export const enum LLMOpsStatus {
+    InProgress = "InProgress",
+    Successful = "Successful",
+    Failure = "Failure",
 }
 
 export const enum LogType {
