@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-08-16 18:56:24.
+// Generated using typescript-generator version 2.35.1025 on 2024-08-20 11:25:42.
 
 export interface Activity extends ActivityBase {
 }
@@ -101,6 +101,7 @@ export interface ApiResp<T> {
 
 export interface EntityInfo {
     thumbnail: string;
+    frameSettings: FrameSettings;
 }
 
 export interface LLMOps extends EntityBase {
@@ -884,6 +885,12 @@ export const enum ResponseStatus {
 export const enum ErrorCode {
     IllegalArgs = 100,
     NotFound = 101,
+}
+
+export const enum FrameSettings {
+    NOFRAME = "NOFRAME",
+    LIGHT = "LIGHT",
+    DARK = "DARK",
 }
 
 export const enum LLMOpsStatus {
