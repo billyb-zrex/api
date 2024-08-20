@@ -102,6 +102,7 @@ export interface ApiResp<T> {
 export interface EntityInfo {
     thumbnail: string;
     frameSettings: FrameSettings;
+    annDemoId: number;
 }
 
 export interface LLMOps extends EntityBase {

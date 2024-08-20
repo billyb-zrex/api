@@ -107,7 +107,7 @@ public class EntityService extends ServiceBase {
       .deleted(TourDeleted.ACTIVE)
       .responsive2(Responsiveness.NoChoice)
       .publishedVersion(0)
-      .info(req.info().orElse(new EntityInfo(null, FrameSettings.LIGHT)))
+      .info(req.info().orElse(new EntityInfo(null, FrameSettings.LIGHT, null)))
       .assetPrefixHash(prefixHash)
       .belongsToOrg(createdByUser.getBelongsToOrg())
       .onboarding(false)

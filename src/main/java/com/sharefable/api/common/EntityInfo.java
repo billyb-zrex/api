@@ -16,4 +16,5 @@ import lombok.ToString;
 public class EntityInfo {
   private String thumbnail;
   private FrameSettings frameSettings = FrameSettings.LIGHT;
+  private Long annDemoId;
 }
