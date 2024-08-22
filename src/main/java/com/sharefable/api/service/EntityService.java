@@ -19,6 +19,7 @@ import com.sharefable.api.transport.resp.RespUploadUrl;
 import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -209,8 +210,8 @@ public class EntityService extends ServiceBase {
     return this.duplicateTour(fromDemoEntity, user, tour -> tour.onboarding(false).displayName(body.duplicateTourName()).description(""), false);
   }
 
-  @Transactional(propagation = Propagation.MANDATORY)
-  public RespDemoEntityWithSubEntities duplicateTour(DemoEntity fromDemoEntity, User user, FnTourBuilder f, boolean shouldCloneParentScreens) {
+  private Triple<AssetFilePath, AssetFilePath, AssetFilePath> getAssetFilePathForTour(DemoEntity fromDemoEntity) {
+
     AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
       S3Config.AssetType.Tour,
       fromDemoEntity.getAssetPrefixHash(),
@@ -219,10 +220,23 @@ public class EntityService extends ServiceBase {
       S3Config.AssetType.Tour,
       fromDemoEntity.getAssetPrefixHash(),
       S3Config.getEntityFiles().loaderFile().filename());
+    AssetFilePath fromTourEditFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Tour,
+      fromDemoEntity.getAssetPrefixHash(),
+      S3Config.getEntityFiles().editFile().filename());
+
+    return Triple.of(fromTourDataFilePath, fromTourLoaderFilePath, fromTourEditFilePath);
+  }
+
+  @Transactional(propagation = Propagation.MANDATORY)
+  public RespDemoEntityWithSubEntities duplicateTour(DemoEntity fromDemoEntity, User user, FnTourBuilder f, boolean shouldCloneParentScreens) {
+
+    Triple<AssetFilePath, AssetFilePath, AssetFilePath> assetFilePaths = getAssetFilePathForTour(fromDemoEntity);
 
     String prefixHash = Utils.createUuidWord();
-    copyDataFileToS3(fromTourDataFilePath, prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
-    copyDataFileToS3(fromTourLoaderFilePath, prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
+    copyDataFileToS3(assetFilePaths.getLeft(), prefixHash, DATA_FILE_TYPE.TOUR_INDEX);
+    copyDataFileToS3(assetFilePaths.getMiddle(), prefixHash, DATA_FILE_TYPE.TOUR_LOADER);
+    copyDataFileToS3(assetFilePaths.getRight(), prefixHash, DATA_FILE_TYPE.TOUR_EDITS);
 
     String rid = Utils.createReadableId(fromDemoEntity.getDisplayName()); // TODO rid would be different
     DemoEntity.DemoEntityBuilder<?, ?> tourBuilder = DemoEntity.builder()
@@ -447,33 +461,33 @@ public class EntityService extends ServiceBase {
 
     try {
       uploadTourManifestToS3(demoEntity);
-      AssetFilePath fromTourDataFilePath = s3Config.getQualifiedPathFor(
-        S3Config.AssetType.Tour,
-        demoEntity.getAssetPrefixHash(),
-        S3Config.getEntityFiles().tourDataFile().filename());
-      AssetFilePath fromTourLoaderFilePath = s3Config.getQualifiedPathFor(
-        S3Config.AssetType.Tour,
-        demoEntity.getAssetPrefixHash(),
-        S3Config.getEntityFiles().loaderFile().filename());
+      Triple<AssetFilePath, AssetFilePath, AssetFilePath> assetFilePaths = getAssetFilePathForTour(demoEntity);
 
       Integer nextVersion = demoEntity.getPublishedVersion() + 1;
       AssetFilePath toTourDataFilePath = s3Config.getQualifiedPathFor(
         S3Config.AssetType.Tour, demoEntity.getAssetPrefixHash(), S3Config.getEntityFiles().publishedDataFile().filename(nextVersion));
       AssetFilePath toTourLoaderFilePath = s3Config.getQualifiedPathFor(
         S3Config.AssetType.Tour, demoEntity.getAssetPrefixHash(), S3Config.getEntityFiles().publishedLoaderFile().filename(nextVersion));
+      AssetFilePath toTourEditsFilePath = s3Config.getQualifiedPathFor(
+        S3Config.AssetType.Tour, demoEntity.getAssetPrefixHash(), S3Config.getEntityFiles().publishedEditFile().filename(nextVersion));
 
       List<Callable<AssetFilePath>> tourInfoCopier = new ArrayList<>();
-      Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(fromTourDataFilePath, toTourDataFilePath, Map.of(
+      Callable<AssetFilePath> tourDataCopier = () -> s3Service.copy(assetFilePaths.getLeft(), toTourDataFilePath, Map.of(
         HttpHeaders.CONTENT_TYPE, "application/json",
         HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedDataFile().cachePolicy())
       ));
-      Callable<AssetFilePath> tourLoaderCopier = () -> s3Service.copy(fromTourLoaderFilePath, toTourLoaderFilePath, Map.of(
+      Callable<AssetFilePath> tourLoaderCopier = () -> s3Service.copy(assetFilePaths.getMiddle(), toTourLoaderFilePath, Map.of(
         HttpHeaders.CONTENT_TYPE, "application/json",
         HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedLoaderFile().cachePolicy())
+      ));
+      Callable<AssetFilePath> tourEditsCopier = () -> s3Service.copy(assetFilePaths.getRight(), toTourEditsFilePath, Map.of(
+        HttpHeaders.CONTENT_TYPE, "application/json",
+        HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().publishedEditFile().cachePolicy())
       ));
 
       tourInfoCopier.add(tourDataCopier);
       tourInfoCopier.add(tourLoaderCopier);
+      tourInfoCopier.add(tourEditsCopier);
 
       for (Screen screen : screens) {
         if (screen.getType() != ScreenType.Img) {
