@@ -2,7 +2,6 @@ package com.sharefable.api.entity;
 
 import com.sharefable.api.common.SubscriptionManagedBy;
 import com.sharefable.api.common.TransportObjRef;
-import com.sharefable.api.transport.JobProcessingInfo;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.resp.RespSubscription;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
@@ -56,5 +55,5 @@ public class Subscription extends EntityBase {
 
   @Type(JsonType.class)
   @Column(columnDefinition = "json")
-  private JobProcessingInfo info;
+  private Object info;
 }

@@ -21,6 +21,18 @@ import java.util.Map;
 @Data
 @Slf4j
 public class PaymentConfig {
+  public static final Map<String, Integer> PLAN_DEFAULT_AI_CREDIT = Map.ofEntries(
+    Map.entry("solo-3-USD-Yearly", 7),
+    Map.entry("startup-1-USD-Monthly", 6),
+    Map.entry("startup-1-USD-Yearly", 5),
+    Map.entry("business-3-USD-Monthly", 4),
+    Map.entry("business-3-USD-Yearly", 3),
+    Map.entry("tier-1-USD-lifetime", 2),
+    Map.entry("tier-2-USD-lifetime", 1),
+    Map.entry("tier-3-USD-lifetime", 9),
+    Map.entry("tier-4-USD-lifetime", 10),
+    Map.entry("tier-5-USD-lifetime", 11)
+  );
   private static final Map<PaymentTerms.Plan, Map<PaymentTerms.Interval, String>> PAYMENT_TERMS_PLAN = Map.of(
     PaymentTerms.Plan.SOLO,
     Map.of(
@@ -64,6 +76,7 @@ public class PaymentConfig {
   private String cbSiteName;
 
   private String cbApiKey;
+  private String aiChargeId;
 
   @PostConstruct
   public void configure() {

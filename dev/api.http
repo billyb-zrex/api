@@ -863,3 +863,14 @@ Authorization: {{auth-header}}
 GET {{api-host}}/v1/f/org/lead_analytics
 Content-Type: application/json
 Authorization: {{auth-header}}
+
+
+### Hosted page for AI credit
+POST {{api-host}}/v1/f/credittopupurl
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+### Get subscription
+GET {{api-host}}/v1/f/subs
+Content-Type: application/json
+Authorization: {{auth-header}}

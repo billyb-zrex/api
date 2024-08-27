@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-08-20 11:25:42.
+// Generated using typescript-generator version 2.35.1025 on 2024-08-27 14:15:23.
 
 export interface Activity extends ActivityBase {
 }
@@ -99,6 +99,11 @@ export interface ApiResp<T> {
     errCode: ErrorCode;
 }
 
+export interface CreditInfo {
+    value: number;
+    updatedAt: Date;
+}
+
 export interface EntityInfo {
     thumbnail: string;
     frameSettings: FrameSettings;
@@ -129,6 +134,10 @@ export interface ButtonClicks {
 export interface CreateGifJobInfo extends JobProcessingInfo {
     manifestFilePath: string;
     gifFilePath: string;
+}
+
+export interface Credit {
+    value: number;
 }
 
 export interface EntityHoldingInfoBase extends Serializable {
@@ -614,14 +623,6 @@ export interface RespSubsValidation {
     cardPresent: boolean;
 }
 
-export interface RespSubscription extends ResponseBase {
-    paymentPlan: Plan;
-    paymentInterval: Interval;
-    status: Status;
-    trialStartedOn: Date;
-    trialEndsOn: Date;
-}
-
 export interface RespTenantIntegration extends ResponseBase {
     id: number;
     disabled: boolean;
@@ -960,16 +961,6 @@ export const enum ClientLogClass {
     na = "na",
     Basic = "Basic",
     Full = "Full",
-}
-
-export const enum Status {
-    FUTURE = "FUTURE",
-    IN_TRIAL = "IN_TRIAL",
-    ACTIVE = "ACTIVE",
-    NON_RENEWING = "NON_RENEWING",
-    PAUSED = "PAUSED",
-    CANCELLED = "CANCELLED",
-    _UNKNOWN = "_UNKNOWN",
 }
 
 export const enum UserOrgAssociation {

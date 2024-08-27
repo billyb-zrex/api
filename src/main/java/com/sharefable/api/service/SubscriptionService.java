@@ -2,14 +2,16 @@ package com.sharefable.api.service;
 
 import com.chargebee.Result;
 import com.chargebee.models.Customer;
+import com.chargebee.models.Event;
 import com.chargebee.models.HostedPage;
+import com.chargebee.models.Invoice;
+import com.chargebee.models.enums.EventType;
 import com.chargebee.org.json.JSONObject;
-import com.sharefable.api.common.SubscriptionManagedBy;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sharefable.api.common.*;
 import com.sharefable.api.config.PaymentConfig;
-import com.sharefable.api.entity.Log;
-import com.sharefable.api.entity.Org;
-import com.sharefable.api.entity.Subscription;
-import com.sharefable.api.entity.User;
+import com.sharefable.api.entity.*;
+import com.sharefable.api.repo.EntityConfigKVRepo;
 import com.sharefable.api.repo.OrgRepo;
 import com.sharefable.api.repo.SubscriptionRepo;
 import com.sharefable.api.repo.UserRepo;
@@ -20,6 +22,7 @@ import com.sharefable.api.transport.req.ReqSubscriptionInfo;
 import com.sharefable.api.transport.resp.RespSubsValidation;
 import com.sharefable.api.transport.resp.RespSubscription;
 import io.sentry.Sentry;
+import io.sentry.SentryLevel;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +35,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class SubscriptionService {
+  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final String FABLE_GIVEN_CREDIT = "FABLE_GIVEN_CREDIT";
+  private static final String TOPUP_CREDIT = "TOPUP_CREDIT";
   private final SubscriptionRepo repo;
   private final PaymentConfig paymentConfig;
   private final OrgRepo orgRepo;
@@ -48,15 +53,21 @@ public class SubscriptionService {
   private final LogService logService;
   private final SlackMsgService slackMsgService;
   private final NfHookService nfHookService;
+  private final EntityConfigKVRepo entityConfigKVRepo;
 
+  @Transactional
   public RespSubscription getSubscriptionForUser(User user) {
     Long orgId = user.getBelongsToOrg();
     if (orgId == null) return null;
     Optional<Org> maybeOrg = orgRepo.findById(orgId);
     if (maybeOrg.isEmpty()) return null;
-    Subscription subs = repo.getSubscriptionByOrgId(orgId);
+
+    Pair<Subscription, List<EntityConfigKV>> subscriptionAndCredits = getSubscriptionWithCreditInfo(orgId);
+    Subscription subs = subscriptionAndCredits.getValue0();
+    List<EntityConfigKV> entityConfigKVS = subscriptionAndCredits.getValue1();
+
     if (subs == null) return null;
-    return RespSubscription.from(subs);
+    return RespSubscription.from(subs, entityConfigKVS);
   }
 
   @Transactional
@@ -65,6 +76,9 @@ public class SubscriptionService {
     Optional<Org> maybeOrg = orgRepo.findById(user.getBelongsToOrg());
     if (maybeOrg.isEmpty()) return null;
     Org org = maybeOrg.get();
+
+    String planId = paymentConfig.getPlanId(info.pricingPlan(), info.pricingInterval());
+    List<EntityConfigKV> entityConfigKVS = setCreditsForOrg(planId, org.getId());
 
     if (info.pricingInterval() == PaymentTerms.Interval.LIFETIME && !StringUtils.isBlank(info.lifetimeLicense())) {
       // process lifetime license from appsumo, in this case we don't process saas pricing at all (chargebee)
@@ -107,14 +121,17 @@ public class SubscriptionService {
             // case 1
             default -> PaymentTerms.Plan.LIFETIME_TIER1;
           };
+          planId = paymentConfig.getPlanId(plan, info.pricingInterval());
+          entityConfigKVS = setCreditsForOrg(planId, org.getId());
+
           builder
-            .paymentPlanId(paymentConfig.getPlanId(plan, info.pricingInterval()))
+            .paymentPlanId(planId)
             .paymentPlan(plan)
             .status(com.chargebee.models.Subscription.Status.ACTIVE);
         }
       } else {
         builder
-          .paymentPlanId(paymentConfig.getPlanId(info.pricingPlan(), info.pricingInterval()))
+          .paymentPlanId(planId)
           .paymentPlan(info.pricingPlan())
           .status(com.chargebee.models.Subscription.Status.FUTURE);
       }
@@ -127,7 +144,7 @@ public class SubscriptionService {
 
         sendUserDetailsWithPlans(user, subs);
 
-        return RespSubscription.from(subs);
+        return RespSubscription.from(subs, entityConfigKVS);
       }
     }
 
@@ -144,7 +161,6 @@ public class SubscriptionService {
       Customer customer = cusomerResult.customer();
 
       // Create a subscription object in chargebee
-      String planId = paymentConfig.getPlanId(info.pricingPlan(), info.pricingInterval());
       Result subsResult = com.chargebee.models.Subscription.createWithItems(customer.id())
         .subscriptionItemItemPriceId(0, planId)
         .subscriptionItemQuantity(0, numberOfMembersInOrg)
@@ -168,7 +184,7 @@ public class SubscriptionService {
 
       sendUserDetailsWithPlans(user, subs);
 
-      return RespSubscription.from(subs);
+      return RespSubscription.from(subs, entityConfigKVS);
     } catch (Exception e) {
       log.error("Can't create account subscription for user {}.  Error: {}", user.getEmail(), e.getMessage());
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating subscription");
@@ -177,7 +193,11 @@ public class SubscriptionService {
 
   @Transactional
   public RespSubscription updateSubscription(ReqSubscriptionInfo info, Long orgId) {
-    Subscription subs = repo.getSubscriptionByOrgId(orgId);
+    Pair<Subscription, List<EntityConfigKV>> subscriptionWithCreditInfo = getSubscriptionWithCreditInfo(orgId);
+
+    Subscription subs = subscriptionWithCreditInfo.getValue0();
+    List<EntityConfigKV> entityConfigKVS = subscriptionWithCreditInfo.getValue1();
+
     Set<User> users = userRepo.getUsersByBelongsToOrgAndActiveIsTrue(orgId);
     Optional<User> user = users.stream().findFirst();
 
@@ -265,7 +285,7 @@ public class SubscriptionService {
           subs.setPaymentInterval(info.pricingInterval());
           subs.setPaymentPlanId(planId);
           Subscription updatedSub = repo.save(subs);
-          return RespSubscription.from(updatedSub);
+          return RespSubscription.from(updatedSub, entityConfigKVS);
         } else {
           throw new RuntimeException("Unknown subscription manager " + subs.getManagedBy());
         }
@@ -339,6 +359,48 @@ public class SubscriptionService {
     }
   }
 
+  @Transactional
+  public String createHostedPageForAiCredit(User user) {
+    Subscription subs = repo.getSubscriptionByOrgId(user.getBelongsToOrg());
+    Org org = orgRepo.findById(subs.getOrgId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    String custId = subs.getCbCustomerId();
+
+    if (subs.getManagedBy().equals(SubscriptionManagedBy.APPSUMO)) {
+      if (StringUtils.isBlank(custId)) {
+        try {
+          Result cusomerResult = Customer.create()
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
+            .email(user.getEmail())
+            .company(org.getDisplayName())
+            .request();
+          Customer customer = cusomerResult.customer();
+          custId = customer.id();
+
+          subs.setCbCustomerId(customer.id());
+          repo.save(subs);
+        } catch (Exception e) {
+          log.error("Something went wrong while trying to create customer for appsumo customer with org {}", org.getId());
+          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to create customer for appsumo customer with org " + org.getId());
+        }
+      }
+    }
+
+    try {
+      Result result = HostedPage.checkoutOneTimeForItems()
+        .customerId(custId)
+        .itemPriceItemPriceId(0, paymentConfig.getAiChargeId())
+        .itemPriceQuantity(0, PaymentConfig.PLAN_DEFAULT_AI_CREDIT.get(subs.getPaymentPlanId()))
+        .request();
+
+      HostedPage hostedPage = result.hostedPage();
+      return hostedPage.toJson();
+    } catch (Exception e) {
+      log.error("Can't complete payment request for {} ", user.getEmail(), e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please try again");
+    }
+  }
+
   public void resyncSubscription(com.chargebee.models.Subscription cbSubs) {
     Subscription subs = repo.getSubscriptionByCbSubscriptionId(cbSubs.id());
     if (subs == null) return;
@@ -389,5 +451,108 @@ public class SubscriptionService {
     if (!StringUtils.isBlank(user.getLastName())) payload.put("lastName", user.getLastName());
     payload.put("subs", subs.getPaymentPlan().name());
     nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP_WITH_SUBS, payload);
+  }
+
+  @Transactional
+  public void updateCredit(Event event) {
+    try {
+      Event.Content content = event.content();
+      EventType eventType = event.eventType();
+      boolean isPaymentForAI = checkIfPaymentForAI(content);
+      String customerId = content.customer().id();
+
+      if (isPaymentForAI && eventType.equals(EventType.PAYMENT_SUCCEEDED)) {
+        Integer quantity = content.invoice().lineItems().get(0).quantity();
+        Subscription subs = repo.getSubscriptionByCbCustomerId(customerId);
+
+        List<EntityConfigKV> entityConfigKVS = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigType(ConfigEntityType.Org, subs.getOrgId(), EntityConfigConfigType.AI_CREDIT);
+
+        Map<String, EntityConfigKV> entityConfigKVMap = entityConfigKVS.stream()
+          .collect(Collectors.toMap(EntityConfigKV::getConfigKey, Function.identity()));
+
+        EntityConfigKV entityConfigKV = entityConfigKVMap.getOrDefault(TOPUP_CREDIT, EntityConfigKV.builder()
+          .entityId(subs.getOrgId())
+          .entityType(ConfigEntityType.Org)
+          .configType(EntityConfigConfigType.AI_CREDIT)
+          .configKey(TOPUP_CREDIT)
+          .configVal(new CreditInfo(quantity, Utils.getCurrentUtcTimestamp()))
+          .build());
+
+        CreditInfo creditInfo = mapper.convertValue(entityConfigKV.getConfigVal(), CreditInfo.class);
+
+        creditInfo.setValue(creditInfo.getValue() + quantity);
+        creditInfo.setUpdatedAt(Utils.getCurrentUtcTimestamp());
+
+        entityConfigKV.setConfigVal(creditInfo);
+        entityConfigKVRepo.save(entityConfigKV);
+
+      } else if (isPaymentForAI && eventType.equals(EventType.PAYMENT_FAILED)) {
+        log.error("The payment failed for AI credit for the customer {}", customerId);
+        Sentry.captureMessage("The payment failed for AI credit for the customer " + customerId, SentryLevel.WARNING);
+      }
+    } catch (Exception e) {
+      log.error("Something went wrong while updating credits for organisation ", e);
+      Sentry.captureException(e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while updating credits for organisation " + e);
+    }
+  }
+
+  private boolean checkIfPaymentForAI(Event.Content content) {
+    Invoice.LineItem.EntityType entityType = content.invoice().lineItems().get(0).entityType();
+    String entityId = content.invoice().lineItems().get(0).entityId();
+    return entityType.equals(Invoice.LineItem.EntityType.CHARGE_ITEM_PRICE)
+      && entityId.equals(paymentConfig.getAiChargeId());
+  }
+
+  @Transactional
+  private List<EntityConfigKV> setCreditsForOrg(String planId, Long orgId) {
+
+    List<EntityConfigKV> entityConfigKVS = new ArrayList<>();
+
+    try {
+      EntityConfigKV fableGivenCredit = EntityConfigKV.builder()
+        .entityId(orgId)
+        .entityType(ConfigEntityType.Org)
+        .configType(EntityConfigConfigType.AI_CREDIT)
+        .configKey(FABLE_GIVEN_CREDIT)
+        .configVal(new CreditInfo(PaymentConfig.PLAN_DEFAULT_AI_CREDIT.get(planId), Utils.getCurrentUtcTimestamp()))
+        .build();
+
+      EntityConfigKV topUpCredit = EntityConfigKV.builder()
+        .entityId(orgId)
+        .entityType(ConfigEntityType.Org)
+        .configType(EntityConfigConfigType.AI_CREDIT)
+        .configKey(TOPUP_CREDIT)
+        .configVal(new CreditInfo(0, Utils.getCurrentUtcTimestamp()))
+        .build();
+
+      entityConfigKVS.add(fableGivenCredit);
+      entityConfigKVS.add(topUpCredit);
+
+      entityConfigKVRepo.saveAll(entityConfigKVS);
+      return entityConfigKVS;
+    } catch (Exception e) {
+      log.warn("Something went wrong while trying to create CREDIT config for Org {}", orgId);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while trying to create CREDIT config for Org " + orgId);
+    }
+  }
+
+  @Transactional
+  protected Pair<Subscription, List<EntityConfigKV>> getSubscriptionWithCreditInfo(Long orgId) {
+    List<SubscriptionWithCredit> subscriptionWithCredits = repo.getSubscriptionAndCredit(orgId, ConfigEntityType.Org, EntityConfigConfigType.AI_CREDIT);
+
+    Subscription subscription = subscriptionWithCredits.stream()
+      .map(SubscriptionWithCredit::getSubscription)
+      .filter(Objects::nonNull)
+      .findFirst()
+      .orElse(null);
+
+    List<EntityConfigKV> entityConfigKVS = subscriptionWithCredits.stream()
+      .map(SubscriptionWithCredit::getEntityConfigKV)
+      .filter(Objects::nonNull)
+      .distinct()
+      .collect(Collectors.toList());
+
+    return Pair.with(subscription, entityConfigKVS);
   }
 }

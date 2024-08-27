@@ -2,10 +2,10 @@ package com.sharefable.api.controller.v1;
 
 import com.chargebee.models.Event;
 import com.chargebee.models.Subscription;
+import com.sharefable.Routes;
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.PaymentConfig;
-import com.sharefable.Routes;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.SubscriptionService;
 import com.sharefable.api.transport.PaymentTerms;
@@ -61,6 +61,11 @@ public class SubscriptionController {
     return subsService.createHostedPage(user, info);
   }
 
+  @RequestMapping(value = Routes.GEN_AI_CREDIT_CHECKOUT_URL, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public String generateCheckoutUrl(@AuthUser User user) {
+    return subsService.createHostedPageForAiCredit(user);
+  }
+
   @RequestMapping(value = Routes.CHARGEBEE_WEBHOOK, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<?> handleWebhook(@RequestBody String payload) {
     Event event = new Event(payload);
@@ -86,8 +91,9 @@ public class SubscriptionController {
         }
         subsService.resyncSubscription(subs);
       }
-      case SUBSCRIPTION_TRIAL_END_REMINDER, PAYMENT_FAILED, PAYMENT_SUCCEEDED, PAYMENT_INITIATED, SUBSCRIPTION_RENEWAL_REMINDER -> {
-      }
+      case SUBSCRIPTION_TRIAL_END_REMINDER, PAYMENT_FAILED, PAYMENT_SUCCEEDED, PAYMENT_INITIATED, SUBSCRIPTION_RENEWAL_REMINDER ->
+        subsService.updateCredit(event);
+
       default -> log.warn("No handler present for chargebee webhook {}", event.eventType());
     }
 

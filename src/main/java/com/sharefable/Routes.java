@@ -115,6 +115,7 @@ public interface Routes {
   String NEW_LLM_RUN = __BEHIND_LOGIN__ + "/llmrun";
   String GET_LLM_RUNS = __BEHIND_LOGIN__ + "/llmruns/{thread_id}";
   String UPDATE_LLM_RUN = __BEHIND_LOGIN__ + "/updatellmrun";
+  String GEN_AI_CREDIT_CHECKOUT_URL = __BEHIND_LOGIN__ + "/credittopupurl";
 
   /* === Cross service w/o authentication === */
 
