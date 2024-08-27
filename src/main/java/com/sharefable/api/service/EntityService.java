@@ -98,6 +98,10 @@ public class EntityService extends ServiceBase {
       uploadTemplateFileToS3(prefixHash, DATA_FILE_TYPE.DEMO_HUB);
     }
 
+    EntityInfo entityInfo = EntityInfo.builder()
+      .frameSettings(FrameSettings.LIGHT)
+      .build();
+
     DemoEntity demoEntity = DemoEntity.builder()
       .createdBy(createdByUser)
       .displayName(req.name())
@@ -108,7 +112,7 @@ public class EntityService extends ServiceBase {
       .deleted(TourDeleted.ACTIVE)
       .responsive2(Responsiveness.NoChoice)
       .publishedVersion(0)
-      .info(req.info().orElse(new EntityInfo(null, FrameSettings.LIGHT, null)))
+      .info(req.info().orElse(entityInfo))
       .assetPrefixHash(prefixHash)
       .belongsToOrg(createdByUser.getBelongsToOrg())
       .onboarding(false)
@@ -591,6 +595,11 @@ public class EntityService extends ServiceBase {
   @Transactional
   public RespDemoEntity updateEntityProperties(String rid, User userEntity, TopLevelEntityType type, EntityUpdateBase body) {
     DemoEntity demoEntity = getEntityByRIdWithAuthValidation(DemoEntity.class, rid, userEntity);
+
+    if (!demoEntity.getEntityType().equals(type)) {
+      log.warn("Trying to access different entity, requested {} but got {}", type, demoEntity.getEntityType());
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Trying to access different entity, requested " + type + " but got " + demoEntity.getEntityType());
+    }
     body.getSite().ifPresent(demoEntity::setSite);
     body.getInProgress().ifPresent(demoEntity::setInProgress);
     body.getResponsive().ifPresent(demoEntity::setResponsive);

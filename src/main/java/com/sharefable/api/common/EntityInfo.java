@@ -2,19 +2,28 @@ package com.sharefable.api.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sharefable.api.transport.GenerateTSDef;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import com.sharefable.api.transport.OptionalPropInTS;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @GenerateTSDef
 public class EntityInfo {
   private String thumbnail;
   private FrameSettings frameSettings = FrameSettings.LIGHT;
-  private Long annDemoId;
+  @OptionalPropInTS
+  private String annDemoId;
+  @OptionalPropInTS
+  private String threadId;
+  @OptionalPropInTS
+  private String productDetails;
+  @OptionalPropInTS
+  private String demoObjective;
+  @OptionalPropInTS
+  private Object demoRouter;
+
 }

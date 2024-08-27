@@ -366,7 +366,15 @@ Content-Type: application/json
   "tourRid": "notion-18l1kvc98vqxvqxz",
   "inProgress": 0,
   "responsive": 1,
-  "info": "1234.jpeg",
+  "info": {
+    "annDemoId": "demo_id",
+    "threadId": "thread_id",
+    "productDetails": "Product objective",
+    "demoObjective": "Demo objective",
+    "demoRouter": {
+      "demo": "1234"
+    }
+  },
   "site": {
     "logo": "image00009.png",
     "navLink": "https://www.google.com",
