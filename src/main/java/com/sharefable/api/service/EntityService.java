@@ -364,6 +364,7 @@ public class EntityService extends ServiceBase {
     return publishEntityBasedOnEntityType(demoEntity, commonConfig, entityType);
   }
 
+  @Transactional
   protected RespDemoEntity publishEntityBasedOnEntityType(DemoEntity demoEntity, RespCommonConfig commonConfig, TopLevelEntityType entityType) {
     if (entityType == TopLevelEntityType.TOUR) {
       return copyDataForPublishTour(demoEntity, commonConfig);
@@ -640,7 +641,7 @@ public class EntityService extends ServiceBase {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User not present for email");
       }
 
-      User user = userService.settingUserBelongsTo(maybeUser.get(), body.orgId());
+      User user = userService.setLatestOrgForUser(maybeUser.get(), body.orgId());
 
       List<RespDemoEntityWithSubEntities> copiedTours = new ArrayList<>();
       List<DemoEntity> allToursByRid = demoEntityRepo.findAllByRidInAndDeletedEquals(body.rids(), TourDeleted.ACTIVE);

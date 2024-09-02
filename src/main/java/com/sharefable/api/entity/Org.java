@@ -42,5 +42,6 @@ public class Org extends EntityBaseWithReadableId {
     name = "user_org_join",
     joinColumns = @JoinColumn(name = "org_id"),
     inverseJoinColumns = @JoinColumn(name = "user_id"))
+  @OrderBy("createdAt ASC")
   private Set<User> users;
 }

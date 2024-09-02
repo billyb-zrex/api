@@ -21,23 +21,25 @@ import java.util.Map;
 @Data
 @Slf4j
 public class PaymentConfig {
-  public static final Map<String, Integer> PLAN_DEFAULT_AI_CREDIT = Map.ofEntries(
-    Map.entry("solo-3-USD-Yearly", 7),
-    Map.entry("startup-1-USD-Monthly", 6),
-    Map.entry("startup-1-USD-Yearly", 5),
-    Map.entry("business-3-USD-Monthly", 4),
-    Map.entry("business-3-USD-Yearly", 3),
-    Map.entry("tier-1-USD-lifetime", 2),
-    Map.entry("tier-2-USD-lifetime", 1),
-    Map.entry("tier-3-USD-lifetime", 9),
-    Map.entry("tier-4-USD-lifetime", 10),
-    Map.entry("tier-5-USD-lifetime", 11)
+  public static final Map<String, CreditValue> PLAN_DEFAULT_AI_CREDIT = Map.ofEntries(
+    Map.entry("IN_TRIAL", new CreditValue(100, false)),
+    Map.entry("solo-4-USD-Yearly", new CreditValue(100, false)),
+    Map.entry("solo-4-USD-Monthly", new CreditValue(100, false)),
+    Map.entry("startup-1-USD-Monthly", new CreditValue(200, true)),
+    Map.entry("startup-1-USD-Yearly", new CreditValue(200, true)),
+    Map.entry("business-3-USD-Monthly", new CreditValue(500, true)),
+    Map.entry("business-3-USD-Yearly", new CreditValue(500, true)),
+    Map.entry("tier-1-USD-lifetime", new CreditValue(10, false)),
+    Map.entry("tier-2-USD-lifetime", new CreditValue(50, false)),
+    Map.entry("tier-3-USD-lifetime", new CreditValue(100, false)),
+    Map.entry("tier-4-USD-lifetime", new CreditValue(200, false)),
+    Map.entry("tier-5-USD-lifetime", new CreditValue(500, false))
   );
   private static final Map<PaymentTerms.Plan, Map<PaymentTerms.Interval, String>> PAYMENT_TERMS_PLAN = Map.of(
     PaymentTerms.Plan.SOLO,
     Map.of(
-      PaymentTerms.Interval.MONTHLY, "solo-3-USD-Monthly",
-      PaymentTerms.Interval.YEARLY, "solo-3-USD-Yearly"
+      PaymentTerms.Interval.MONTHLY, "solo-4-USD-Monthly",
+      PaymentTerms.Interval.YEARLY, "solo-4-USD-Yearly"
     ),
     PaymentTerms.Plan.STARTUP,
     Map.of(
@@ -71,10 +73,7 @@ public class PaymentConfig {
       PaymentTerms.Interval.LIFETIME, "tier-5-USD-lifetime"
     )
   );
-
-
   private String cbSiteName;
-
   private String cbApiKey;
   private String aiChargeId;
 
@@ -97,5 +96,8 @@ public class PaymentConfig {
       }
     }
     return null;
+  }
+
+  public record CreditValue(int value, boolean isCreditPerUser) {
   }
 }

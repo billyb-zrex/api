@@ -34,6 +34,7 @@ public interface Routes {
 
   // internal data entry routes
   String ADD_OR_UPDATE_PLATFORM_INTEGRATION = "/ide/platform_integration";
+  String REFILL_FABLE_CREDIT = "/ide/refill_fable_credit/{org_id}";
 
   /* === Routes with authentication === */
   String __BEHIND_LOGIN__ = "/f"; // f => behind spring security [F]ilters for authentication
@@ -102,6 +103,7 @@ public interface Routes {
   String ENTITY_SUBENTITY_DIST_METRICS = __BEHIND_LOGIN__ + "/entity_subentity_dist_metrics";
   String ACTIVITY_DATA = __BEHIND_LOGIN__ + "/activity_data/{entityRid}/{aid}";
   String GET_ORG_LEVEL_LEAD_ANALYTICS = __BEHIND_LOGIN__ + "/org/lead_analytics";
+  String DEDUCT_CREDIT = __BEHIND_LOGIN__ + "/deductcredit";
 
   /* === Demo Hub === */
   String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";

@@ -5,6 +5,7 @@ import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.entity.User;
+import com.sharefable.api.service.OrgService;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.ObjectValidationResult;
 import com.sharefable.api.transport.PvtAssetType;
@@ -31,6 +32,7 @@ import java.util.Optional;
 public class WorkspaceController {
   private final WorkspaceService wsService;
   private final AppSettings settings;
+  private final OrgService orgService;
 
   @RequestMapping(value = Routes.NEW_ORG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespOrg> createNewOrg(@RequestBody ReqNewOrg body, @AuthUser User user) {
@@ -115,7 +117,7 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.GET_ALL_USER_IN_ORG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespUser[]> updateUserName(@AuthUser User user) {
-    List<RespUser> users = wsService.getAllUsersInAnOrg(user.getBelongsToOrg());
+    List<RespUser> users = orgService.getAllUsersInAnOrg(user.getBelongsToOrg());
     return ApiResp.<RespUser[]>builder().status(ApiResp.ResponseStatus.Success).data(users.toArray(RespUser[]::new)).build();
   }
 

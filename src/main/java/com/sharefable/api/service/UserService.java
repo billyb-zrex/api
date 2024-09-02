@@ -53,7 +53,7 @@ public class UserService {
     }
 
     Long orgId = OrgContext.getCurrentOrgId();
-    User updatedUser = settingUserBelongsTo(user, orgId);
+    User updatedUser = setLatestOrgForUser(user, orgId);
 
     // If the user is deactivated any new auth attempt would mark the user as active.
     // This is not ideal but for the timebeing this would do.
@@ -113,7 +113,7 @@ public class UserService {
     nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP, eventInfo);
   }
 
-  public User settingUserBelongsTo(User user, Long orgId) throws JsonProcessingException {
+  public User setLatestOrgForUser(User user, Long orgId) throws JsonProcessingException {
     if (orgId != null) {
       Set<Org> orgs = user.getOrgs();
       orgs = orgs == null ? Set.of() : orgs;

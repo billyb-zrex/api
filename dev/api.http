@@ -874,3 +874,13 @@ Authorization: {{auth-header}}
 GET {{api-host}}/v1/f/subs
 Content-Type: application/json
 Authorization: {{auth-header}}
+
+### Deduct Credit
+POST {{api-host}}/v1/f/deductcredit
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "deductBy": 1,
+  "creditType": "AI_CREDIT"
+}

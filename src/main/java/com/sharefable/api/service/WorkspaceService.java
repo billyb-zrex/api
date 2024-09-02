@@ -48,6 +48,7 @@ public class WorkspaceService extends ServiceBase {
   private final EntityConfigKVRepo entityConfigKVRepo;
   private final AwsAmplifyCustomDomainService customDomainService;
   private final EntityConfigService entityConfigService;
+  private final SubscriptionService subscriptionService;
   private final AppSettings settings;
   private final ObjectMapper mapper = new ObjectMapper();
 
@@ -64,7 +65,9 @@ public class WorkspaceService extends ServiceBase {
                           ApiKeyRepo apiKeyRepo,
                           SlackMsgService slackMsgService,
                           EntityConfigKVRepo entityConfigKVRepo,
-                          AwsAmplifyCustomDomainService customDomainService, EntityConfigService entityConfigService) {
+                          AwsAmplifyCustomDomainService customDomainService,
+                          EntityConfigService entityConfigService,
+                          SubscriptionService subscriptionService) {
     super(settings, s3Service, s3Config, screenRepo, demoEntityRepo);
     this.orgRepo = orgRepo;
     this.userRepo = userRepo;
@@ -78,6 +81,7 @@ public class WorkspaceService extends ServiceBase {
     this.entityConfigKVRepo = entityConfigKVRepo;
     this.customDomainService = customDomainService;
     this.entityConfigService = entityConfigService;
+    this.subscriptionService = subscriptionService;
   }
 
   // is in the format test CNAME d3uxmturbrrjns.cloudfront.net
@@ -364,19 +368,9 @@ public class WorkspaceService extends ServiceBase {
     orgs.add(maybeOrg.get());
     user.setBelongsToOrg(maybeOrg.get().getId());
     user.setOrgs(orgs);
-
     User savedUser = userRepo.save(user);
+    subscriptionService.updateNoOfSeatInSubscription(body.orgId());
     return Pair.with(RespUser.from(savedUser), RespOrg.from(maybeOrg.get()));
-  }
-
-  public List<RespUser> getAllUsersInAnOrg(Long orgId) {
-    Optional<Org> maybeOrg = orgRepo.findById(orgId);
-    if (maybeOrg.isEmpty()) return new ArrayList<>();
-
-    Org org = maybeOrg.get();
-    Set<User> users = org.getUsers();
-
-    return users.stream().map(RespUser::from).collect(Collectors.toList());
   }
 
   public List<RespVanityDomain> getAllVanityDomains(Long orgId) {
