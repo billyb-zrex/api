@@ -25,6 +25,8 @@ public class PaymentConfig {
     Map.entry("IN_TRIAL", new CreditValue(100, false)),
     Map.entry("solo-4-USD-Yearly", new CreditValue(100, false)),
     Map.entry("solo-4-USD-Monthly", new CreditValue(100, false)),
+    Map.entry("solo-3-USD-Yearly", new CreditValue(100, false)), // old
+    Map.entry("solo-3-USD-Monthly", new CreditValue(100, false)), // old
     Map.entry("startup-1-USD-Monthly", new CreditValue(200, true)),
     Map.entry("startup-1-USD-Yearly", new CreditValue(200, true)),
     Map.entry("business-3-USD-Monthly", new CreditValue(500, true)),
