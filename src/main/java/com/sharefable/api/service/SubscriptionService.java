@@ -613,9 +613,12 @@ public class SubscriptionService {
     if (subscription.getManagedBy() != SubscriptionManagedBy.CHARGEBEE) {
       return PaymentConfig.PLAN_DEFAULT_AI_CREDIT.get(subscription.getPaymentPlanId());
     }
-    return subscription.getStatus().equals(com.chargebee.models.Subscription.Status.IN_TRIAL) ?
+    PaymentConfig.CreditValue creditValue = subscription.getStatus().equals(com.chargebee.models.Subscription.Status.IN_TRIAL) ?
       PaymentConfig.PLAN_DEFAULT_AI_CREDIT.get(subscription.getStatus().name()) :
       PaymentConfig.PLAN_DEFAULT_AI_CREDIT.get(subscription.getPaymentPlanId());
+    // For legacy plans, let's by default set 100 credits.
+    if (creditValue == null) creditValue = new PaymentConfig.CreditValue(100, false);
+    return creditValue;
   }
 
   @Transactional
