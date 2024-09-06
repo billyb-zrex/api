@@ -74,7 +74,7 @@ public class SubscriptionController {
     log.warn("Subscription event {}", event.eventType());
     switch (event.eventType()) {
       case SUBSCRIPTION_ACTIVATED, SUBSCRIPTION_REACTIVATED, SUBSCRIPTION_CHANGED, SUBSCRIPTION_PAUSED,
-        SUBSCRIPTION_RESUMED, SUBSCRIPTION_RENEWED, SUBSCRIPTION_CANCELLED, SUBSCRIPTION_TRIAL_EXTENDED -> {
+           SUBSCRIPTION_RESUMED, SUBSCRIPTION_RENEWED, SUBSCRIPTION_CANCELLED, SUBSCRIPTION_TRIAL_EXTENDED -> {
         Subscription subs = event.content().subscription();
         log.warn("Subscription id {}", subs.id());
         com.chargebee.models.Subscription.SubscriptionItem subscriptionItem = subs.subscriptionItems().get(0);
@@ -95,7 +95,7 @@ public class SubscriptionController {
         subsService.resyncSubscription(subs);
       }
       case SUBSCRIPTION_TRIAL_END_REMINDER, PAYMENT_FAILED, PAYMENT_SUCCEEDED, PAYMENT_INITIATED,
-        SUBSCRIPTION_RENEWAL_REMINDER -> subsService.checkEventAndTopupCredit(event);
+           SUBSCRIPTION_RENEWAL_REMINDER -> subsService.checkEventAndTopupCredit(event);
 
       default -> log.warn("No handler present for chargebee webhook {}", event.eventType());
     }
@@ -115,7 +115,17 @@ public class SubscriptionController {
       log.error("Data entry requested but flag not set but REFILL_FABLE_CREDIT for {} is requested.", orgId);
       throw new ResponseStatusException(HttpStatusCode.valueOf(404));
     }
-    RespSubscription subs = subsService.refillFableCreditForOg(orgId);
+    RespSubscription subs = subsService.resetCreditUsage(orgId);
+    return ApiResp.<RespSubscription>builder().status(ApiResp.ResponseStatus.Success).data(subs).build();
+  }
+
+  @RequestMapping(value = Routes.MIGRATE_FABLE_CREDIT, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespSubscription> migrateFableCredit(@PathVariable("org_id") Long orgId) {
+    if (!appSettings.isDataEntryFlagSet()) {
+      log.error("Data entry requested but flag not set but REFILL_FABLE_CREDIT for {} is requested.", orgId);
+      throw new ResponseStatusException(HttpStatusCode.valueOf(404));
+    }
+    RespSubscription subs = subsService.migrateFableCredit(orgId);
     return ApiResp.<RespSubscription>builder().status(ApiResp.ResponseStatus.Success).data(subs).build();
   }
 }

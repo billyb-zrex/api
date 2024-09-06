@@ -35,6 +35,7 @@ public interface Routes {
   // internal data entry routes
   String ADD_OR_UPDATE_PLATFORM_INTEGRATION = "/ide/platform_integration";
   String REFILL_FABLE_CREDIT = "/ide/refill_fable_credit/{org_id}";
+  String MIGRATE_FABLE_CREDIT = "/ide/migrate_fable_credit/{org_id}";
 
   /* === Routes with authentication === */
   String __BEHIND_LOGIN__ = "/f"; // f => behind spring security [F]ilters for authentication

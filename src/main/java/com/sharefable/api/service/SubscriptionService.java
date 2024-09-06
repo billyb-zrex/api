@@ -47,6 +47,7 @@ public class SubscriptionService {
   private static final String FABLE_GIVEN_CREDIT = "FABLE_GIVEN_CREDIT";
   private static final String TOPUP_CREDIT = "TOPUP_CREDIT";
   private static final String CREDIT_USED = "CREDIT_USED";
+  private static final int CREDIT_SCALED_BY = 10;
   private final SubscriptionRepo repo;
   private final PaymentConfig paymentConfig;
   private final OrgService orgService;
@@ -564,7 +565,15 @@ public class SubscriptionService {
         );
         EntityConfigKV usedCredit = usedCreditAll.get(0);
         CreditInfo usedCreditInfo = mapper.convertValue(usedCredit.getConfigVal(), CreditInfo.class);
-        usedCreditInfo.setValue(0);
+        int usedValue = usedCreditInfo.getValue();
+        // During reset we only reset fable given credit
+        // Let's say fable_given_credit = 100 & top_up_credit = 50 and user is used up 75 credits. Since the credit will
+        // first go from fable_given_credit hence during usage reset we would do max(0, 75 - 100) = 0
+        // Now let's say user fable_given_credit = 100 & top_up_credit = 50 and user is used up 125 credits
+        // i.e. user has used up all fable given credit and then used up 25/50 user credit, so we would keep the usage
+        // as max(125 - 100) = 25. This will keep the usage from topup credit.
+        int resetValue = Math.max(0, usedValue - creditInfo.getValue());
+        usedCreditInfo.setValue(resetValue);
         usedCreditInfo.setUpdatedAt(Utils.getCurrentUtcTimestamp());
         usedCredit.setConfigVal(usedCreditInfo);
         updatedCredits.add(usedCredit);
@@ -656,8 +665,10 @@ public class SubscriptionService {
     CreditInfo usedCreditInfo = mapper.convertValue(usedCredit.getConfigVal(), CreditInfo.class);
 
     // current normalized credit usage can't go above fable credit info + topup credit info
+    // When credit gets deducted it's deducted by unit. But then it's scaled to a value for perception purpose
     // however we store non-normalized credit in absValue
-    int currNValue = usedCreditInfo.getValue() + req.getDeductBy();
+    int usageVal = req.getDeductBy() * CREDIT_SCALED_BY;
+    int currNValue = usedCreditInfo.getValue() + usageVal;
     int totalCredit = fableCreditInfo.getValue() + topUpCreditInfo.getValue();
     usedCreditInfo.setAbsValue(currNValue);
     usedCreditInfo.setValue(Math.min(currNValue, totalCredit));
@@ -670,7 +681,12 @@ public class SubscriptionService {
   }
 
   @Transactional
-  public RespSubscription refillFableCreditForOg(Long orgId) {
+  public RespSubscription resetCreditUsage(Long orgId) {
     return setCreditsForOrg(orgId, 0, true);
+  }
+
+  @Transactional
+  public RespSubscription migrateFableCredit(Long orgId) {
+    return setCreditsForOrg(orgId, 0, false);
   }
 }

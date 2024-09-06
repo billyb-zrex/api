@@ -22,20 +22,20 @@ import java.util.Map;
 @Slf4j
 public class PaymentConfig {
   public static final Map<String, CreditValue> PLAN_DEFAULT_AI_CREDIT = Map.ofEntries(
-    Map.entry("IN_TRIAL", new CreditValue(100, false)),
-    Map.entry("solo-4-USD-Yearly", new CreditValue(100, false)),
-    Map.entry("solo-4-USD-Monthly", new CreditValue(100, false)),
-    Map.entry("solo-3-USD-Yearly", new CreditValue(100, false)), // old
-    Map.entry("solo-3-USD-Monthly", new CreditValue(100, false)), // old
-    Map.entry("startup-1-USD-Monthly", new CreditValue(200, true)),
-    Map.entry("startup-1-USD-Yearly", new CreditValue(200, true)),
-    Map.entry("business-3-USD-Monthly", new CreditValue(500, true)),
-    Map.entry("business-3-USD-Yearly", new CreditValue(500, true)),
-    Map.entry("tier-1-USD-lifetime", new CreditValue(10, false)),
-    Map.entry("tier-2-USD-lifetime", new CreditValue(50, false)),
-    Map.entry("tier-3-USD-lifetime", new CreditValue(100, false)),
-    Map.entry("tier-4-USD-lifetime", new CreditValue(200, false)),
-    Map.entry("tier-5-USD-lifetime", new CreditValue(500, false))
+    Map.entry("IN_TRIAL", new CreditValue(1000, false)),
+    Map.entry("solo-4-USD-Yearly", new CreditValue(1000, false)),
+    Map.entry("solo-4-USD-Monthly", new CreditValue(1000, false)),
+    Map.entry("solo-3-USD-Yearly", new CreditValue(1000, false)), // old
+    Map.entry("solo-3-USD-Monthly", new CreditValue(1000, false)), // old
+    Map.entry("startup-1-USD-Monthly", new CreditValue(2000, true)),
+    Map.entry("startup-1-USD-Yearly", new CreditValue(2000, true)),
+    Map.entry("business-3-USD-Monthly", new CreditValue(5000, true)),
+    Map.entry("business-3-USD-Yearly", new CreditValue(5000, true)),
+    Map.entry("tier-1-USD-lifetime", new CreditValue(200, false)),
+    Map.entry("tier-2-USD-lifetime", new CreditValue(500, false)),
+    Map.entry("tier-3-USD-lifetime", new CreditValue(1000, false)),
+    Map.entry("tier-4-USD-lifetime", new CreditValue(2000, false)),
+    Map.entry("tier-5-USD-lifetime", new CreditValue(5000, false))
   );
   private static final Map<PaymentTerms.Plan, Map<PaymentTerms.Interval, String>> PAYMENT_TERMS_PLAN = Map.of(
     PaymentTerms.Plan.SOLO,
