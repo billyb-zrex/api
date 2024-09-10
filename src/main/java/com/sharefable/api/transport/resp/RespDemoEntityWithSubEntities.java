@@ -25,7 +25,7 @@ public class RespDemoEntityWithSubEntities extends RespDemoEntity {
   private Optional<Map<String, String>> idxm;
   private RespCommonConfig cc;
 
-  public static RespDemoEntityWithSubEntities from(DemoEntity demoEntity, EntityConfigKV entityConfigKV) {
+  public static RespDemoEntityWithSubEntities from(DemoEntity demoEntity, List<EntityConfigKV> entityConfigKV) {
     RespDemoEntityWithSubEntities resp = (RespDemoEntityWithSubEntities) RespDemoEntity.from(demoEntity, entityConfigKV);
     // `fromEntityToTransportObject` can't convert collection<type> to collection<resp_type>
     // hence this explicit conversion is necessary
@@ -40,7 +40,7 @@ public class RespDemoEntityWithSubEntities extends RespDemoEntity {
     return resp;
   }
 
-  public static RespDemoEntityWithSubEntities from(DemoEntity demoEntity, RespCommonConfig cc, EntityConfigKV entityConfigKV) {
+  public static RespDemoEntityWithSubEntities from(DemoEntity demoEntity, RespCommonConfig cc, List<EntityConfigKV> entityConfigKV) {
     RespDemoEntityWithSubEntities resp = from(demoEntity, entityConfigKV);
     resp.setCc(cc);
     return resp;

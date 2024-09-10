@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -233,6 +234,7 @@ public class WorkspaceService extends ServiceBase {
       .pubTourAssetPath(pathConfig.tourPublishedAsset())
       .demoHubAssetPath(pathConfig.demoHubAsset())
       .pubDemoHubAssetPath(pathConfig.demoHubPublishedAsset())
+      .datasetAssetPath(pathConfig.datasetAsset())
 
       // Although we have now tourDataFile and screenDataFile treated differently when it comes to cache policy,
       // in client side we send dataFileName as index.json
@@ -240,7 +242,8 @@ public class WorkspaceService extends ServiceBase {
       .dataFileName(entityFilesConfig.tourDataFile().filename())
       .loaderFileName(entityFilesConfig.loaderFile().filename())
       .editFileName(entityFilesConfig.editFile().filename())
-      .manifestFileName(entityFilesConfig.manifestFile().filename());
+      .manifestFileName(entityFilesConfig.manifestFile().filename())
+      .datasetFileName(entityFilesConfig.datasetFile().filename());
   }
 
   public RespUploadUrl getPreSignedUrlToUploadFile(User user, String contentType, Optional<String> extension) {
@@ -604,4 +607,118 @@ public class WorkspaceService extends ServiceBase {
     return getAllCustomFields(orgId);
   }
 
+  @Transactional
+  public RespDataset publishDataset(ReqNewDataset req, User user) {
+    Map<String, EntityConfigKV> entityConfigKVMap = convertEntityConfigListToMap(user.getBelongsToOrg());
+
+    if (!entityConfigKVMap.containsKey(req.name())) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dataset not found for name " + req.name() + " ,so won't be able to publish");
+    }
+
+    EntityConfigKV entityConfigKV = entityConfigKVMap.get(req.name());
+    Dataset dataset = mapper.convertValue(entityConfigKVMap.get(req.name()).getConfigVal(), Dataset.class);
+    Integer nextVersion = dataset.getLastPublishedVersion() + 1;
+
+    dataset.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
+    dataset.setLastPublishedVersion(nextVersion);
+    entityConfigKV.setConfigVal(dataset);
+
+    AssetFilePath fromDatasetFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Dataset, user.getBelongsToOrg().toString(), S3Config.getEntityFiles().datasetFile().filename(0, req.name()));
+
+    AssetFilePath toDatasetFilePath = s3Config.getQualifiedPathFor(
+      S3Config.AssetType.Dataset, user.getBelongsToOrg().toString(), S3Config.getEntityFiles().datasetFile().filename(nextVersion, req.name()));
+    s3Service.copy(fromDatasetFilePath, toDatasetFilePath, Map.of(
+      HttpHeaders.CONTENT_TYPE, "application/json",
+      HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().datasetFile().cachePolicy())));
+
+    entityConfigKVRepo.save(entityConfigKV);
+    return RespDataset.from(dataset);
+  }
+
+  @Transactional
+  public List<RespDataset> getAllDataset(Long orgId) {
+    List<EntityConfigKV> entityConfig = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigType(ConfigEntityType.Org, orgId, EntityConfigConfigType.DATASET);
+    return entityConfig.stream()
+      .map(entity -> mapper.convertValue(entity.getConfigVal(), Dataset.class))
+      .map(RespDataset::from)
+      .toList();
+  }
+
+  @Transactional
+  public RespDataset getDataset(String name, Long orgId) {
+    List<EntityConfigKV> entityConfig = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+      ConfigEntityType.Org, orgId, EntityConfigConfigType.DATASET, name
+    );
+
+    if (entityConfig.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No dataset present for the requested name " + name);
+    }
+    try {
+      return RespDataset.from(mapper.convertValue(entityConfig.get(0).getConfigVal(), Dataset.class));
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Probably the dataset does not contain value but key exists" + name);
+    }
+  }
+
+  @Transactional
+  public RespDataset createAndGetPreSignedUrlToUploadDataSet(ReqNewDataset req, User user) {
+    try {
+      Map<String, EntityConfigKV> entityConfigKVMap = convertEntityConfigListToMap(user.getBelongsToOrg());
+
+      Dataset dataset;
+
+      if (entityConfigKVMap.isEmpty() || !entityConfigKVMap.containsKey(req.name())) {
+        EntityConfigKV entityConfigKV = createDataSet(req.name(), user.getBelongsToOrg());
+        dataset = mapper.convertValue(entityConfigKV.getConfigVal(), Dataset.class);
+      } else {
+        log.info("Dataset already exists, so only generating presigned url");
+        dataset = mapper.convertValue(entityConfigKVMap.get(req.name()).getConfigVal(), Dataset.class);
+      }
+
+      AssetFilePath filePath = s3Config.getQualifiedPathFor(
+        S3Config.AssetType.Dataset, user.getBelongsToOrg().toString(), S3Config.getEntityFiles().datasetFile().filename(dataset.getLastPublishedVersion(), dataset.getName()));
+      URL url = s3Service.preSignedUrl(filePath, "application/json");
+      RespUploadUrl respUploadUrl = RespUploadUrl.builder()
+        .url(url.toString())
+        .expiry("expiry")
+        .filename(req.name())
+        .build();
+      return RespDataset.from(dataset, respUploadUrl);
+    } catch (Exception e) {
+      log.error("Something went wrong while #createAndGetPreSignedUrlToUploadDataSet", e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating a dataset" + e);
+    }
+  }
+
+  @Transactional
+  protected EntityConfigKV createDataSet(String name, Long orgId) {
+    Dataset dataset = Dataset.builder()
+      .name(name)
+      .lastPublishedVersion(0)
+      .lastPublishedDate(null)
+      .build();
+
+    EntityConfigKV entityConfigKV = EntityConfigKV.builder()
+      .entityId(orgId)
+      .entityType(ConfigEntityType.Org)
+      .configType(EntityConfigConfigType.DATASET)
+      .configKey(name)
+      .configVal(dataset)
+      .build();
+
+    return entityConfigKVRepo.save(entityConfigKV);
+  }
+
+  @Transactional
+  protected Map<String, EntityConfigKV> convertEntityConfigListToMap(Long orgId) {
+    List<EntityConfigKV> entityConfigKVList = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigType(ConfigEntityType.Org, orgId, EntityConfigConfigType.DATASET);
+
+    return entityConfigKVList.isEmpty() ?
+      new HashMap<>() : entityConfigKVList.stream()
+      .collect(Collectors.toMap(
+        EntityConfigKV::getConfigKey,
+        entity -> entity
+      ));
+  }
 }

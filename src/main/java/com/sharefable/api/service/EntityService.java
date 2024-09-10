@@ -121,29 +121,32 @@ public class EntityService extends ServiceBase {
       .build();
 
     DemoEntity storedDemoEntity = demoEntityRepo.save(demoEntity);
-    EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
+    List<EntityConfigKV> entityConfigKV = getEntityConfigKV(demoEntity.getBelongsToOrg());
     return RespDemoEntity.from(storedDemoEntity, entityConfigKV);
   }
 
   @Transactional(readOnly = true)
   public RespDemoEntity getEntityByRid(String rid, boolean shouldGetScreens, boolean shouldGetDeletedTour, TopLevelEntityType type) {
-    Optional<TourWithConfig> maybeTourWithConfig = demoEntityRepo.findTourWithConfigByRidAndDeletedAndEntityType(rid, shouldGetDeletedTour ? TourDeleted.DELETED : TourDeleted.ACTIVE, EntityConfigConfigType.GLOBAL_OPTS, type);
-    RespDemoEntity respDemoEntity = maybeTourWithConfig.map(tourWithConfig -> {
-      DemoEntity demoEntity = tourWithConfig.getDemoEntity();
-      EntityConfigKV entityConfigKV = tourWithConfig.getEntityConfigKV();
-      if (shouldGetScreens && type != TopLevelEntityType.DEMO_HUB) {
-        Set<Screen> screens = demoEntity.getScreens();
-        demoEntity.setScreens(screens);
-        return RespDemoEntityWithSubEntities.from(demoEntity, entityConfigKV);
-      }
-      return RespDemoEntity.from(demoEntity, entityConfigKV);
-    }).orElse(null);
+    List<TourWithConfig> maybeTourWithConfig = demoEntityRepo.findTourWithConfigByRidAndDeletedAndEntityType(
+      rid,
+      shouldGetDeletedTour ? TourDeleted.DELETED : TourDeleted.ACTIVE,
+      Set.of(EntityConfigConfigType.GLOBAL_OPTS, EntityConfigConfigType.DATASET),
+      type
+    );
 
-    if (respDemoEntity == null) {
+    if (maybeTourWithConfig.isEmpty()) {
       log.error("Can't get tour by rid {}", rid);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
     }
-    return respDemoEntity;
+
+    DemoEntity demoEntity = maybeTourWithConfig.get(0).getDemoEntity();
+    List<EntityConfigKV> entityConfigKVS = maybeTourWithConfig.stream().map(TourWithConfig::getEntityConfigKV).toList();
+    if (shouldGetScreens && type != TopLevelEntityType.DEMO_HUB) {
+      Set<Screen> screens = demoEntity.getScreens();
+      demoEntity.setScreens(screens);
+      return RespDemoEntityWithSubEntities.from(demoEntity, entityConfigKVS);
+    }
+    return RespDemoEntity.from(demoEntity, entityConfigKVS);
   }
 
   @Transactional
@@ -288,7 +291,7 @@ public class EntityService extends ServiceBase {
     }
     DemoEntity.DemoEntityBuilder<?, ?> updatedTourBuilder = savedDemoEntity.toBuilder().screens(clonedScreens);
     DemoEntity updatedDemoEntity = updatedTourBuilder.build();
-    EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
+    List<EntityConfigKV> entityConfigKV = getEntityConfigKV(demoEntity.getBelongsToOrg());
     RespDemoEntityWithSubEntities resp = RespDemoEntityWithSubEntities.from(updatedDemoEntity, entityConfigKV);
     resp.setIdxm(Optional.of(sourceAndClonedScreenIdMap));
 
@@ -407,7 +410,7 @@ public class EntityService extends ServiceBase {
     Optional<DemoEntity> maybeTour = demoEntityRepo.findByRidAndDeleted(rid, TourDeleted.ACTIVE);
     DemoEntity demoEntity = maybeTour.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     if (demoEntity.getLastPublishedDate() == null) {
-      EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
+      List<EntityConfigKV> entityConfigKV = getEntityConfigKV(demoEntity.getBelongsToOrg());
       RespDemoEntity respTour = RespDemoEntity.from(demoEntity, entityConfigKV);
       return Pair.with(false, respTour);
     }
@@ -418,7 +421,7 @@ public class EntityService extends ServiceBase {
     demoEntity.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
     demoEntity.setPublishedVersion(nextVersion);
 
-    EntityConfigKV entityConfigKV = getEntityConfigKVForGlobalOpts(demoEntity.getBelongsToOrg());
+    List<EntityConfigKV> entityConfigKV = getEntityConfigKV(demoEntity.getBelongsToOrg());
     RespDemoEntityWithSubEntities respTour = RespDemoEntityWithSubEntities.from(demoEntity, commonConfig, entityConfigKV);
 
     // Based on subscription plan get log class
@@ -628,8 +631,10 @@ public class EntityService extends ServiceBase {
 
   @Transactional
   public RespDemoEntity getTourById(Long id) {
-    Optional<TourWithConfig> maybeTourWithConfig = demoEntityRepo.findTourWithConfigById(id, EntityConfigConfigType.GLOBAL_OPTS);
-    return maybeTourWithConfig.map(tourWithConfig -> RespDemoEntity.from(tourWithConfig.getDemoEntity(), tourWithConfig.getEntityConfigKV())).orElse(null);
+    List<TourWithConfig> maybeTourWithConfig = demoEntityRepo.findTourWithConfigById(id, Set.of(EntityConfigConfigType.GLOBAL_OPTS, EntityConfigConfigType.DATASET));
+    DemoEntity demoEntity = maybeTourWithConfig.get(0).getDemoEntity();
+    List<EntityConfigKV> entityConfigKVS = maybeTourWithConfig.stream().map(TourWithConfig::getEntityConfigKV).toList();
+    return RespDemoEntity.from(demoEntity, entityConfigKVS);
   }
 
   @Transactional
@@ -661,7 +666,8 @@ public class EntityService extends ServiceBase {
     }
   }
 
-  public EntityConfigKV getEntityConfigKVForGlobalOpts(Long orgId) {
-    return entityConfigService.getEntityConfig(ConfigEntityType.Org, orgId, EntityConfigConfigType.GLOBAL_OPTS);
+  @Transactional
+  public List<EntityConfigKV> getEntityConfigKV(Long orgId) {
+    return entityConfigService.getEntityConfigForAnOrg(ConfigEntityType.Org, orgId, Set.of(EntityConfigConfigType.GLOBAL_OPTS, EntityConfigConfigType.DATASET));
   }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -26,5 +27,10 @@ public class EntityConfigService {
       return null;
     }
     return entityConfigType.get(0);
+  }
+
+  @Transactional(readOnly = true)
+  public List<EntityConfigKV> getEntityConfigForAnOrg(ConfigEntityType configEntityType, Long entityId, Set<EntityConfigConfigType> entityConfigConfigTypes) {
+    return entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeIn(configEntityType, entityId, entityConfigConfigTypes);
   }
 }

@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-09-01 05:28:58.
+// Generated using typescript-generator version 2.35.1025 on 2024-09-10 13:45:59.
 
 export interface Activity extends ActivityBase {
 }
@@ -105,6 +105,12 @@ export interface CreditInfo {
     updatedAt: Date;
 }
 
+export interface Dataset {
+    name: string;
+    lastPublishedVersion: number;
+    lastPublishedDate: Date;
+}
+
 export interface EntityInfo {
     thumbnail: string;
     frameSettings: FrameSettings;
@@ -139,10 +145,6 @@ export interface ButtonClicks {
 export interface CreateGifJobInfo extends JobProcessingInfo {
     manifestFilePath: string;
     gifFilePath: string;
-}
-
-export interface Credit {
-    value: number;
 }
 
 export interface EntityHoldingInfoBase extends Serializable {
@@ -378,6 +380,10 @@ export interface ReqMediaProcessing {
     assn: ReqEntityAssetAssn;
 }
 
+export interface ReqNewDataset {
+    name: string;
+}
+
 export interface ReqNewInvite {
     invitedEmail: string;
     expiryTimeUnit?: ExpiryTimeUnit;
@@ -511,15 +517,24 @@ export interface RespCommonConfig extends ResponseBase {
     demoHubAssetPath: string;
     pubDemoHubAssetPath: string;
     pubTourAssetPath: string;
+    datasetAssetPath: string;
     dataFileName: string;
     loaderFileName: string;
     editFileName: string;
     manifestFileName: string;
+    datasetFileName: string;
     latestSchemaVersion: SchemaVersion;
 }
 
 export interface RespCustomField {
     fieldName: string;
+}
+
+export interface RespDataset {
+    name: string;
+    lastPublishedVersion: number;
+    lastPublishedDate: Date;
+    presignedUrl?: RespUploadUrl;
 }
 
 export interface RespDemoEntity extends ResponseBase {
@@ -546,6 +561,8 @@ export interface RespDemoEntity extends ResponseBase {
     lastInteractedAt: Date;
     globalOpts?: any;
     settings?: TourSettings;
+    datasets?: Dataset[];
+    owner: number;
 }
 
 export interface RespDemoEntityWithSubEntities extends RespDemoEntity {

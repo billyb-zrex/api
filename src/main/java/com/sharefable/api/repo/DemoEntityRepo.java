@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface DemoEntityRepo extends CrudRepository<DemoEntity, Long> {
@@ -32,15 +33,15 @@ public interface DemoEntityRepo extends CrudRepository<DemoEntity, Long> {
 
   @Query("SELECT new com.sharefable.api.common.TourWithConfig(t, e) " +
     "FROM DemoEntity t " +
-    "LEFT OUTER JOIN EntityConfigKV e ON t.belongsToOrg = e.entityId AND e.configType = :type " +
-    "WHERE t.rid = :rid AND t.deleted = :deleted AND t.entityType = :entityType ORDER BY t.id LIMIT 1")
-  Optional<TourWithConfig> findTourWithConfigByRidAndDeletedAndEntityType(String rid, TourDeleted deleted, EntityConfigConfigType type, TopLevelEntityType entityType);
+    "LEFT OUTER JOIN EntityConfigKV e ON t.belongsToOrg = e.entityId AND e.configType IN (:entityConfigConfigTypes) " +
+    "WHERE t.rid = :rid AND t.deleted = :deleted AND t.entityType = :entityType ORDER BY t.id")
+  List<TourWithConfig> findTourWithConfigByRidAndDeletedAndEntityType(String rid, TourDeleted deleted, Set<EntityConfigConfigType> entityConfigConfigTypes, TopLevelEntityType entityType);
 
   @Query(value = "SELECT new com.sharefable.api.common.TourWithConfig(t, e) " +
     "FROM DemoEntity t " +
-    "LEFT OUTER JOIN EntityConfigKV e ON t.belongsToOrg = e.entityId AND e.configType = :type " +
-    "WHERE t.id = :id ORDER BY t.id LIMIT 1")
-  Optional<TourWithConfig> findTourWithConfigById(Long id, EntityConfigConfigType type);
+    "LEFT OUTER JOIN EntityConfigKV e ON t.belongsToOrg = e.entityId AND e.configType IN (:entityConfigConfigTypes) " +
+    "WHERE t.id = :id ORDER BY t.id")
+  List<TourWithConfig> findTourWithConfigById(Long id, Set<EntityConfigConfigType> entityConfigConfigTypes);
 
   List<DemoEntity> findAllByIdIn(List<Long> id);
 

@@ -30,4 +30,10 @@ public interface EntityConfigKVRepo extends CrudRepository<EntityConfigKV, Long>
     EntityConfigConfigType configType,
     Set<String> configKey
   );
+
+  List<EntityConfigKV> findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeIn(
+    ConfigEntityType entityType,
+    Long entityId,
+    Set<EntityConfigConfigType> configType
+  );
 }

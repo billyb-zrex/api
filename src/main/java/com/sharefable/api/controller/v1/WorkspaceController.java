@@ -232,4 +232,29 @@ public class WorkspaceController {
     RespGlobalOpts resp = wsService.getGlobalOpts(user);
     return ApiResp.<RespGlobalOpts>builder().data(resp).build();
   }
+
+  @RequestMapping(value = Routes.NEW_DATASET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespDataset> createNewDatasetAndGeneratePresignedUrl(@RequestBody ReqNewDataset body, @AuthUser User user) {
+    ReqNewDataset req = body.normalizeDisplayName();
+    RespDataset resp = wsService.createAndGetPreSignedUrlToUploadDataSet(req, user);
+    return ApiResp.<RespDataset>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.PUBLISH_DATASET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespDataset> publishDataset(@RequestBody ReqNewDataset body, @AuthUser User user) {
+    RespDataset resp = wsService.publishDataset(body, user);
+    return ApiResp.<RespDataset>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.GET_ALL_DATASET, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespDataset[]> getAllDatasets(@RequestParam("orgId") Long orgId) {
+    List<RespDataset> resp = wsService.getAllDataset(orgId);
+    return ApiResp.<RespDataset[]>builder().status(ApiResp.ResponseStatus.Success).data(resp.toArray(RespDataset[]::new)).build();
+  }
+
+  @RequestMapping(value = Routes.GET_DATASET, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespDataset> getAllDataset(@PathVariable(value = "name") String name, @AuthUser User user) {
+    RespDataset resp = wsService.getDataset(name.toLowerCase(), user.getBelongsToOrg());
+    return ApiResp.<RespDataset>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
 }

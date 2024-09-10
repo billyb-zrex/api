@@ -105,6 +105,10 @@ public interface Routes {
   String ACTIVITY_DATA = __BEHIND_LOGIN__ + "/activity_data/{entityRid}/{aid}";
   String GET_ORG_LEVEL_LEAD_ANALYTICS = __BEHIND_LOGIN__ + "/org/lead_analytics";
   String DEDUCT_CREDIT = __BEHIND_LOGIN__ + "/deductcredit";
+  String NEW_DATASET = __BEHIND_LOGIN__ + "/newds";
+  String PUBLISH_DATASET = __BEHIND_LOGIN__ + "/pubds";
+  String GET_ALL_DATASET = __BEHIND_LOGIN__ + "/ds";
+  String GET_DATASET = __BEHIND_LOGIN__ + "/ds/{name}";
 
   /* === Demo Hub === */
   String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";

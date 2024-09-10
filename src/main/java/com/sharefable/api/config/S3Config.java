@@ -28,6 +28,7 @@ public class S3Config {
   private static final String DEMOHUB_DATA_FILE_NAME = "index.json";
   private static final String EDIT_FILE_NAME = "edits.json";
   private static final String LOADER_FILE_NAME = "loader.json";
+  private static final String DATASET_FILE_NAME = "%d_%s.json";
   private static final String IMAGE_FILE_NAME = "index.img";
   private static final String LEAD_ACTIVITY_FILE_NAME = "ule.json";
   private static final String PUBLISHED_DATA_FILE_NAME = "%d_index.json";
@@ -46,6 +47,7 @@ public class S3Config {
   private static final String PATH_FOR_DEMOHUB_ASSET = "/dh/%s";
   private static final String PATH_FOR_PVT_TOUR_INPUT = "/tour_data/%s/ip";
   private static final String PATH_FOR_PVT_LLM_OPS = "/tour_data/%s/llmops";
+  private static final String PATH_FOR_DATASET = "/orgpub/%s/ds";
   private String region;
   private String rootQualifier;
   private String assetBucketName;
@@ -69,7 +71,8 @@ public class S3Config {
       new FileConfig(PUBLISHED_TOUR_ENTITY_FILE_NAME, DATA_FILE_CACHE_POLICY.StaleOk), // cache with revalidate tour entity file
       new FileConfig(MANIFEST_FILE, DATA_FILE_CACHE_POLICY.NoCache),
       new FileConfig(LEAD_ACTIVITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
-      new FileConfig(DEMOHUB_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache));
+      new FileConfig(DEMOHUB_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
+      new FileConfig(DATASET_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache, String::format));
   }
 
   public static String getCachePolicyStr(DATA_FILE_CACHE_POLICY policy) {
@@ -93,6 +96,7 @@ public class S3Config {
       case PublishedDemoHub -> PATH_FOR_PUBLISHED_DEMO_HUB_ASSET;
       case PvtTourInputData -> PATH_FOR_PVT_TOUR_INPUT;
       case PvtTourLlmOpsAssets -> PATH_FOR_PVT_LLM_OPS;
+      case Dataset -> PATH_FOR_DATASET;
     };
   }
 
@@ -109,7 +113,9 @@ public class S3Config {
       AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.PublishedTour, "")).getS3UriToFile(),
       AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Analytics, "")).getS3UriToFile(),
       AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.DemoHub, "")).getS3UriToFile(),
-      AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.PublishedDemoHub, "")).getS3UriToFile()
+      AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.PublishedDemoHub, "")).getS3UriToFile(),
+      AssetFilePath.from(assetFilePath, getPrefixPath(AssetType.Dataset, "")).getS3UriToFile()
+
     );
   }
 
@@ -179,6 +185,7 @@ public class S3Config {
     PublishedDemoHub,
     PvtTourInputData,
     PvtTourLlmOpsAssets,
+    Dataset
   }
 
   public enum DATA_FILE_CACHE_POLICY {
@@ -194,7 +201,8 @@ public class S3Config {
     String tourPublishedAsset,
     String leadAnalytics,
     String demoHubAsset,
-    String demoHubPublishedAsset) {
+    String demoHubPublishedAsset,
+    String datasetAsset) {
   }
 
   public static class FileConfig {
@@ -205,7 +213,7 @@ public class S3Config {
     FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
       this.__filename = filename;
       this.__cachePolicy = cachePolicy;
-      replacer = (f, v) -> f;
+      replacer = (f, v, c) -> f;
     }
 
     FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy, VersionedFile replacer) {
@@ -219,7 +227,11 @@ public class S3Config {
     }
 
     public String filename(Integer v) {
-      return this.replacer.apply(this.__filename, v);
+      return this.replacer.apply(this.__filename, v, null);
+    }
+
+    public String filename(Integer v, String name) {
+      return this.replacer.apply(this.__filename, v, name);
     }
 
     public DATA_FILE_CACHE_POLICY cachePolicy() {
@@ -239,6 +251,7 @@ public class S3Config {
     FileConfig publishedTourEntityFile,
     FileConfig manifestFile,
     FileConfig leadActivityDataFile,
-    FileConfig demoHubDataFile) {
+    FileConfig demoHubDataFile,
+    FileConfig datasetFile) {
   }
 }

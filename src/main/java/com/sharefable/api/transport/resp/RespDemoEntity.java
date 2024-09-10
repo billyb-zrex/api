@@ -1,9 +1,9 @@
 package com.sharefable.api.transport.resp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.sharefable.api.common.EntityInfo;
-import com.sharefable.api.common.TopLevelEntityType;
-import com.sharefable.api.common.Utils;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sharefable.api.common.*;
 import com.sharefable.api.config.S3Config;
 import com.sharefable.api.entity.DemoEntity;
 import com.sharefable.api.entity.EntityConfigKV;
@@ -11,9 +11,11 @@ import com.sharefable.api.transport.*;
 import io.sentry.Sentry;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.javatuples.Pair;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -25,6 +27,7 @@ import java.util.Map;
 @Slf4j
 @GenerateTSDef
 public class RespDemoEntity extends ResponseBase {
+  private static ObjectMapper mapper = new ObjectMapper();
   private Long id;
   private String rid;
   private String assetPrefixHash;
@@ -46,10 +49,14 @@ public class RespDemoEntity extends ResponseBase {
   private TopLevelEntityType entityType;
   private EntityInfo info;
   private Timestamp lastInteractedAt;
+  @JsonProperty(value = "owner")
+  private Long belongsToOrg;
   @OptionalPropInTS
   private Object globalOpts;
   @OptionalPropInTS
   private TourSettings settings;
+  @OptionalPropInTS
+  private List<Dataset> datasets;
 
   public static RespDemoEntity from(DemoEntity demoEntity) {
     try {
@@ -75,6 +82,26 @@ public class RespDemoEntity extends ResponseBase {
     RespDemoEntity resp = from(demoEntity);
     resp.setGlobalOpts(entityConfigKV == null ? null : entityConfigKV.getConfigVal());
     return resp;
+  }
+
+  public static RespDemoEntity from(DemoEntity demoEntity, List<EntityConfigKV> entityConfigKV) {
+    Pair<EntityConfigKV, List<Dataset>> separatedEntityConfig = separateEntityConfigKV(entityConfigKV);
+    RespDemoEntity resp = from(demoEntity, separatedEntityConfig.getValue0());
+    resp.setDatasets(separatedEntityConfig.getValue1());
+    return resp;
+  }
+
+  public static Pair<EntityConfigKV, List<Dataset>> separateEntityConfigKV(List<EntityConfigKV> entityConfigKV) {
+    EntityConfigKV globalOpts = entityConfigKV.stream().filter((entityConfig) -> entityConfig.getConfigType() == EntityConfigConfigType.GLOBAL_OPTS)
+      .findFirst()
+      .orElse(null);
+
+    List<Dataset> publishedDatasets = entityConfigKV.stream()
+      .filter(entityConfig -> entityConfig.getConfigType() == EntityConfigConfigType.DATASET)
+      .map(entityConfig -> mapper.convertValue(entityConfig.getConfigVal(), Dataset.class))
+      .filter(dataset -> dataset.getLastPublishedDate() != null)
+      .toList();
+    return Pair.with(globalOpts, publishedDatasets);
   }
 
   private static RespDemoEntity Empty() {

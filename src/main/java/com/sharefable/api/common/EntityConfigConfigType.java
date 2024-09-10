@@ -4,5 +4,6 @@ public enum EntityConfigConfigType {
   VANITY_DOMAIN,
   CUSTOM_FORM_FIELDS,
   GLOBAL_OPTS,
-  AI_CREDIT
+  AI_CREDIT,
+  DATASET
 }

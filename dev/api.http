@@ -884,3 +884,31 @@ Authorization: {{auth-header}}
   "deductBy": 1,
   "creditType": "AI_CREDIT"
 }
+
+### Create new dataset
+POST {{api-host}}/v1/f/newds
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "name": "Dataset90"
+}
+
+### Publish dataset
+POST {{api-host}}/v1/f/pubds
+Content-Type: application/json
+Authorization: {{auth-header}}
+
+{
+  "name": "dataset90"
+}
+
+### Get all dataset
+GET {{api-host}}/v1/f/ds?orgId=1
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+### Get a dataset
+GET {{api-host}}/v1/f/ds/Dataset1237
+Authorization: {{auth-header}}
+Content-Type: application/json
