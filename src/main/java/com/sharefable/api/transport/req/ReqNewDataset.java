@@ -6,11 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
+
 @GenerateTSDef
 @Slf4j
-public record ReqNewDataset(String name) {
+public record ReqNewDataset(String name, Optional<String> description) {
   public ReqNewDataset normalizeDisplayName() {
-    return new ReqNewDataset(isValidDatasetName(Utils.normalizeWhitespace(name()).toLowerCase()));
+    return new ReqNewDataset(isValidDatasetName(Utils.normalizeWhitespace(name()).toLowerCase()), description());
   }
 
   public String isValidDatasetName(String name) {

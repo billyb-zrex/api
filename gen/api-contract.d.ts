@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-09-10 13:45:59.
+// Generated using typescript-generator version 2.35.1025 on 2024-09-11 14:02:41.
 
 export interface Activity extends ActivityBase {
 }
@@ -109,6 +109,7 @@ export interface Dataset {
     name: string;
     lastPublishedVersion: number;
     lastPublishedDate: Date;
+    description?: string;
 }
 
 export interface EntityInfo {
@@ -382,6 +383,7 @@ export interface ReqMediaProcessing {
 
 export interface ReqNewDataset {
     name: string;
+    description?: string;
 }
 
 export interface ReqNewInvite {
@@ -531,9 +533,7 @@ export interface RespCustomField {
 }
 
 export interface RespDataset {
-    name: string;
-    lastPublishedVersion: number;
-    lastPublishedDate: Date;
+    dataset: Dataset;
     presignedUrl?: RespUploadUrl;
 }
 

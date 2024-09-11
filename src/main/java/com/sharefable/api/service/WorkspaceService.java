@@ -669,7 +669,7 @@ public class WorkspaceService extends ServiceBase {
       Dataset dataset;
 
       if (entityConfigKVMap.isEmpty() || !entityConfigKVMap.containsKey(req.name())) {
-        EntityConfigKV entityConfigKV = createDataSet(req.name(), user.getBelongsToOrg());
+        EntityConfigKV entityConfigKV = createDataSet(req, user.getBelongsToOrg());
         dataset = mapper.convertValue(entityConfigKV.getConfigVal(), Dataset.class);
       } else {
         log.info("Dataset already exists, so only generating presigned url");
@@ -677,7 +677,7 @@ public class WorkspaceService extends ServiceBase {
       }
 
       AssetFilePath filePath = s3Config.getQualifiedPathFor(
-        S3Config.AssetType.Dataset, user.getBelongsToOrg().toString(), S3Config.getEntityFiles().datasetFile().filename(dataset.getLastPublishedVersion(), dataset.getName()));
+        S3Config.AssetType.Dataset, user.getBelongsToOrg().toString(), S3Config.getEntityFiles().datasetFile().filename(0, dataset.getName()));
       URL url = s3Service.preSignedUrl(filePath, "application/json");
       RespUploadUrl respUploadUrl = RespUploadUrl.builder()
         .url(url.toString())
@@ -692,18 +692,19 @@ public class WorkspaceService extends ServiceBase {
   }
 
   @Transactional
-  protected EntityConfigKV createDataSet(String name, Long orgId) {
+  protected EntityConfigKV createDataSet(ReqNewDataset req, Long orgId) {
     Dataset dataset = Dataset.builder()
-      .name(name)
+      .name(req.name())
       .lastPublishedVersion(0)
       .lastPublishedDate(null)
+      .description(req.description().orElse(""))
       .build();
 
     EntityConfigKV entityConfigKV = EntityConfigKV.builder()
       .entityId(orgId)
       .entityType(ConfigEntityType.Org)
       .configType(EntityConfigConfigType.DATASET)
-      .configKey(name)
+      .configKey(req.name())
       .configVal(dataset)
       .build();
 

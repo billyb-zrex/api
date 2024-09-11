@@ -15,14 +15,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @SuppressWarnings("removal")
 @RestController
@@ -242,12 +241,16 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.PUBLISH_DATASET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespDataset> publishDataset(@RequestBody ReqNewDataset body, @AuthUser User user) {
-    RespDataset resp = wsService.publishDataset(body, user);
+    ReqNewDataset req = body.normalizeDisplayName();
+    RespDataset resp = wsService.publishDataset(req, user);
     return ApiResp.<RespDataset>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
   }
 
   @RequestMapping(value = Routes.GET_ALL_DATASET, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  public ApiResp<RespDataset[]> getAllDatasets(@RequestParam("orgId") Long orgId) {
+  public ApiResp<RespDataset[]> getAllDatasets(@RequestParam("orgId") Long orgId, @AuthUser User user) {
+    if (!Objects.equals(user.getBelongsToOrg(), orgId)) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "The dataset requested for an org does not match the user's org");
+    }
     List<RespDataset> resp = wsService.getAllDataset(orgId);
     return ApiResp.<RespDataset[]>builder().status(ApiResp.ResponseStatus.Success).data(resp.toArray(RespDataset[]::new)).build();
   }
