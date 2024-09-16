@@ -912,3 +912,8 @@ Content-Type: application/json
 GET {{api-host}}/v1/f/ds/Dataset1237
 Authorization: {{auth-header}}
 Content-Type: application/json
+
+### Delete a dataset
+POST {{api-host}}/v1/f/ds/del/Dataset45
+Authorization: {{auth-header}}
+Content-Type: application/json

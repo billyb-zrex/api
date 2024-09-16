@@ -36,4 +36,10 @@ public interface EntityConfigKVRepo extends CrudRepository<EntityConfigKV, Long>
     Long entityId,
     Set<EntityConfigConfigType> configType
   );
+
+  void deleteEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+    ConfigEntityType entityType,
+    Long entityId,
+    EntityConfigConfigType configType,
+    String configKey);
 }

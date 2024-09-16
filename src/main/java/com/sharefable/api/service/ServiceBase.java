@@ -36,6 +36,7 @@ public abstract class ServiceBase implements DefaultThumbnail {
   private static final String PATH_TO_SCHEMA_FILE_FOR_TOUR_EDITS = "/data-schema/v=%s/tour/edits.json";
   private static final String PATH_TO_SCHEMA_FILE_FOR_SCREEN_EDIT = "/data-schema/v=%s/screen/edits.json";
   private static final String PATH_TO_SCHEMA_FILE_FOR_DEMOHUB_INDEX = "/data-schema/v=%s/demoHub/index.json";
+  private static final String PATH_TO_SCHEMA_FILE_FOR_DATASET = "/data-schema/v=%s/org/dataset.json";
 
   private final S3Service s3Service;
   private final S3Config s3Config;
@@ -110,6 +111,12 @@ public abstract class ServiceBase implements DefaultThumbnail {
         S3Config.AssetType.Tour,
         S3Config.getEntityFiles().editFile()
       );
+
+      case DATASET -> new TemplateFile(
+        String.format(PATH_TO_SCHEMA_FILE_FOR_DATASET, schemaVersion),
+        S3Config.AssetType.Dataset,
+        S3Config.getEntityFiles().datasetFile()
+      );
     };
   }
 
@@ -124,25 +131,39 @@ public abstract class ServiceBase implements DefaultThumbnail {
   @Transactional(propagation = Propagation.MANDATORY)
   public AssetFilePath uploadTemplateFileToS3(String prefixHash, DATA_FILE_TYPE type) {
     TemplateFile tFile = getTemplateFileLocFor(type);
+    String fileContent = getTemplateFileContent(tFile);
+    return uploadDataFileToS3(fileContent, prefixHash, tFile.toFile(), tFile.type());
+  }
+
+  public AssetFilePath uploadTemplateFileToS3(AssetFilePath assetFilePath, DATA_FILE_TYPE type) {
+    TemplateFile tFile = getTemplateFileLocFor(type);
+    String fileContent = getTemplateFileContent(tFile);
+    return uploadDataFileToS3(fileContent, assetFilePath, tFile.toFile());
+  }
+
+  public String getTemplateFileContent(TemplateFile tFile) {
     try (InputStream resourceAsStream = getClass().getResourceAsStream(tFile.fromPath())) {
       if (resourceAsStream == null) {
         log.error("No default data file is present while creating tour. Can't find schema file with path = {}", tFile.fromPath());
         throw new RuntimeException("Can't find schema file");
       }
-      String fileContent = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-      return uploadDataFileToS3(fileContent, prefixHash, tFile.toFile(), tFile.type());
+      return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public AssetFilePath uploadDataFileToS3(String content, String prefixHash, S3Config.FileConfig config, S3Config.AssetType assetType) {
-    AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, config.filename());
+  public AssetFilePath uploadDataFileToS3(String content, AssetFilePath assetFilePath, S3Config.FileConfig config) {
     Map<String, String> userDefinedMetadata = new HashMap<>(1);
     userDefinedMetadata.put(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     userDefinedMetadata.put(HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(config.cachePolicy()));
     s3Service.upload(assetFilePath, content.getBytes(StandardCharsets.UTF_8), userDefinedMetadata);
     return assetFilePath;
+  }
+
+  public AssetFilePath uploadDataFileToS3(String content, String prefixHash, S3Config.FileConfig config, S3Config.AssetType assetType) {
+    AssetFilePath assetFilePath = s3Config.getQualifiedPathFor(assetType, prefixHash, config.filename());
+    return uploadDataFileToS3(content, assetFilePath, config);
   }
 
   public <T extends EntityBaseWithOwnership> T getEntityByRIdWithAuthValidation(Class<T> cls, String rid, User user) {
@@ -184,7 +205,8 @@ public abstract class ServiceBase implements DefaultThumbnail {
     TOUR_LOADER,
     TOUR_EDITS,
     SCREEN_EDIT,
-    DEMO_HUB
+    DEMO_HUB,
+    DATASET
   }
 
   public record TemplateFile(String fromPath, S3Config.AssetType type, S3Config.FileConfig toFile) {

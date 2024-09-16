@@ -257,7 +257,13 @@ public class WorkspaceController {
 
   @RequestMapping(value = Routes.GET_DATASET, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiResp<RespDataset> getAllDataset(@PathVariable(value = "name") String name, @AuthUser User user) {
-    RespDataset resp = wsService.getDataset(name.toLowerCase(), user.getBelongsToOrg());
+    RespDataset resp = wsService.getDataset(name.trim().toLowerCase(), user.getBelongsToOrg());
     return ApiResp.<RespDataset>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.DELETE_DATASET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespDataset[]> removeDataset(@PathVariable(value = "name") String name, @AuthUser User user) {
+    List<RespDataset> resp = wsService.removeDataset(name.trim().toLowerCase(), user.getBelongsToOrg());
+    return ApiResp.<RespDataset[]>builder().status(ApiResp.ResponseStatus.Success).data(resp.toArray(RespDataset[]::new)).build();
   }
 }

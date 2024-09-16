@@ -668,16 +668,18 @@ public class WorkspaceService extends ServiceBase {
 
       Dataset dataset;
 
+      AssetFilePath filePath = s3Config.getQualifiedPathFor(
+        S3Config.AssetType.Dataset, user.getBelongsToOrg().toString(), S3Config.getEntityFiles().datasetFile().filename(0, req.name()));
+
       if (entityConfigKVMap.isEmpty() || !entityConfigKVMap.containsKey(req.name())) {
         EntityConfigKV entityConfigKV = createDataSet(req, user.getBelongsToOrg());
         dataset = mapper.convertValue(entityConfigKV.getConfigVal(), Dataset.class);
+        uploadTemplateFileToS3(filePath, DATA_FILE_TYPE.DATASET);
       } else {
         log.info("Dataset already exists, so only generating presigned url");
         dataset = mapper.convertValue(entityConfigKVMap.get(req.name()).getConfigVal(), Dataset.class);
       }
 
-      AssetFilePath filePath = s3Config.getQualifiedPathFor(
-        S3Config.AssetType.Dataset, user.getBelongsToOrg().toString(), S3Config.getEntityFiles().datasetFile().filename(0, dataset.getName()));
       URL url = s3Service.preSignedUrl(filePath, "application/json");
       RespUploadUrl respUploadUrl = RespUploadUrl.builder()
         .url(url.toString())
@@ -721,5 +723,29 @@ public class WorkspaceService extends ServiceBase {
         EntityConfigKV::getConfigKey,
         entity -> entity
       ));
+  }
+
+  @Transactional
+  public List<RespDataset> removeDataset(String datasetName, Long orgId) {
+
+    List<EntityConfigKV> entityConfigKVbyConfigKey = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.DATASET,
+      datasetName);
+
+    if (entityConfigKVbyConfigKey.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The Dataset is not present, can't delete " + datasetName);
+    }
+    entityConfigKVRepo.deleteEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.DATASET,
+      datasetName);
+
+    return entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeIn(ConfigEntityType.Org, orgId, Set.of(EntityConfigConfigType.DATASET)).stream()
+      .map(entity -> mapper.convertValue(entity.getConfigVal(), Dataset.class))
+      .map(RespDataset::from)
+      .toList();
   }
 }

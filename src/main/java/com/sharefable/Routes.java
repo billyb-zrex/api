@@ -109,6 +109,7 @@ public interface Routes {
   String PUBLISH_DATASET = __BEHIND_LOGIN__ + "/pubds";
   String GET_ALL_DATASET = __BEHIND_LOGIN__ + "/ds";
   String GET_DATASET = __BEHIND_LOGIN__ + "/ds/{name}";
+  String DELETE_DATASET = __BEHIND_LOGIN__ + "/ds/del/{name}";
 
   /* === Demo Hub === */
   String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";
