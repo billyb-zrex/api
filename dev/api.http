@@ -917,3 +917,13 @@ Content-Type: application/json
 POST {{api-host}}/v1/f/ds/del/Dataset45
 Authorization: {{auth-header}}
 Content-Type: application/json
+
+### Update a dataset description
+POST {{api-host}}/v1/f/ds/updtprop
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "name": "dataset22",
+  "description": "Updated"
+}

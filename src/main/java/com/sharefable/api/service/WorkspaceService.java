@@ -633,7 +633,7 @@ public class WorkspaceService extends ServiceBase {
       HttpHeaders.CACHE_CONTROL, S3Config.getCachePolicyStr(S3Config.getEntityFiles().datasetFile().cachePolicy())));
 
     entityConfigKVRepo.save(entityConfigKV);
-    return RespDataset.from(dataset);
+    return RespDataset.from(dataset, user.getBelongsToOrg());
   }
 
   @Transactional
@@ -641,7 +641,7 @@ public class WorkspaceService extends ServiceBase {
     List<EntityConfigKV> entityConfig = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigType(ConfigEntityType.Org, orgId, EntityConfigConfigType.DATASET);
     return entityConfig.stream()
       .map(entity -> mapper.convertValue(entity.getConfigVal(), Dataset.class))
-      .map(RespDataset::from)
+      .map(dataset -> RespDataset.from(dataset, orgId))
       .toList();
   }
 
@@ -655,7 +655,8 @@ public class WorkspaceService extends ServiceBase {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No dataset present for the requested name " + name);
     }
     try {
-      return RespDataset.from(mapper.convertValue(entityConfig.get(0).getConfigVal(), Dataset.class));
+      Dataset dataset = mapper.convertValue(entityConfig.get(0).getConfigVal(), Dataset.class);
+      return RespDataset.from(dataset, orgId);
     } catch (Exception e) {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Probably the dataset does not contain value but key exists" + name);
     }
@@ -686,7 +687,7 @@ public class WorkspaceService extends ServiceBase {
         .expiry("expiry")
         .filename(req.name())
         .build();
-      return RespDataset.from(dataset, respUploadUrl);
+      return RespDataset.from(dataset, respUploadUrl, user.getBelongsToOrg());
     } catch (Exception e) {
       log.error("Something went wrong while #createAndGetPreSignedUrlToUploadDataSet", e);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong while creating a dataset" + e);
@@ -745,7 +746,27 @@ public class WorkspaceService extends ServiceBase {
 
     return entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeIn(ConfigEntityType.Org, orgId, Set.of(EntityConfigConfigType.DATASET)).stream()
       .map(entity -> mapper.convertValue(entity.getConfigVal(), Dataset.class))
-      .map(RespDataset::from)
+      .map(dataset -> RespDataset.from(dataset, orgId))
       .toList();
+  }
+
+  @Transactional
+  public RespDataset updateDataset(ReqNewDataset body, Long orgId) {
+    List<EntityConfigKV> entityConfig = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+      ConfigEntityType.Org,
+      orgId,
+      EntityConfigConfigType.DATASET,
+      body.name());
+
+    if (entityConfig.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The Dataset is not present, can't update " + body.name());
+    }
+    EntityConfigKV entityConfigKV = entityConfig.get(0);
+    Dataset dataset = mapper.convertValue(entityConfigKV.getConfigVal(), Dataset.class);
+    body.description().ifPresent(dataset::setDescription);
+    entityConfigKV.setConfigVal(dataset);
+
+    entityConfigKVRepo.save(entityConfigKV);
+    return RespDataset.from(dataset, orgId);
   }
 }

@@ -266,4 +266,10 @@ public class WorkspaceController {
     List<RespDataset> resp = wsService.removeDataset(name.trim().toLowerCase(), user.getBelongsToOrg());
     return ApiResp.<RespDataset[]>builder().status(ApiResp.ResponseStatus.Success).data(resp.toArray(RespDataset[]::new)).build();
   }
+
+  @RequestMapping(value = Routes.UPDATE_DATASET, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespDataset> updateDataSet(@RequestBody ReqNewDataset body, @AuthUser User user) {
+    RespDataset resp = wsService.updateDataset(body, user.getBelongsToOrg());
+    return ApiResp.<RespDataset>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
 }
