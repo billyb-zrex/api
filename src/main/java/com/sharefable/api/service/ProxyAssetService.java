@@ -11,22 +11,33 @@ import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,6 +62,26 @@ public class ProxyAssetService {
     DefaultUriBuilderFactory defaultUriBuilderFactory = new DefaultUriBuilderFactory();
     defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
     this.restClient.setUriTemplateHandler(defaultUriBuilderFactory);
+
+    // This has been added because sometimes jvm runs into 'PKIX path building failed' exception when it can't find
+    // a certificate in its trust store. Ref: https://stackoverflow.com/questions/55693919/getting-pkix-path-building-failed-validatorexception-while-requesting-a-url.
+    // while we proxy a resource.
+    // We normally don't want to check for SSL validation when proxying other resource, this following code disable checking ssl validation.
+    // Reference: https://stackoverflow.com/questions/4072585/disabling-ssl-certificate-validation-in-spring-resttemplate
+    // We had to upgrade HTTPClient to achieve this, some imports needed to be upgraded https://stackoverflow.com/questions/74688513/httpclients-custom-setsslsocketfactory-method-not-found
+    try {
+      TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+      SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
+      SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+      CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(
+        PoolingHttpClientConnectionManagerBuilder.create().setSSLSocketFactory(csf).build()
+      ).build();
+      HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+      requestFactory.setHttpClient(httpClient);
+      this.restClient.setRequestFactory(requestFactory);
+    } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+      log.warn("Can't bypass certificate checking while initing resttemplate, falling back to default behaviour", e);
+    }
   }
 
   @Transactional
