@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 2.35.1025 on 2024-09-11 14:02:41.
+// Generated using typescript-generator version 2.35.1025 on 2024-10-14 06:27:26.
 
 export interface Activity extends ActivityBase {
 }
@@ -122,6 +122,14 @@ export interface EntityInfo {
     demoRouter?: any;
 }
 
+export interface EntityConfigKV extends EntityBase {
+    entityId: number;
+    entityType: ConfigEntityType;
+    configType: EntityConfigConfigType;
+    configKey: string;
+    configVal: any;
+}
+
 export interface LLMOps extends EntityBase {
     orgId: number;
     entityId: number;
@@ -146,6 +154,10 @@ export interface ButtonClicks {
 export interface CreateGifJobInfo extends JobProcessingInfo {
     manifestFilePath: string;
     gifFilePath: string;
+}
+
+export interface Credit {
+    value: number;
 }
 
 export interface EntityHoldingInfoBase extends Serializable {
@@ -189,6 +201,11 @@ export interface OrgInfo {
 }
 
 export interface PaymentTerms {
+}
+
+export interface ReqExperimentConfig {
+    key: string;
+    value: any;
 }
 
 export interface ReqNewLog {
@@ -534,6 +551,7 @@ export interface RespCustomField {
 
 export interface RespDataset {
     dataset: Dataset;
+    owner: number;
     presignedUrl?: RespUploadUrl;
 }
 
@@ -929,6 +947,15 @@ export const enum FrameSettings {
     NOFRAME = "NOFRAME",
     LIGHT = "LIGHT",
     DARK = "DARK",
+}
+
+export const enum EntityConfigConfigType {
+    VANITY_DOMAIN = "VANITY_DOMAIN",
+    CUSTOM_FORM_FIELDS = "CUSTOM_FORM_FIELDS",
+    GLOBAL_OPTS = "GLOBAL_OPTS",
+    AI_CREDIT = "AI_CREDIT",
+    DATASET = "DATASET",
+    _EXP_ = "_EXP_",
 }
 
 export const enum LLMOpsStatus {

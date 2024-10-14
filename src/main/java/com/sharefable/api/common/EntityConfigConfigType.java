@@ -5,5 +5,8 @@ public enum EntityConfigConfigType {
   CUSTOM_FORM_FIELDS,
   GLOBAL_OPTS,
   AI_CREDIT,
-  DATASET
+  DATASET,
+
+  // This key is reserved for running experiments. Client will set this key and retrieves this key via a generic endpoint
+  _EXP_
 }

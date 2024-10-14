@@ -4,11 +4,13 @@ import com.sharefable.Routes;
 import com.sharefable.api.auth.AuthUser;
 import com.sharefable.api.common.ApiResp;
 import com.sharefable.api.config.AppSettings;
+import com.sharefable.api.entity.EntityConfigKV;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.OrgService;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.ObjectValidationResult;
 import com.sharefable.api.transport.PvtAssetType;
+import com.sharefable.api.transport.ReqExperimentConfig;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.*;
 import lombok.RequiredArgsConstructor;
@@ -271,5 +273,17 @@ public class WorkspaceController {
   public ApiResp<RespDataset> updateDataSet(@RequestBody ReqNewDataset body, @AuthUser User user) {
     RespDataset resp = wsService.updateDataset(body, user.getBelongsToOrg());
     return ApiResp.<RespDataset>builder().status(ApiResp.ResponseStatus.Success).data(resp).build();
+  }
+
+  @RequestMapping(value = Routes.EXP_SET_CONFIG, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<EntityConfigKV> setConfigForExperiments(@RequestBody ReqExperimentConfig body, @AuthUser User user) {
+    EntityConfigKV config = wsService.setConfigForExperiments(body, user.getBelongsToOrg());
+    return ApiResp.<EntityConfigKV>builder().status(ApiResp.ResponseStatus.Success).data(config).build();
+  }
+
+  @RequestMapping(value = Routes.EXP_GET_CONFIG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<List<EntityConfigKV>> getConfigForExperiments(@PathVariable String key, @AuthUser User user) {
+    List<EntityConfigKV> config = wsService.getConfigForExperiments(key, user.getBelongsToOrg());
+    return ApiResp.<List<EntityConfigKV>>builder().status(ApiResp.ResponseStatus.Success).data(config).build();
   }
 }

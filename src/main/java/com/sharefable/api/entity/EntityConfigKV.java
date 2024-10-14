@@ -2,6 +2,7 @@ package com.sharefable.api.entity;
 
 import com.sharefable.api.common.ConfigEntityType;
 import com.sharefable.api.common.EntityConfigConfigType;
+import com.sharefable.api.transport.GenerateTSDef;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,7 @@ import org.hibernate.annotations.Type;
 @AllArgsConstructor
 @ToString
 @Builder
+@GenerateTSDef
 public class EntityConfigKV extends EntityBase {
   private Long entityId;
 

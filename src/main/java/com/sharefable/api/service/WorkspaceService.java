@@ -15,6 +15,7 @@ import com.sharefable.api.service.vendor.SlackMsgService;
 import com.sharefable.api.transport.InviteCode;
 import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.PvtAssetType;
+import com.sharefable.api.transport.ReqExperimentConfig;
 import com.sharefable.api.transport.req.*;
 import com.sharefable.api.transport.resp.*;
 import io.sentry.Sentry;
@@ -695,7 +696,7 @@ public class WorkspaceService extends ServiceBase {
   }
 
   @Transactional
-  protected EntityConfigKV createDataSet(ReqNewDataset req, Long orgId) {
+  public EntityConfigKV createDataSet(ReqNewDataset req, Long orgId) {
     Dataset dataset = Dataset.builder()
       .name(req.name())
       .lastPublishedVersion(0)
@@ -715,7 +716,7 @@ public class WorkspaceService extends ServiceBase {
   }
 
   @Transactional
-  protected Map<String, EntityConfigKV> convertEntityConfigListToMap(Long orgId) {
+  public Map<String, EntityConfigKV> convertEntityConfigListToMap(Long orgId) {
     List<EntityConfigKV> entityConfigKVList = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigType(ConfigEntityType.Org, orgId, EntityConfigConfigType.DATASET);
 
     return entityConfigKVList.isEmpty() ?
@@ -768,5 +769,32 @@ public class WorkspaceService extends ServiceBase {
 
     entityConfigKVRepo.save(entityConfigKV);
     return RespDataset.from(dataset, orgId);
+  }
+
+  public EntityConfigKV setConfigForExperiments(ReqExperimentConfig body, Long belongsToOrg) {
+    List<EntityConfigKV> configForExperiments = getConfigForExperiments(body.key(), belongsToOrg);
+    EntityConfigKV config;
+    if (configForExperiments.isEmpty()) {
+      config = EntityConfigKV.builder()
+        .entityType(ConfigEntityType.Org)
+        .entityId(belongsToOrg)
+        .configType(EntityConfigConfigType._EXP_)
+        .configKey(body.key())
+        .configVal(body.value())
+        .build();
+    } else {
+      config = configForExperiments.get(0);
+      config.setConfigVal(body.value());
+    }
+    return entityConfigKVRepo.save(config);
+  }
+
+  public List<EntityConfigKV> getConfigForExperiments(String key, Long belongsToOrg) {
+    return entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
+      ConfigEntityType.Org,
+      belongsToOrg,
+      EntityConfigConfigType._EXP_,
+      key
+    );
   }
 }

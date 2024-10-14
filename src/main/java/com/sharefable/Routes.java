@@ -111,6 +111,8 @@ public interface Routes {
   String GET_DATASET = __BEHIND_LOGIN__ + "/ds/{name}";
   String DELETE_DATASET = __BEHIND_LOGIN__ + "/ds/del/{name}";
   String UPDATE_DATASET = __BEHIND_LOGIN__ + "/ds/updtprop";
+  String EXP_SET_CONFIG = __BEHIND_LOGIN__ + "/exp/config";
+  String EXP_GET_CONFIG = __BEHIND_LOGIN__ + "/exp/config/{key}";
 
   /* === Demo Hub === */
   String CREATE_DEMO_HUB = __BEHIND_LOGIN__ + "/demohub";

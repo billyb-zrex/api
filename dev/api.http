@@ -928,3 +928,23 @@ Content-Type: application/json
   "name": "dataset22",
   "description": "Updated"
 }
+
+### set experiment config
+POST {{api-host}}/v1/f/exp/config
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "key": "test_key",
+  "value": {
+    "a": 1,
+    "b": {
+      "c": 41
+    }
+  }
+}
+
+### get experiment config
+GET {{api-host}}/v1/f/exp/config/test_key
+Authorization: {{auth-header}}
+Content-Type: application/json
