@@ -13,10 +13,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @GenerateTSDef
 public class RespMediaProcessingInfo extends ResponseBase {
-    private Long jobId;
-    private String originalFilePath;
-    private MediaType mediaType;
-    private String processedFilePath;
-    private JobProcessingStatus processingState;
-    private String failureReason;
+  private Long jobId;
+  private String originalFilePath;
+  private MediaType mediaType;
+  private String processedFilePath;
+  private String processedCdnPath;
+  private JobProcessingStatus processingState;
+  private String failureReason;
 }

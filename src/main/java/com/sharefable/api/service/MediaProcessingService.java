@@ -51,7 +51,7 @@ public class MediaProcessingService {
     return savedJob;
   }
 
-  private RespMediaProcessingInfo transcodeVideoWithFormat(VideoProcessingSub sub, String basePath) {
+  private RespMediaProcessingInfo transcodeVideoWithFormat(VideoProcessingSub sub, String basePath, String cdnPath) {
     String processedPath = switch (sub) {
       case CONVERT_TO_MP4 -> String.format("%s.mp4", basePath);
       case CONVERT_TO_HLS -> String.format("%s_hls/master", basePath);
@@ -61,13 +61,22 @@ public class MediaProcessingService {
       case CONVERT_TO_MP4 -> MediaType.VIDEO_MP4;
       case CONVERT_TO_HLS -> MediaType.VIDEO_HLS;
     };
-    return submitTranscoding(sub, processedPath, basePath, JobType.TRANSCODE_VIDEO, mediaType);
+    RespMediaProcessingInfo respMediaProcessingInfo = submitTranscoding(sub, processedPath, basePath, JobType.TRANSCODE_VIDEO, mediaType);
+    if (StringUtils.isNotBlank(cdnPath)) {
+      respMediaProcessingInfo.setProcessedCdnPath(
+        switch (sub) {
+          case CONVERT_TO_MP4 -> String.format("%s.mp4", cdnPath);
+          case CONVERT_TO_HLS -> String.format("%s_hls/master.m3u8", cdnPath);
+        }
+      );
+    } else respMediaProcessingInfo.setProcessedCdnPath(respMediaProcessingInfo.getProcessedFilePath());
+    return respMediaProcessingInfo;
   }
 
   @Transactional
   public RespMediaProcessingInfo[] transcodeVideoForStreaming(ReqMediaProcessing body) {
-    RespMediaProcessingInfo mp4JobInfo = transcodeVideoWithFormat(VideoProcessingSub.CONVERT_TO_MP4, body.getPath());
-    RespMediaProcessingInfo hlsJobInfo = transcodeVideoWithFormat(VideoProcessingSub.CONVERT_TO_HLS, body.getPath());
+    RespMediaProcessingInfo mp4JobInfo = transcodeVideoWithFormat(VideoProcessingSub.CONVERT_TO_MP4, body.getPath(), body.getCdnPath());
+    RespMediaProcessingInfo hlsJobInfo = transcodeVideoWithFormat(VideoProcessingSub.CONVERT_TO_HLS, body.getPath(), body.getCdnPath());
     String keyPath = getKeyPath(body.getPath());
     entityHoldingService.addAssociation(
       body.getAssn(),
@@ -131,7 +140,7 @@ public class MediaProcessingService {
     submitJob(key, JobType.CREATE_DEMO_GIF, info);
   } */
 
-  private RespMediaProcessingInfo transcodeAudioWithFormat(AudioProcessingSub sub, String basePath) {
+  private RespMediaProcessingInfo transcodeAudioWithFormat(AudioProcessingSub sub, String basePath, String cdnPath) {
     String processedPath = switch (sub) {
       case CONVERT_TO_HLS -> String.format("%s_hls/master", basePath);
       case CONVERT_TO_WEBM -> String.format("%s.webm", basePath);
@@ -141,13 +150,22 @@ public class MediaProcessingService {
       case CONVERT_TO_WEBM -> MediaType.AUDIO_WEBM;
     };
 
-    return submitTranscoding(sub, processedPath, basePath, JobType.TRANSCODE_AUDIO, mediaType);
+    RespMediaProcessingInfo resp = submitTranscoding(sub, processedPath, basePath, JobType.TRANSCODE_AUDIO, mediaType);
+    if (StringUtils.isNotBlank(cdnPath)) {
+      resp.setProcessedCdnPath(
+        switch (sub) {
+          case CONVERT_TO_HLS -> String.format("%s_hls/master.m3u8", basePath);
+          case CONVERT_TO_WEBM -> String.format("%s.webm", basePath);
+        }
+      );
+    } else resp.setProcessedCdnPath(resp.getProcessedFilePath());
+    return resp;
   }
 
   @Transactional
   public RespMediaProcessingInfo[] transcodeAudioForStreaming(ReqMediaProcessing body) {
-    RespMediaProcessingInfo hlsJobInfo = transcodeAudioWithFormat(AudioProcessingSub.CONVERT_TO_HLS, body.getPath());
-    RespMediaProcessingInfo webmJobInfo = transcodeAudioWithFormat(AudioProcessingSub.CONVERT_TO_WEBM, body.getPath());
+    RespMediaProcessingInfo hlsJobInfo = transcodeAudioWithFormat(AudioProcessingSub.CONVERT_TO_HLS, body.getPath(), body.getCdnPath());
+    RespMediaProcessingInfo webmJobInfo = transcodeAudioWithFormat(AudioProcessingSub.CONVERT_TO_WEBM, body.getPath(), body.getCdnPath());
 
     String keyPath = getKeyPath(body.getPath());
     entityHoldingService.addAssociation(

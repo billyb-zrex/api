@@ -258,6 +258,7 @@ public class WorkspaceService extends ServiceBase {
     log.warn("content type {} url {}", contentType, url);
     return RespUploadUrl.builder()
       .url(url.toString())
+      .cdnPath(filePath.getS3UriToFile())
       .expiry("default")
       .filename(filename)
       .build();

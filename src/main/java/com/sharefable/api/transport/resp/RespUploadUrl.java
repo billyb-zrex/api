@@ -14,7 +14,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @GenerateTSDef
 public class RespUploadUrl {
-    private String url;
-    private String expiry;
-    private String filename;
+  private String url;
+  private String expiry;
+  private String filename;
+  private String cdnPath;
 }

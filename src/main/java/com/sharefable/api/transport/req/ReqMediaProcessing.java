@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @GenerateTSDef
 public class ReqMediaProcessing {
-    private String path;
-
-    private ReqEntityAssetAssn assn;
+  private String path;
+  private String cdnPath;
+  private ReqEntityAssetAssn assn;
 }
