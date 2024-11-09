@@ -28,6 +28,7 @@ Content-Type: application/json
 }
 
 ### proxy asset - auth issue
+# https://media.canva.com/v2/image-resize/format:PNG/height:140/quality:100/uri:s3%3A%2F%2Fmedia-private.canva.com%2FIWoG8%2FMAGFHRIWoG8%2F1%2Fp.svg/watermark:F/width:550?csig=AAAAAAAAAAAAAAAAAAAAAFBWLKgWZ6r8z-jtVNB4LG9KnWG4ZMvitSRa53Zj0yXg&exp=1731149379&osig=AAAAAAAAAAAAAAAAAAAAAGRXndcSB74rQ67tDkIyWU4JLYdotZ336fXoYMZkV4iH&signer=media-rpc&x-canva-quality=thumbnail_large
 POST {{api-host}}/v1/f/proxyasset
 Content-Type: application/json
 Authorization: {{auth-header}}
