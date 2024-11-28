@@ -115,7 +115,8 @@ public abstract class ServiceBase implements DefaultThumbnail {
       case DATASET -> new TemplateFile(
         String.format(PATH_TO_SCHEMA_FILE_FOR_DATASET, schemaVersion),
         S3Config.AssetType.Dataset,
-        S3Config.getEntityFiles().datasetFile()
+        // WARN for dataset template file cache policy is NoCache. Refer to the comment @ S3Config regarding [#dataset_caching]
+        S3Config.getEntityFiles().datasetFile().overrideCachePolicy(S3Config.DATA_FILE_CACHE_POLICY.NoCache)
       );
     };
   }

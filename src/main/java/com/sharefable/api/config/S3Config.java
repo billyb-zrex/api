@@ -72,6 +72,13 @@ public class S3Config {
       new FileConfig(MANIFEST_FILE, DATA_FILE_CACHE_POLICY.NoCache),
       new FileConfig(LEAD_ACTIVITY_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
       new FileConfig(DEMOHUB_DATA_FILE_NAME, DATA_FILE_CACHE_POLICY.NoCache),
+      // INFO [#dataset_caching] works in a weird way -
+      //      The live (non published) dataset file is named as 0_{dataset_name} >> need to be cached as NoCache
+      //      The published dataset file is named as {n}_{dataset_name} where n is the published version >>need to be cached as Cache
+      // WARN Here we are making dataset's cache policy is Cached. And when template file gets created below, we are overriding the
+      //      cache policy. This is just a workaround so that we don't test the rest of the system.
+      //      In a nutshell, all dataset cache policy is set as Cached. While template file gets created for dataset the cache
+      //      policy is overwritten as NoCache. For published dataset cache policy remains Cache
       new FileConfig(DATASET_FILE_NAME, DATA_FILE_CACHE_POLICY.Cache, String::format));
   }
 
@@ -207,8 +214,8 @@ public class S3Config {
 
   public static class FileConfig {
     private final String __filename;
-    private final DATA_FILE_CACHE_POLICY __cachePolicy;
     private final VersionedFile replacer;
+    private DATA_FILE_CACHE_POLICY __cachePolicy;
 
     FileConfig(String filename, DATA_FILE_CACHE_POLICY cachePolicy) {
       this.__filename = filename;
@@ -236,6 +243,11 @@ public class S3Config {
 
     public DATA_FILE_CACHE_POLICY cachePolicy() {
       return __cachePolicy;
+    }
+
+    public FileConfig overrideCachePolicy(DATA_FILE_CACHE_POLICY newPolicy) {
+      this.__cachePolicy = newPolicy;
+      return this;
     }
   }
 
