@@ -29,14 +29,14 @@ Content-Type: application/json
 
 ### proxy asset - auth issue
 # https://media.canva.com/v2/image-resize/format:PNG/height:140/quality:100/uri:s3%3A%2F%2Fmedia-private.canva.com%2FIWoG8%2FMAGFHRIWoG8%2F1%2Fp.svg/watermark:F/width:550?csig=AAAAAAAAAAAAAAAAAAAAAFBWLKgWZ6r8z-jtVNB4LG9KnWG4ZMvitSRa53Zj0yXg&exp=1731149379&osig=AAAAAAAAAAAAAAAAAAAAAGRXndcSB74rQ67tDkIyWU4JLYdotZ336fXoYMZkV4iH&signer=media-rpc&x-canva-quality=thumbnail_large
-POST {{api-host}}/v1/f/proxyasset
+POST {{api-host}}/v1/proxyasset
 Content-Type: application/json
-Authorization: {{auth-header}}
+#Authorization: {{auth-header}}
 
 {
-  "origin": "https://app.dayboard.fr/assets/css/font-awesome.css",
+  "origin": "https://idx-test-123-1731905315371.cluster-qpa6grkipzc64wfjrbr3hsdma2.cloudworkstations.dev/oss-cf213cd39a3bfb26ce45d2c85949fee44b9d03d9/vscode-remote-resource?path=%2Fopt%2Fcode-oss%2Fextensions%2Fmonospace-file-icon-theme%2Fdenizenscript.svg&tkn=",
   "projectId": 1,
-  "clientInfo": "eyJraWUiOiJfX2NmX2JtPXpOR3VBeDRPSlRKbnRGTXVOMUhPd2luVm5IUmJ6TW5ac2VIRTllR1dfYTgtMTY3Nzc0MTYzNC0wLUFSRDJZU1ozeXdRUEZEa1dTK3R6c1BwN0ZsUk9ha2lhWlp2M0JQbHhGWGc0MmRocEZ5ajRoR0U0KzJqRXVQM3IzSWNlVlFUZlB4dzQxWGE1cU1KeUhkTT07IF9fY2ZydWlkPWQ2M2VlNGIxYjY2ZDdhODQxZGZkNDFhZWIyN2QwMWUzMDVjZjA4ZDQtMTY3Nzc0MTYzNCIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEwNy4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
+  "clientInfo": "eyJraWUiOiJ2c2NvZGUtc2VjcmV0LWtleS1wYXRoPS9pZGUtc3RhcnQvbWludC1rZXk7IHZzY29kZS1jbGktc2VjcmV0LWhhbGY9N1VDclp1dlBHczA3OGdjSE1nbF9jUVp3Z0k0R0R3RmY2Xzg4Wjdub0w2QSIsInVhIjoiTW96aWxsYS81LjAgKE1hY2ludG9zaDsgSW50ZWwgTWFjIE9TIFggMTBfMTVfNykgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEzMC4wLjAuMCBTYWZhcmkvNTM3LjM2In0="
 }
 
 
@@ -613,15 +613,21 @@ Authorization: {{auth-header}}
 }
 
 ### transfer tour
-POST {{api-host}}/v1/m/cpytrdifforg
+#POST {{api-host}}/v1/m/cpytrdifforg
+POST http://localhost:8080/v1/m/test
+Content-Type: application/json
+
+
+### transfer tour
+#POST {{api-host}}/v1/m/cpytrdifforg
+POST http://localhost:8080/v1/m/cpytrdifforg
 Content-Type: application/json
 
 {
-  "email": "john@acme.com",
-  "orgId": "45",
+  "email": "sid@sharefable.com",
+  "orgId": 2063,
   "rids": [
-    "git-1rdtndsgp8g71up1",
-    "untitled-ivmkaqafd1gwr8lg"
+    "free-webinar-registrat-q6omxyaiarmuu84c"
   ]
 }
 
@@ -949,3 +955,12 @@ Content-Type: application/json
 GET {{api-host}}/v1/f/exp/config/test_key
 Authorization: {{auth-header}}
 Content-Type: application/json
+
+### lock a dem
+POST {{api-host}}/v1/lock
+Content-Type: application/json
+
+{
+  "orgId": 49,
+  "shouldLock": true
+}

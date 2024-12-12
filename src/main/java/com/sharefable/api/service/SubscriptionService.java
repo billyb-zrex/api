@@ -19,6 +19,7 @@ import com.sharefable.api.transport.NfEvents;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.req.ReqDeductCredit;
 import com.sharefable.api.transport.req.ReqSubscriptionInfo;
+import com.sharefable.api.transport.req.ReqUpdateSubInfo;
 import com.sharefable.api.transport.resp.RespSubsValidation;
 import com.sharefable.api.transport.resp.RespSubscription;
 import io.sentry.Sentry;
@@ -56,6 +57,7 @@ public class SubscriptionService {
   private final SlackMsgService slackMsgService;
   private final NfHookService nfHookService;
   private final EntityConfigKVRepo entityConfigKVRepo;
+  private final QMsgService qMsgService;
 
 
   public static int computeAvailableCredit(List<EntityConfigKV> entityConfigKV) {
@@ -72,7 +74,7 @@ public class SubscriptionService {
   }
 
   @Transactional
-  public RespSubscription getSubscriptionForUser(User user) {
+  public Pair<Subscription, List<EntityConfigKV>> getSubscriptionCreditPairForUser(User user) {
     Long orgId = user.getBelongsToOrg();
     if (orgId == null) return null;
     Optional<Org> maybeOrg = orgRepo.findById(orgId);
@@ -81,6 +83,17 @@ public class SubscriptionService {
     Pair<Subscription, List<EntityConfigKV>> subscriptionAndCredits = getSubscriptionWithCreditInfo(orgId);
     Subscription subs = subscriptionAndCredits.getValue0();
     List<EntityConfigKV> entityConfigKVS = subscriptionAndCredits.getValue1();
+
+    return Pair.with(subs, entityConfigKVS);
+  }
+
+  @Transactional
+  public RespSubscription getSubscriptionForUser(User user) {
+    Pair<Subscription, List<EntityConfigKV>> pair = getSubscriptionCreditPairForUser(user);
+    if (pair == null) return null;
+
+    Subscription subs = pair.getValue0();
+    List<EntityConfigKV> entityConfigKVS = pair.getValue1();
 
     if (subs == null) return null;
     return RespSubscription.from(subs, entityConfigKVS);
@@ -276,7 +289,9 @@ public class SubscriptionService {
               null
             ), user);
         } else if (subs.getManagedBy() == SubscriptionManagedBy.CHARGEBEE) {
-          // saas upgrade
+          // saas upgrade / downgrade
+          PaymentTerms.Plan beforePlan = subs.getPaymentPlan();
+
           com.chargebee.models.Subscription.updateForItems(subs.getCbSubscriptionId())
             .subscriptionItemItemPriceId(0, planId)
             .subscriptionItemQuantity(0, numberOfMembersInOrg)
@@ -285,8 +300,25 @@ public class SubscriptionService {
           subs.setPaymentPlan(info.pricingPlan());
           subs.setPaymentInterval(info.pricingInterval());
           subs.setPaymentPlanId(planId);
+          if (info.pricingPlan() != PaymentTerms.Plan.SOLO) {
+            // IF pricing plan is not solo reset the user confirmation key
+            SubscriptionInfo subInfo = subs.getInfo();
+            if (subInfo == null) {
+              subInfo = SubscriptionInfo.builder().build();
+            }
+            subInfo.setSoloPlanDowngradeIntentReceived(false);
+            subs.setInfo(subInfo);
+          }
+
           Subscription updatedSub = repo.save(subs);
           List<EntityConfigKV> entityConfigKVS = setCreditsForOrg(updatedSub, numberOfMembersInOrg);
+
+          qMsgService.sendSqsMessage("SUBS_UPGRADE_DOWNGRADE_SIDE_EFFECT", Map.of(
+            "orgIdStr", Long.toString(subs.getOrgId()),
+            "beforePlan", beforePlan.name(),
+            "afterPlan", updatedSub.getPaymentPlan().name()
+          ));
+
           return RespSubscription.from(updatedSub, entityConfigKVS);
         } else {
           throw new RuntimeException("Unknown subscription manager " + subs.getManagedBy());
@@ -416,8 +448,9 @@ public class SubscriptionService {
   }
 
   @Transactional
-  public void resyncSubscription(com.chargebee.models.Subscription cbSubs) {
+  public void resyncSubscription(com.chargebee.models.Subscription cbSubs, EventType eventType) {
     Subscription subs = repo.getSubscriptionByCbSubscriptionId(cbSubs.id());
+    PaymentTerms.Plan beforePlan = subs.getPaymentPlan();
     if (subs.getManagedBy() != SubscriptionManagedBy.CHARGEBEE) return;
 
     com.chargebee.models.Subscription.SubscriptionItem subscriptionItem = cbSubs.subscriptionItems().get(0);
@@ -433,7 +466,17 @@ public class SubscriptionService {
     }
     final int seatQuantity = orgService.getCountOfActiveUsersInOrg(subs.getOrgId());
     setCreditsForOrg(subs, seatQuantity);
-    repo.save(subs);
+    subs = repo.save(subs);
+
+    // Automatic downgrade to solo go via this route
+    // We need this additional check because this function is called many times via chargebee webhook
+    if (!StringUtils.equalsIgnoreCase(beforePlan.name(), subs.getPaymentPlan().name()) && eventType == EventType.SUBSCRIPTION_CHANGED) {
+      qMsgService.sendSqsMessage("SUBS_UPGRADE_DOWNGRADE_SIDE_EFFECT", Map.of(
+        "orgIdStr", Long.toString(subs.getOrgId()),
+        "beforePlan", beforePlan.name(),
+        "afterPlan", subs.getPaymentPlan().name()
+      ));
+    }
   }
 
   public RespSubsValidation validate(Long orgId) {
@@ -528,12 +571,12 @@ public class SubscriptionService {
   }
 
   @Transactional
-  protected List<EntityConfigKV> setCreditsForOrg(Subscription subscription, int userCount) {
+  public List<EntityConfigKV> setCreditsForOrg(Subscription subscription, int userCount) {
     return setCreditsForOrg(subscription, userCount, false);
   }
 
   @Transactional
-  protected List<EntityConfigKV> setCreditsForOrg(Subscription subscription, int userCount, boolean shouldResetUsage) {
+  public List<EntityConfigKV> setCreditsForOrg(Subscription subscription, int userCount, boolean shouldResetUsage) {
     List<EntityConfigKV> existingCredits = entityConfigKVRepo.findEntityConfigKVSByEntityTypeAndEntityIdAndConfigTypeAndConfigKey(
       ConfigEntityType.Org,
       subscription.getOrgId(),
@@ -631,7 +674,7 @@ public class SubscriptionService {
   }
 
   @Transactional
-  protected Pair<Subscription, List<EntityConfigKV>> getSubscriptionWithCreditInfo(Long orgId) {
+  public Pair<Subscription, List<EntityConfigKV>> getSubscriptionWithCreditInfo(Long orgId) {
     List<SubscriptionWithCredit> subscriptionWithCredits = repo.getSubscriptionAndCredit(orgId, ConfigEntityType.Org, EntityConfigConfigType.AI_CREDIT);
 
     Subscription subscription = subscriptionWithCredits.stream()
@@ -688,5 +731,25 @@ public class SubscriptionService {
   @Transactional
   public RespSubscription migrateFableCredit(Long orgId) {
     return setCreditsForOrg(orgId, 0, false);
+  }
+
+  @Transactional
+  public RespSubscription updateSubsInfo(ReqUpdateSubInfo req, User user) {
+    Pair<Subscription, List<EntityConfigKV>> pair = getSubscriptionCreditPairForUser(user);
+    if (pair == null) {
+      log.warn("User {} with orgId {} requested subscription but it's not found.", user.getEmail(), user.getBelongsToOrg());
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+    Subscription sub = pair.getValue0();
+    List<EntityConfigKV> entityConfigKVS = pair.getValue1();
+
+    SubscriptionInfo info = sub.getInfo();
+    if (info == null) info = SubscriptionInfo.builder().build();
+    if (req.getSoloPlanDowngradeIntentReceived().isPresent())
+      info.setSoloPlanDowngradeIntentReceived(req.getSoloPlanDowngradeIntentReceived().get());
+
+    sub.setInfo(info);
+    sub = repo.save(sub);
+    return RespSubscription.from(sub, entityConfigKVS);
   }
 }

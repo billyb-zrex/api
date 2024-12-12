@@ -28,7 +28,6 @@ gen:
 env:
 	@echo "Generating env file"
 	@echo "docker compose version must be >= 1.28.0. docker compose version found (see below)"
-	@docker compose --version
 
 	@if [ "$(staging)" ]; then \
         cp env.staging env.now; \

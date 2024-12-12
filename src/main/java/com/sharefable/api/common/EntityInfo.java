@@ -16,6 +16,8 @@ public class EntityInfo {
   private String thumbnail;
   private FrameSettings frameSettings = FrameSettings.LIGHT;
   @OptionalPropInTS
+  private boolean locked;
+  @OptionalPropInTS
   private String annDemoId;
   @OptionalPropInTS
   private String threadId;

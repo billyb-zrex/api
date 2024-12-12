@@ -17,7 +17,7 @@ import java.util.Set;
 public interface DemoEntityRepo extends CrudRepository<DemoEntity, Long> {
   List<DemoEntity> findAllByBelongsToOrgAndDeletedAndEntityTypeEqualsOrderByUpdatedAtDesc(Long belongsToOrgId, TourDeleted deleted, TopLevelEntityType type);
 
-  List<DemoEntity> findAllByBelongsToOrgOrderByUpdatedAtDesc(Long belongsToOrgId);
+  List<DemoEntity> findAllByBelongsToOrgAndDeleted(Long belongsToOrgId, TourDeleted deleted);
 
   List<DemoEntity> findAllByBelongsToOrgAndDeletedAndLastPublishedDateNotNull(Long orgId, TourDeleted deleted);
 

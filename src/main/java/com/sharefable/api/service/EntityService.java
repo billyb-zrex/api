@@ -406,6 +406,7 @@ public class EntityService extends ServiceBase {
     }
   }
 
+  @Transactional
   public Pair<Boolean, RespDemoEntity> refreshAndPublishEntityDataFile(String rid, RespCommonConfig commonConfig) {
     Optional<DemoEntity> maybeTour = demoEntityRepo.findByRidAndDeleted(rid, TourDeleted.ACTIVE);
     DemoEntity demoEntity = maybeTour.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -417,6 +418,7 @@ public class EntityService extends ServiceBase {
     return Pair.with(true, updateEntityAndUploadTos3(demoEntity, demoEntity.getPublishedVersion(), commonConfig));
   }
 
+  @Transactional
   public RespDemoEntity updateEntityAndUploadTos3(DemoEntity demoEntity, Integer nextVersion, RespCommonConfig commonConfig) {
     demoEntity.setLastPublishedDate(Utils.getCurrentUtcTimestamp());
     demoEntity.setPublishedVersion(nextVersion);
@@ -669,5 +671,20 @@ public class EntityService extends ServiceBase {
   @Transactional
   public List<EntityConfigKV> getEntityConfigKV(Long orgId) {
     return entityConfigService.getEntityConfigForAnOrg(ConfigEntityType.Org, orgId, Set.of(EntityConfigConfigType.GLOBAL_OPTS, EntityConfigConfigType.DATASET));
+  }
+
+  public List<String> lockOrUnlockDemosInAccount(ReqLockUnlockDemo req) {
+    List<DemoEntity> demos = demoEntityRepo.findAllByBelongsToOrgAndDeleted(req.getOrgId(), TourDeleted.ACTIVE);
+    List<DemoEntity> tobeChangedDemos = demos.stream().filter(d -> d.getInfo().isLocked() != req.isShouldLock()).toList();
+
+    for (DemoEntity demo : tobeChangedDemos) {
+      demo.getInfo().setLocked(req.isShouldLock());
+    }
+    Iterable<DemoEntity> savedDemos = demoEntityRepo.saveAll(tobeChangedDemos);
+    List<String> savedDemoRids = new ArrayList<>(tobeChangedDemos.size());
+    for (DemoEntity savedDemo : savedDemos) {
+      savedDemoRids.add(savedDemo.getRid());
+    }
+    return savedDemoRids;
   }
 }

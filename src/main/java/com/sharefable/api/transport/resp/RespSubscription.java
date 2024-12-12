@@ -2,11 +2,13 @@ package com.sharefable.api.transport.resp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sharefable.api.common.SubscriptionInfo;
 import com.sharefable.api.common.Utils;
 import com.sharefable.api.entity.EntityConfigKV;
 import com.sharefable.api.entity.Subscription;
 import com.sharefable.api.service.SubscriptionService;
 import com.sharefable.api.transport.GenerateTSDef;
+import com.sharefable.api.transport.OptionalPropInTS;
 import com.sharefable.api.transport.PaymentTerms;
 import io.sentry.Sentry;
 import lombok.Data;
@@ -32,6 +34,8 @@ public class RespSubscription extends ResponseBase {
   private Timestamp trialStartedOn;
   private Timestamp trialEndsOn;
   private int availableCredits;
+  @OptionalPropInTS
+  private SubscriptionInfo info;
 
   public static RespSubscription from(Subscription subs) {
     try {

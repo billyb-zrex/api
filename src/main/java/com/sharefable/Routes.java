@@ -47,6 +47,7 @@ public interface Routes {
   String PROBE_VANITY_DOMAIN = __BEHIND_LOGIN__ + "/vanitydomain/probe";
   String DEL_VANITY_DOMAIN = __BEHIND_LOGIN__ + "/delvanitydomains";
   String UPDATE_ORG_PROPS = __BEHIND_LOGIN__ + "/updtorgprops";
+  String UPDATE_SUBS_PROPS = __BEHIND_LOGIN__ + "/updtsubprops";
   String ASSIGN_IMPLICIT_USER_ORG = __BEHIND_LOGIN__ + "/assgnimplorg";
   String UPDATE_USER_PROP = __BEHIND_LOGIN__ + "/userprop";
   String PROXY_ASSET = __BEHIND_LOGIN__ + "/proxyasset";
@@ -149,4 +150,5 @@ public interface Routes {
   String CREATE_JOB = "/fat/a/job";
   String UPDATE_JOB = "/fat/a/job/{id}";
   String GET_LAST_SUCCESSFUL_JOB = "/fat/a/job/last_success/{type}";
+  String LOCK_UNLOCK_DEMOS_IN_ORG = "/lock";
 }

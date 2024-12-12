@@ -12,6 +12,7 @@ import com.sharefable.api.service.SubscriptionService;
 import com.sharefable.api.transport.PaymentTerms;
 import com.sharefable.api.transport.req.ReqDeductCredit;
 import com.sharefable.api.transport.req.ReqSubscriptionInfo;
+import com.sharefable.api.transport.req.ReqUpdateSubInfo;
 import com.sharefable.api.transport.resp.RespSubsValidation;
 import com.sharefable.api.transport.resp.RespSubscription;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +77,7 @@ public class SubscriptionController {
       case SUBSCRIPTION_ACTIVATED, SUBSCRIPTION_REACTIVATED, SUBSCRIPTION_CHANGED, SUBSCRIPTION_PAUSED,
            SUBSCRIPTION_RESUMED, SUBSCRIPTION_RENEWED, SUBSCRIPTION_CANCELLED, SUBSCRIPTION_TRIAL_EXTENDED -> {
         Subscription subs = event.content().subscription();
-        log.warn("Subscription id {}", subs.id());
+        log.warn("Subscription id {} with eventType {}", subs.id(), event.eventType());
         com.chargebee.models.Subscription.SubscriptionItem subscriptionItem = subs.subscriptionItems().get(0);
         if ((subs.status() == Subscription.Status.CANCELLED
           || subs.status() == Subscription.Status.NON_RENEWING
@@ -92,7 +93,7 @@ public class SubscriptionController {
           log.info("Downgrading subscription because current status = {} & current plan = {}", subs.status(), subscriptionItem.itemPriceId());
           subsService.downgradeSubscriptionToFreePlan(subs);
         }
-        subsService.resyncSubscription(subs);
+        subsService.resyncSubscription(subs, event.eventType());
       }
       case SUBSCRIPTION_TRIAL_END_REMINDER, PAYMENT_FAILED, PAYMENT_SUCCEEDED, PAYMENT_INITIATED,
            SUBSCRIPTION_RENEWAL_REMINDER -> subsService.checkEventAndTopupCredit(event);
@@ -128,4 +129,11 @@ public class SubscriptionController {
     RespSubscription subs = subsService.migrateFableCredit(orgId);
     return ApiResp.<RespSubscription>builder().status(ApiResp.ResponseStatus.Success).data(subs).build();
   }
+
+  @RequestMapping(value = Routes.UPDATE_SUBS_PROPS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<RespSubscription> updateOrgProps(@RequestBody ReqUpdateSubInfo req, @AuthUser User user) {
+    RespSubscription respSubs = subsService.updateSubsInfo(req, user);
+    return ApiResp.<RespSubscription>builder().status(ApiResp.ResponseStatus.Success).data(respSubs).build();
+  }
+
 }

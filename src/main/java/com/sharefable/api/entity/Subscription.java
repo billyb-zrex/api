@@ -1,5 +1,6 @@
 package com.sharefable.api.entity;
 
+import com.sharefable.api.common.SubscriptionInfo;
 import com.sharefable.api.common.SubscriptionManagedBy;
 import com.sharefable.api.common.TransportObjRef;
 import com.sharefable.api.transport.PaymentTerms;
@@ -55,5 +56,5 @@ public class Subscription extends EntityBase {
 
   @Type(JsonType.class)
   @Column(columnDefinition = "json")
-  private Object info;
+  private SubscriptionInfo info;
 }
