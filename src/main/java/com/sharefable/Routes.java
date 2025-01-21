@@ -50,6 +50,7 @@ public interface Routes {
   String UPDATE_SUBS_PROPS = __BEHIND_LOGIN__ + "/updtsubprops";
   String ASSIGN_IMPLICIT_USER_ORG = __BEHIND_LOGIN__ + "/assgnimplorg";
   String UPDATE_USER_PROP = __BEHIND_LOGIN__ + "/userprop";
+  String USER_SIGNUP_DETAILS = __BEHIND_LOGIN__ + "/usrsudet";
   String PROXY_ASSET = __BEHIND_LOGIN__ + "/proxyasset";
   String NEW_SCREEN = __BEHIND_LOGIN__ + "/newscreen";
   String CREATE_THUMBNAIL = __BEHIND_LOGIN__ + "/genthumb";

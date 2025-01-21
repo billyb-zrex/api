@@ -7,6 +7,7 @@ import com.sharefable.api.config.AppSettings;
 import com.sharefable.api.entity.EntityConfigKV;
 import com.sharefable.api.entity.User;
 import com.sharefable.api.service.OrgService;
+import com.sharefable.api.service.UserService;
 import com.sharefable.api.service.WorkspaceService;
 import com.sharefable.api.transport.ObjectValidationResult;
 import com.sharefable.api.transport.PvtAssetType;
@@ -32,6 +33,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class WorkspaceController {
   private final WorkspaceService wsService;
+  private final UserService userService;
   private final AppSettings settings;
   private final OrgService orgService;
 
@@ -70,6 +72,12 @@ public class WorkspaceController {
     body = body.normalize();
     RespUser respUser = wsService.updateUserFirstAndLastName(body, user);
     return ApiResp.<RespUser>builder().status(ApiResp.ResponseStatus.Success).data(respUser).build();
+  }
+
+  @RequestMapping(value = Routes.USER_SIGNUP_DETAILS, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  public ApiResp<String> pushUserSignupDetailsInfo(@RequestBody ReqUserSignupDetails body, @AuthUser User user) {
+    userService.sendUserNf(user.getEmail(), body.p());
+    return ApiResp.<String>builder().status(ApiResp.ResponseStatus.Success).data("ok").build();
   }
 
   @RequestMapping(value = Routes.GET_COMMON_CONFIG, method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)

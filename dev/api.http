@@ -956,11 +956,20 @@ GET {{api-host}}/v1/f/exp/config/test_key
 Authorization: {{auth-header}}
 Content-Type: application/json
 
-### lock a dem
+### lock a demo
 POST {{api-host}}/v1/lock
 Content-Type: application/json
 
 {
   "orgId": 49,
   "shouldLock": true
+}
+
+### pass query parameter after signup
+POST {{api-host}}/v1/f/usrsudet
+Authorization: {{auth-header}}
+Content-Type: application/json
+
+{
+  "p": "test=abc | test2=1"
 }

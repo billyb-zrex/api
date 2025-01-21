@@ -113,6 +113,20 @@ public class UserService {
     nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP, eventInfo);
   }
 
+  public void sendUserNf(String userEmail, String params) {
+    Map<String, String> eventInfo = new HashMap<>();
+
+    if (StringUtils.isBlank(userEmail)) {
+      log.warn("Didn't send message as one of userEmail=[{}] or details=[{}]", userEmail, params);
+      return;
+    }
+
+    eventInfo.put("emailId", userEmail);
+    eventInfo.put("params", params);
+    nfHookService.sendNotification(NfEvents.NEW_USER_SIGNUP, eventInfo);
+  }
+
+
   public User setLatestOrgForUser(User user, Long orgId) throws JsonProcessingException {
     if (orgId != null) {
       Set<Org> orgs = user.getOrgs();
