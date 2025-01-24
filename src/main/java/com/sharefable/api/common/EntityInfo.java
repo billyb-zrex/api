@@ -27,5 +27,6 @@ public class EntityInfo {
   private String demoObjective;
   @OptionalPropInTS
   private Object demoRouter;
-
+  @OptionalPropInTS
+  private Boolean isVideo;
 }
