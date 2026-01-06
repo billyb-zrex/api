@@ -6,6 +6,7 @@ import com.sharefable.api.common.ForObjectType;
 import com.sharefable.api.common.LogType;
 import com.sharefable.api.config.AppConfig;
 import com.sharefable.Routes;
+import com.sharefable.api.config.vendor.AppsumoConfig;
 import com.sharefable.api.entity.Subscription;
 import com.sharefable.api.service.LogService;
 import com.sharefable.api.service.SubscriptionService;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,14 +41,15 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class AppSumoController {
-  private static final String clientId = "APPSUMO_CLIENT_ID_PLACEHOLDER";
-  private static final String clientSecret = "APPSUMO_CLIENT_SECRET_PLACEHOLDER";
+//  private static final String clientId = "APPSUMO_CLIENT_ID_PLACEHOLDER";
+//  private static final String clientSecret = "APPSUMO_CLIENT_SECRET_PLACEHOLDER";
   private final RestTemplate restClient;
   private final ObjectMapper mapper = new ObjectMapper();
   private final LogService logService;
   private final SubscriptionService subscriptionService;
   private final SlackMsgService slackMsgService;
   private final AppConfig appConfig;
+  private final AppsumoConfig appsumoConfig;
 
   @PostConstruct
   private void init() {
@@ -122,8 +125,8 @@ public class AppSumoController {
         ParameterizedTypeReference<Map<String, Object>> responseType = new ParameterizedTypeReference<>() {
         };
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(Map.of(
-          "client_id", clientId,
-          "client_secret", clientSecret,
+          "client_id", appsumoConfig.getClientId(),
+          "client_secret", appsumoConfig.getClientSecret(),
           "code", code.get(),
           "redirect_uri", "https://api.service.sharefable.com/v1/vr/as/redir",
           "grant_type", "authorization_code"
