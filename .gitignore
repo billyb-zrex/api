@@ -33,6 +33,7 @@ build/
 .vscode/
 
 env.*
+!env.sample
 scratchpad*
 .DS_Store
 

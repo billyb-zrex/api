@@ -1,114 +1,529 @@
-# api
+# Fable API Server
 
-### [Common Project Information](https://github.com/sharefable)
+Server-side API for Fable, an interactive demo product platform. This repository contains the backend services that power demo creation, management, analytics, and integrations.
 
-## General
+## Table of Contents
 
-- Checkout the _Makefile_ for detailed running
-  instructions. [Read more about why we use Makefile](https://www.notion.so/sharefable/Why-use-Makefile-24c83d9f6f5d4187b2734626beb01fe1)
-- _dev/*.http_ files for http request response from IntelliJ IDEA (We don't need a different UI tool like postman)
-- Service dependencies _docker-compose.yml_
-- The _entity_ classes use mysql `auto increment` for id. [Ref](https://stackoverflow.com/a/4103347).
-- ~~Can't use elasticsearch 8.* cluster as `RestHighLevelClient` is deprecated and has
-  issues. [Read more about it here.](https://github.com/spring-projects/spring-data-elasticsearch#about-elasticsearch-versions-and-clients)~~
-  . We use ElasticSearch native client for compatibility & flexibility.
-- `make gen`is used to generate typescript definition for transport objects
+- [Features](#features)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation & Setup](#installation--setup)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [Development](#development)
+- [API Documentation](#api-documentation)
+- [Deployment](#deployment)
+- [Third-Party Integrations](#third-party-integrations)
+- [Support](#support)
+- [License](#license)
 
-## Environment Variables
+## Features
 
-This project requires couple of env variable to be present before we fire the makefile commands.
+- **Interactive Demo Management**: Create, edit, and manage interactive product demos (tours and screens)
+- **Demo Hubs**: Organize multiple demos into customizable demo hubs
+- **Analytics & Insights**: Track user engagement, activity logs, and lead analytics
+- **Media Processing**: Video transcoding, audio processing, and image resizing
+- **Custom Domains**: Support for vanity domains with custom SSL certificates
+- **Multi-Tenant Architecture**: Organization-based access control and resource isolation
+- **Third-Party Integrations**: Native integrations with HubSpot, Slack, Chargebee, Zapier, and more
+- **Subscription Management**: Flexible subscription plans with credit-based billing
+- **LLM Operations**: Credit tracking for AI-powered features
+- **Dataset Management**: Create and manage reusable datasets for demos
+- **API Key Authentication**: Support for programmatic access via API keys
+- **Webhook Support**: Event-driven integrations via webhooks
 
-Each env requires it's own _env.{{env_name}}_ file. For the following environment the following files should be
-present. These files are not checked in anywhere.
+## Architecture
 
-```text
-dev -> env.dev
-staging -> env.staging
-prod -> env.prod
-idea -> env.idea  # For running from Intellij IDEA
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Client Applications                       │
+│                    (Web App, Mobile, API Clients)               │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Spring Boot API Server                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ Controllers  │  │  Services    │  │  Security Layer      │  │
+│  │   (REST)     │──│   (Business) │──│  (OAuth2/Auth0)      │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+└───────────┬─────────────────┬────────────────────┬──────────────┘
+            │                 │                    │
+            ▼                 ▼                    ▼
+  ┌──────────────────┐  ┌──────────────┐  ┌─────────────────┐
+  │   MySQL Database │  │  PostgreSQL  │  │   AWS Services  │
+  │   (Main Data)    │  │ (Analytics)  │  │  - S3 (Assets)  │
+  └──────────────────┘  └──────────────┘  │  - SQS (Queue)  │
+                                           │  - Kinesis      │
+                                           │  - Amplify      │
+                                           └─────────────────┘
 ```
 
-Each file contains same set of variables to be exported to the service.
+### Technology Stack
+
+- **Framework**: Spring Boot 3.0.8
+- **Language**: Java 17
+- **Build Tool**: Maven 3.6+
+- **Databases**:
+  - MySQL 8+ (Primary data store)
+  - PostgreSQL 16 (Analytics data)
+- **Authentication**: OAuth2 Resource Server (Auth0)
+- **Cloud Services**:
+  - AWS S3 (Asset storage)
+  - AWS SQS (Message queuing)
+  - AWS Kinesis Firehose (Event streaming)
+  - AWS Amplify (Deployment of custom domain)
+- **Integrations**:
+  - Chargebee (Payment & subscription management)
+  - HubSpot (CRM integration)
+  - Cobalt (Platform integrations vendor)
+  - Slack (Notifications)
+  - Zapier (Workflow automation)
+  - Sentry (Error tracking)
+
+### Key Components
+
+- **API Layer**: RESTful endpoints for all operations (see Routes.java)
+- **Security Layer**: OAuth2-based authentication with Auth0 integration
+- **Data Layer**: Dual database architecture (MySQL for main data, PostgreSQL for analytics)
+- **Service Layer**: Business logic for tours, screens, analytics, subscriptions, etc.
+- **Integration Layer**: Connectors for third-party services
+- **Media Processing**: Asynchronous media transcoding and processing
+- **Queue Processing**: SQS-based background job processing
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Java 17** or higher
+- **Maven 3.6+**
+- **Docker** and **Docker Compose** (>= 1.28.0)
+- **MySQL 8+** (or use Docker Compose)
+- **PostgreSQL 16** (or use Docker Compose)
+- **AWS Account** with access to:
+  - S3 (for asset storage)
+  - SQS (for message queuing)
+  - Kinesis Firehose (for event streaming)
+- **Auth0 Account** (for authentication)
+- **Chargebee Account** (optional, for payment processing)
+
+### Optional Requirements
+
+- **IntelliJ IDEA** (recommended IDE)
+- **Sentry Account** (for error tracking)
+- **ngrok** or similar (for local webhook testing)
+
+## Installation & Setup
+
+### 1. Clone the Repository
 
 ```bash
-export APP_ENV=dev | staging | prod
-export DB_USER=<>
-export DB_PWD=<>
-# Example value for local
-export DB_CONN_URL_DOCKER_COMPOSE=jdbc:mysql://host.docker.internal:3306
-# Example value for local
-export DB_CONN_URL=jdbc:mysql://localhost:3306
-export ASSET_BUCKET_NAME=<>
-export AWS_ACCESS_KEY_ID=<>
-export AWS_SECRET_ACCESS_KEY=<>
-export AWS_S3_REGION=ap-south-1
-export AWS_S3_ENDPOINT=https://s3.ap-south-1.amazonaws.com
+git clone https://github.com/your-org/fable-api.git
+cd fable-api
 ```
 
-`APP_ENV` is mandatory and needs to be present for all env files. The values are predefined `dev | staging | prod`
-based on the environment. These values are in turned used to activate profiles from _docker-compose.yml_ file. (Check
-out
-the profile property)
+### 2. Set Up Environment Files
 
-### Commands
+Create environment-specific configuration files. The application supports three environments: `dev`, `staging`, and `prod`.
 
-Check out _Makefile_ for more detailed capabilities.
-
-# IDE setup
-
-- Use IntelliJ
-- Install java 8 and maven 3.6.*
-- Use plugin EnvFile. An _env.idea_ file with all the secrets can be generated from `make env dev=1` command
-- `spring-boot-devtools` is already added as
-  dependency. [Set up the IDE properly](https://www.youtube.com/watch?v=uv-Mku3l0ls) to make auto reloading
-  works. [See this](https://youtrack.jetbrains.com/issue/IDEA-274903/In-IntelliJ-20212-compilerautomakeallowwhenapprunning-disappear-Unable-to-enable-live-reload-under-Spring-boot)
-  for Intellij 2022.
-
-# Manual deployment in staging server
-
-- Create a box in aws and configure your ssh client for fast & easy access to the box. You can do `ssh fab-api` post
-  this settings
-
-```text
-...
-
-Host fab-api
-  HostName <elastic ip>
-  User ubuntu
-  IdentityFile ~/.ssh/fab.pem
-  
-...
-
-```
-
-- All the required files are in _aws/_ dir
-- Run a tmux session to run the servers. We should ideally run it via `systemctl` services, but we currently use tmux so
-  that we get hold of the logs easily as `journalctl` truncates logs. **This is a temporary step.** Upload the tmux file
-  for easier navigation
+For local development, create `env.dev`:
 
 ```bash
-scp aws/.tmux.conf fab-api:~/.
+cp env.sample env.dev
 ```
 
-- Use the commands in _aws/bootstrap.sh_ file to set up env + install toolchains
-- Once done you can start running the _Makefile_ scripts
-- Create elastic search indexes from _dev/es.http_ file
+Edit `env.dev` and fill in your configuration values (see [Configuration](#configuration) section).
 
-# Deployment via ECR
+### 3. Generate Environment Files for Tools
 
-## Create ECR (one time)
-
-- Make sure the `service.json` file is present
-- From `cd infra` dir
+Generate IDE-compatible environment files: (check Makefile for details)
 
 ```bash
+# For development
+make env dev=1
+
+# For staging
+make env staging=1
+```
+
+This creates:
+- `env.now`: Active environment file used by Makefile
+- `env.idea`: IntelliJ IDEA-compatible format (without `export` prefix)
+
+### 4. Start Dependencies with Docker
+
+Start MySQL and PostgreSQL databases:
+
+```bash
+make setup
+```
+
+This will:
+- Start MySQL container on port 3306
+- Start PostgreSQL container on port 5432
+- Create necessary volumes for data persistence
+
+### 5. Run Database Migrations
+
+Apply database schema migrations:
+
+```bash
+make db-schema-migrate
+```
+
+This runs Flyway migrations for both:
+- API database (MySQL)
+- Analytics database (PostgreSQL)
+
+### 6. Build the Application
+
+```bash
+make build
+```
+
+### 7. Run the Application
+
+```bash
+make run
+```
+
+The server will start on `http://localhost:8080`.
+
+## Configuration
+
+### Environment Variables
+
+The application requires several environment variables. Create an environment file (`env.dev`, `env.staging`, or `env.prod`) with the following variables:
+
+#### Required Variables
+
+Check env.sample file for details.
+
+#### Optional Variables
+
+```bash
+# Sentry (Error Tracking)
+export SENTRY_DSN=your-sentry-dsn
+
+# For local development with webhooks
+export PUBLIC_ENDPOINT=https://your-ngrok-url.ngrok-free.app
+```
+
+### Database Configuration
+
+The application uses two separate databases:
+
+1. **MySQL** (Main Database): Stores core application data (demos, screens, organizations, users, subscriptions)
+2. **PostgreSQL** (Analytics Database): Stores analytics events and metrics
+
+Both databases are automatically created when using Docker Compose. For production, you'll need to provision these databases separately.
+
+### Auth0 Configuration
+
+Configure OAuth2 authentication in `src/main/resources/application-{env}.properties`:
+
+```properties
+auth0.audiences=backend
+spring.security.oauth2.resourceserver.jwt.issuer-uri=https://your-tenant.auth0.com/
+```
+
+## Running the Application
+
+Check Makefile for details.
+
+### Available Makefile Commands
+
+| Command | Description |
+|---------|-------------|
+| `make env dev=1` | Generate environment files for development |
+| `make env staging=1` | Generate environment files for staging |
+| `make setup` | Start Docker dependencies (MySQL, PostgreSQL) |
+| `make teardown` | Stop Docker dependencies |
+| `make db-schema-migrate` | Run Flyway database migrations |
+| `make build` | Build the application |
+| `make run` | Run the application |
+| `make gen` | Generate TypeScript API contract definitions |
+| `make containerize v=X.X.X` | Build and push Docker image to ECR |
+| `make container-run` | Run application in Docker container |
+| `make clean-data` | Remove Docker volumes and containers |
+
+## Development
+
+### IDE Setup (IntelliJ IDEA)
+
+1. **Install Prerequisites**:
+   - Java 17
+   - Maven 3.6+
+   - IntelliJ IDEA (Ultimate recommended)
+
+2. **Install Plugins**:
+   - **EnvFile Plugin**: Load environment variables from `env.idea`
+   - **Lombok Plugin**: Support for Lombok annotations
+
+3. **Import Project**:
+   - Open IntelliJ IDEA
+   - File → Open → Select `pom.xml`
+   - Import as Maven project
+
+4. **Configure Environment**:
+   - Generate `env.idea` file: `make env dev=1`
+   - Run/Debug Configurations → Edit Configurations
+   - Enable EnvFile plugin and point to `env.idea`
+
+5. **Enable Hot Reload**:
+   - Settings → Build, Execution, Deployment → Compiler
+   - Check "Build project automatically"
+   - Settings → Advanced Settings
+   - Check "Allow auto-make to start even if developed application is currently running"
+
+### Project Structure
+
+```
+api/
+├── src/
+│   ├── main/
+│   │   ├── java/com/sharefable/
+│   │   │   ├── Main.java                    # Application entry point
+│   │   │   ├── Routes.java                  # Route definitions
+│   │   │   ├── ApiDataSourceConfig.java     # MySQL datasource config
+│   │   │   ├── AnalyticsDataSourceConfig.java # PostgreSQL datasource config
+│   │   │   ├── api/
+│   │   │   │   ├── auth/                    # Authentication & authorization
+│   │   │   │   ├── common/                  # Common utilities & DTOs
+│   │   │   │   ├── config/                  # Application configuration
+│   │   │   │   ├── controller/              # REST controllers
+│   │   │   │   ├── entity/                  # JPA entities
+│   │   │   │   ├── repo/                    # JPA repositories
+│   │   │   │   ├── service/                 # Business logic
+│   │   │   │   └── transport/               # API request/response models
+│   │   │   └── analytics/                   # Analytics module
+│   │   │       ├── controller/
+│   │   │       ├── entity/
+│   │   │       ├── repo/
+│   │   │       └── transport/
+│   │   └── resources/
+│   │       ├── application.properties       # Base configuration
+│   │       ├── application-dev.properties   # Dev environment config
+│   │       ├── application-staging.properties
+│   │       └── application-prod.properties
+│   └── test/                                # Test files
+├── schema/
+│   ├── api/                                 # MySQL migration scripts
+│   └── analytics/                           # PostgreSQL migration scripts
+├── dev/
+│   └── *.http                               # HTTP request examples
+├── docker-compose.yml                       # Docker services definition
+├── Dockerfile                               # Container build definition
+├── Makefile                                 # Build & deployment commands
+└── pom.xml                                  # Maven dependencies
+```
+
+### TypeScript API Contract Generation
+
+The project automatically generates TypeScript definitions for API contracts:
+
+```bash
+make gen
+```
+
+This generates `gen/api-contract.d.ts` from Java transport objects annotated with `@GenerateTSDef`. Make sure app and
+api project roots are in the same directory, then this command will copy the generated contract in app as well.
+
+### Testing with HTTP Files
+
+Use IntelliJ IDEA's HTTP Client with the provided `.http` files in the `dev/` directory:
+
+```
+dev/
+├── tours.http
+├── screens.http
+├── analytics.http
+└── ...
+```
+
+These files contain example API requests you can execute directly from IntelliJ.
+
+## API Documentation
+
+### Authentication
+
+The API uses OAuth2 Bearer token authentication. Most endpoints require a valid JWT token from Auth0.
+
+#### Authenticated Requests
+
+Include the Authorization header:
+
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+     http://localhost:8080/f/org
+```
+
+#### API Key Authentication
+
+Some endpoints support API key authentication:
+
+```bash
+curl -H "X-API-Key: YOUR_API_KEY" \
+     http://localhost:8080/via/ak/tours
+```
+
+### API Versioning
+
+The API uses version prefixes in the URL:
+
+- `/v1/*` - Version 1 endpoints (current)
+
+### Core Endpoints
+
+#### Public Endpoints (No Authentication)
+
+- `GET /health` - Health check
+- `GET /tour` - Get tour configuration
+- `GET /screen` - Get screen configuration
+- `GET /dh` - Get demo hub configuration
+- `POST /new/log` - Log user events
+
+#### Authenticated Endpoints
+
+All authenticated endpoints are prefixed with `/f/`:
+
+**Organization Management**
+- `GET /f/org` - Get current organization
+- `POST /f/neworg` - Create new organization
+- `PUT /f/updtorgprops` - Update organization properties
+
+**Tour Management**
+- `GET /f/tours` - List all tours
+- `POST /f/newtour` - Create new tour
+- `PUT /f/updtrprop` - Update tour properties
+- `DELETE /f/deltour` - Delete tour
+- `POST /f/tpub` - Publish tour
+- `POST /f/duptour` - Duplicate tour
+
+**Screen Management**
+- `GET /f/screens` - List all screens
+- `POST /f/newscreen` - Create new screen
+- `PUT /f/updatescreenproperty` - Update screen properties
+- `POST /f/copyscreen` - Copy screen
+
+**Demo Hub Management**
+- `GET /f/dhs` - List all demo hubs
+- `POST /f/demohub` - Create demo hub
+- `PUT /f/updtdhprops` - Update demo hub properties
+- `POST /f/pubdh` - Publish demo hub
+- `DELETE /f/deldh` - Delete demo hub
+
+**Analytics**
+- `GET /f/entity_metrics` - Get entity metrics
+- `GET /f/leads` - Get leads
+- `GET /f/entity_metrics_daily` - Get daily metrics
+- `GET /f/activity_data/{entityRid}/{aid}` - Get activity details
+
+**Media Processing**
+- `POST /f/vdt` - Transcode video
+- `POST /f/audt` - Transcode audio
+- `POST /f/rzeimg` - Resize image
+
+**Subscriptions**
+- `GET /f/subs` - Get subscription details
+- `POST /f/checkout` - Create checkout session
+- `POST /f/genchckouturl` - Generate checkout URL
+
+For detailed API documentation, refer to the HTTP request files in `dev/*.http`.
+
+## Deployment
+
+### Building for Production
+
+```bash
+make containerize v=X.X.X
+```
+
+This creates a JAR file in `target/api-{version}.jar` and upload to ECR, you can then deploy the image to ECS.
+
+### AWS ECR Deployment
+
+1. **Create ECR Repository** (one-time setup):
+
+```bash
+cd infra
 terraform init
-terraform workspace list
-terraform workspace staging # or prod
+terraform workspace select staging  # or prod
 terraform apply
 ```
 
-## Build and upload image to ECR
+2. **Build and Push to ECR**:
 
-- `cd ..` to go back to the project root
-- `make containerize v=1.0.1` with proper version number
+```bash
+make containerize v=1.0.0
+```
+
+This will:
+- Build the Docker image
+- Tag it with the ECR repository URL
+- Authenticate with ECR
+- Push the image to ECR
+
+3. **Deploy to AWS**:
+
+Update your ECS deployment to use the new image version.
+
+### Environment-Specific Deployment
+
+- **Development**: Local machine or development server
+- **Staging**: AWS staging environment
+- **Production**: AWS production environment with high availability
+
+Each environment uses its own:
+- Database instances
+- S3 buckets
+- Auth0 tenant
+- Environment variables
+
+## Third-Party Integrations
+
+### Supported Integrations
+
+1. **Chargebee** - Subscription and payment management
+   - Configure: `CB_SITE_NAME`, `CB_API_KEY`
+   - Webhook: `POST /wh/cb`
+
+2. **HubSpot** - CRM integration
+   - Configure: `HUBSPOT_CLIENT_SECRET`
+   - Endpoints: `/vr/hs/*`
+
+3. **Cobalt** - Platform integration framework
+   - Configure: `COBALT_API_KEY`
+   - Endpoints: `/vr/ct/*`
+
+4. **Slack** - Team notifications
+   - Managed via tenant integrations
+   - Configure through API: `POST /f/tenant_integration`
+
+5. **Zapier** - Workflow automation
+   - Webhook registration: `POST /vr/zp/reghook`
+   - Webhook unregistration: `POST /vr/zp/unreghook`
+   - Sample data: `GET /vr/zp/sample_data`
+
+6. **AppSumo** - Partner integration
+   - Webhook: `POST /vr/as/whk`
+   - Redirect: `GET /vr/as/redir`
+
+7. **Sentry** - Error tracking and monitoring
+   - Configure: `SENTRY_DSN`
+
+## Support
+
+If you encounter any issues or have questions:
+
+- **Issues**: [Open an issue on GitHub](https://github.com/your-org/fable-api/issues)
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Note**: This is the server-side API component of Fable. For the frontend application, see the [fable-app repository](https://github.com/sharefable/app).
