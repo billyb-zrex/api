@@ -8,6 +8,7 @@ import com.sharefable.api.common.MapSerializable;
 import com.sharefable.api.config.SQSConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -20,9 +21,9 @@ public class QMsgService {
     private final AmazonSQS sqsClient;
 
     @Autowired
-    public QMsgService(SQSConfig config, AmazonSQS sqsClient) {
+    public QMsgService(SQSConfig config, ObjectProvider<AmazonSQS> sqsClientProvider) {
         this.config = config;
-        this.sqsClient = sqsClient;
+        this.sqsClient = sqsClientProvider.getIfAvailable();
     }
 
     private SendMessageRequest getProducibleMsg(String key, Map<String, String> payload) {
@@ -39,6 +40,10 @@ public class QMsgService {
     }
 
     public void sendSqsMessage(String key, Map<String, String> payload) {
+        if (!config.isEnabled() || sqsClient == null) {
+            log.info("Skipping background job {} because SQS is disabled", key);
+            return;
+        }
         SendMessageRequest msgReq = getProducibleMsg(key, payload);
         SendMessageResult sendMessageResult = sqsClient.sendMessage(msgReq);
         log.debug("Message {} posted in sqs", sendMessageResult.getMessageId());
