@@ -2,6 +2,7 @@ package com.sharefable.api.config;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.sharefable.api.common.AssetFilePath;
 import com.sharefable.api.common.VersionedFile;
 import lombok.AllArgsConstructor;
@@ -49,10 +50,13 @@ public class S3Config {
   private static final String PATH_FOR_PVT_LLM_OPS = "/tour_data/%s/llmops";
   private static final String PATH_FOR_DATASET = "/orgpub/%s/ds";
   private String region;
+  private String endpoint;
+  private boolean pathStyleAccessEnabled;
   private String rootQualifier;
   private String assetBucketName;
   private String pvtAssetBucketName;
   private String pvtAssetBucketRegion;
+  private String pvtEndpoint;
   private String cdn;
 
   @Autowired
@@ -171,13 +175,25 @@ public class S3Config {
   @Bean
   @Primary
   AmazonS3 s3Client() {
-    return AmazonS3ClientBuilder.standard().withRegion(region).build();
+    return buildClient(region, endpoint);
   }
 
   @Bean
   @Qualifier("pvt")
   AmazonS3 pvtS3Client() {
-    return AmazonS3ClientBuilder.standard().withRegion(pvtAssetBucketRegion).build();
+    return buildClient(pvtAssetBucketRegion, pvtEndpoint);
+  }
+
+  private AmazonS3 buildClient(String clientRegion, String clientEndpoint) {
+    AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard()
+      .withPathStyleAccessEnabled(pathStyleAccessEnabled);
+    if (StringUtils.isNotBlank(clientEndpoint)) {
+      builder.withEndpointConfiguration(
+        new AwsClientBuilder.EndpointConfiguration(clientEndpoint, clientRegion));
+    } else {
+      builder.withRegion(clientRegion);
+    }
+    return builder.build();
   }
 
   public enum AssetType {
