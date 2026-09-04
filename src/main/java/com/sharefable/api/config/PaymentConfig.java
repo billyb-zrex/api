@@ -81,7 +81,11 @@ public class PaymentConfig {
 
   @PostConstruct
   public void configure() {
-    Environment.configure(cbSiteName, cbApiKey);
+    if (StringUtils.isNoneBlank(cbSiteName, cbApiKey)) {
+      Environment.configure(cbSiteName, cbApiKey);
+    } else {
+      log.info("Chargebee is not configured; billing operations are disabled");
+    }
   }
 
   public String getPlanId(PaymentTerms.Plan plan, PaymentTerms.Interval interval) {
