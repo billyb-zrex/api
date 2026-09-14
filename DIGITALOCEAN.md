@@ -20,6 +20,7 @@ AUTH0_AUDIENCE=https://api.demo.zrexsolutions.com
 AUTH0_ISSUER_URI=https://zrexsolutions-demo.us.auth0.com/
 
 DB_CONN_URL=jdbc:mysql://<mysql-host>:<mysql-port>
+DB_JDBC_URL=jdbc:mysql://<mysql-host>:<mysql-port>/fable_tour_app?sslMode=REQUIRED
 DB_USER=<mysql-user>
 DB_PWD=<mysql-password>
 ANALYTICS_DB_CONN_URL=jdbc:postgresql://<postgres-host>:<postgres-port>/<database>?sslmode=require
@@ -31,6 +32,7 @@ AWS_SECRET_ACCESS_KEY=<spaces-secret-key>
 AWS_S3_REGION=<spaces-region>
 AWS_S3_ENDPOINT=https://<spaces-region>.digitaloceanspaces.com
 AWS_S3_PATH_STYLE_ACCESS_ENABLED=false
+AWS_S3_PUBLIC_READ_ACL=true
 ASSET_BUCKET_NAME=<space-name>
 ASSET_CDN=<space-name>.<spaces-region>.digitaloceanspaces.com
 PVT_ASSET_BUCKET_NAME=<space-name>
@@ -38,6 +40,9 @@ PVT_ASSET_BUCKET_REGION=<spaces-region>
 PVT_ASSET_ENDPOINT=https://<spaces-region>.digitaloceanspaces.com
 
 JOBS_ENABLED=false
+FIREHOSE_ENABLED=false
+JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=70
+SPRING_DATASOURCE_ANALYTICS_CONFIGURATION_MAXIMUM_POOL_SIZE=5
 SENTRY_DSN=
 CB_SITE_NAME=
 CB_API_KEY=
@@ -65,3 +70,11 @@ Dockerfile.migrate-analytics
 The core deployment deliberately treats SQS as optional. Calls that would
 enqueue AI, media-transcoding, integration, or subscription side-effect jobs
 are logged and skipped while `JOBS_ENABLED=false`.
+
+## Spaces object access
+
+`AWS_S3_PUBLIC_READ_ACL=true` is opt-in for Spaces. It makes non-private demo asset uploads and copies publicly readable. Private assets continue to use the private client and receive no public ACL. Browser uploads send the signed ACL header when the presigned URL requests it. Keep bucket listing restricted, use a key scoped only to the two demo buckets, and allow CORS from `https://demo.zrexsolutions.com` for GET, PUT, HEAD with allowed headers `*`.
+
+## Initial deployment verified September 14, 2026
+
+MySQL applied 42 migrations through v1.42; PostgreSQL applied 17 through v1.17. Both one-time PRE_DEPLOY migration components were removed after success. Keep application jobs and Firehose disabled for the core deployment. Restrict both database trusted sources to the API App Platform app. The `/health` endpoint returned HTTP 200 after the initial deployment.
