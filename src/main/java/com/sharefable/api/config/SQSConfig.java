@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Configuration
 @ConfigurationProperties(prefix = "com.sharefable.api.q")
@@ -23,7 +24,10 @@ public class SQSConfig {
 
     private String qUrl;
 
+    private boolean enabled;
+
     @Bean
+    @ConditionalOnProperty(prefix = "com.sharefable.api.q", name = "enabled", havingValue = "true")
     AmazonSQS sqsClient() {
         AmazonSQS client = AmazonSQSClientBuilder.standard().withRegion(region).build();
         qUrl = client.getQueueUrl(name).getQueueUrl();

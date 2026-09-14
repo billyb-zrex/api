@@ -20,6 +20,9 @@ public class FirehoseService {
 
 
   public void sendEventsToFirehose(String prefix, String sub, String userEventLogs) {
+    if (!firehoseConfig.isEnabled()) {
+      return;
+    }
     String streamName = "";
     try {
       PutRecordRequest putRecordRequest = new PutRecordRequest();

@@ -8,6 +8,7 @@ import com.sharefable.api.common.AssetFilePath;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,9 @@ public class S3Service {
 
   private final AmazonS3 client;
   private final AmazonS3 pvtClient;
+
+  @Value("${AWS_S3_PUBLIC_READ_ACL:false}")
+  private boolean publicReadAcl;
 
   @Autowired
   S3Service(AmazonS3 s3, @Qualifier("pvt") AmazonS3 pvtClient) {
@@ -63,7 +67,8 @@ public class S3Service {
       filePath.getFullQualifiedPath(),
       new ByteArrayInputStream(content),
       getS3ObjectMetadata(new HashMap<>(assetMetadata)));
-    client.putObject(req);
+    if (publicReadAcl && !filePath.isPrivateFile()) req.withCannedAcl(CannedAccessControlList.PublicRead);
+    (filePath.isPrivateFile() ? pvtClient : client).putObject(req);
 
     return filePath;
   }
@@ -75,7 +80,8 @@ public class S3Service {
       toObject.getBucketName(),
       toObject.getFullQualifiedPath());
     if (assetMetadata != null) req.withNewObjectMetadata(getS3ObjectMetadata(new HashMap<>(assetMetadata)));
-    client.copyObject(req);
+    if (publicReadAcl && !toObject.isPrivateFile()) req.withCannedAccessControlList(CannedAccessControlList.PublicRead);
+    (toObject.isPrivateFile() ? pvtClient : client).copyObject(req);
     return toObject;
   }
 
@@ -91,6 +97,7 @@ public class S3Service {
     req.setExpiration(expireAt);
     req.setMethod(HttpMethod.PUT);
     req.setContentType(contentType);
+    if (publicReadAcl && !pvt) req.addRequestParameter("x-amz-acl", "public-read");
     return (pvt ? pvtClient : client).generatePresignedUrl(req);
   }
 
@@ -99,11 +106,12 @@ public class S3Service {
       filePath.getBucketName(),
       filePath.getFullQualifiedPath()
     );
-    S3Object object = client.getObject(req);
+    S3Object object = (filePath.isPrivateFile() ? pvtClient : client).getObject(req);
     S3ObjectInputStream content = object.getObjectContent();
     byte[] fileAsBytes = IOUtils.toByteArray(content);
     content.close();
     return fileAsBytes;
   }
 }
+
 

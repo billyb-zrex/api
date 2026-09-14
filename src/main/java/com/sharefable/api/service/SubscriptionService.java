@@ -30,6 +30,7 @@ import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.javatuples.Pair;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -58,6 +59,33 @@ public class SubscriptionService {
   private final NfHookService nfHookService;
   private final EntityConfigKVRepo entityConfigKVRepo;
   private final QMsgService qMsgService;
+
+  @Value("${SELF_HOSTED_CORE:false}")
+  private boolean selfHostedCore;
+
+  private Subscription ensureSelfHostedSubscription(Long orgId) {
+    orgRepo.lockForSubscription(orgId)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Organization not found"));
+    Subscription existing = repo.getSubscriptionByOrgId(orgId);
+    if (existing != null) return existing;
+    Subscription subscription = repo.save(Subscription.builder()
+      .orgId(orgId)
+      .paymentPlanId("self-hosted-core")
+      .paymentPlan(PaymentTerms.Plan.BUSINESS)
+      .paymentInterval(PaymentTerms.Interval.LIFETIME)
+      .managedBy(SubscriptionManagedBy.SELF_HOSTED)
+      .status(com.chargebee.models.Subscription.Status.ACTIVE)
+      .cbCustomerId("")
+      .cbSubscriptionId("self-hosted-" + orgId)
+      .build());
+    setCreditsForOrg(subscription, 0);
+    return subscription;
+  }
+
+  private void requireBillingService() {
+    if (selfHostedCore) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+      "Billing is disabled for this self-hosted core deployment");
+  }
 
 
   public static int computeAvailableCredit(List<EntityConfigKV> entityConfigKV) {
@@ -101,6 +129,7 @@ public class SubscriptionService {
 
   @Transactional
   public RespSubscription newSubscription(ReqSubscriptionInfo info, User user) {
+    if (selfHostedCore) return getSubscriptionForUser(user);
     if (user.getBelongsToOrg() == null) return null;
     Optional<Org> maybeOrg = orgRepo.findById(user.getBelongsToOrg());
     if (maybeOrg.isEmpty()) return null;
@@ -225,6 +254,7 @@ public class SubscriptionService {
 
   @Transactional
   public RespSubscription updateSubscription(ReqSubscriptionInfo info, User user) {
+    if (selfHostedCore) return getSubscriptionForUser(user);
     val orgId = user.getBelongsToOrg();
     Subscription subs = repo.getSubscriptionByOrgId(orgId);
 
@@ -343,6 +373,7 @@ public class SubscriptionService {
   @Async
   @Transactional
   public void updateNoOfSeatInSubscription(Long orgId) {
+    if (selfHostedCore || orgId == null) return;
     try {
       Thread.sleep(10000);
     } catch (InterruptedException e) {
@@ -350,6 +381,7 @@ public class SubscriptionService {
     }
     final int newSeatQuantity = orgService.getCountOfActiveUsersInOrg(orgId);
     Subscription subs = repo.getSubscriptionByOrgId(orgId);
+    if (subs == null || subs.getManagedBy() != SubscriptionManagedBy.CHARGEBEE) return;
     String subsId = subs.getCbSubscriptionId();
     if (StringUtils.isBlank(subsId)) {
       log.error("Seat change requested but subscription id not found for org {}", orgId);
@@ -371,6 +403,7 @@ public class SubscriptionService {
 
   @Transactional
   public void downgradeSubscriptionToFreePlan(com.chargebee.models.Subscription cbSub) {
+    requireBillingService();
     try {
       Subscription subs = repo.getSubscriptionByCbSubscriptionId(cbSub.id());
       Integer quantity = orgService.getCountOfActiveUsersInOrg(subs.getOrgId());
@@ -385,6 +418,7 @@ public class SubscriptionService {
   }
 
   public String createHostedPage(User user, Optional<ReqSubscriptionInfo> info) {
+    requireBillingService();
     Subscription subs = repo.getSubscriptionByOrgId(user.getBelongsToOrg());
     if (subs == null) return null;
 
@@ -407,6 +441,7 @@ public class SubscriptionService {
 
   @Transactional
   public String createHostedPageForAiCredit(User user) {
+    requireBillingService();
     Subscription subs = repo.getSubscriptionByOrgId(user.getBelongsToOrg());
     Org org = orgRepo.findById(subs.getOrgId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     String custId = subs.getCbCustomerId();
@@ -449,6 +484,7 @@ public class SubscriptionService {
 
   @Transactional
   public void resyncSubscription(com.chargebee.models.Subscription cbSubs, EventType eventType) {
+    requireBillingService();
     Subscription subs = repo.getSubscriptionByCbSubscriptionId(cbSubs.id());
     PaymentTerms.Plan beforePlan = subs.getPaymentPlan();
     if (subs.getManagedBy() != SubscriptionManagedBy.CHARGEBEE) return;
@@ -481,6 +517,10 @@ public class SubscriptionService {
 
   public RespSubsValidation validate(Long orgId) {
     RespSubsValidation validationResult = new RespSubsValidation();
+    if (selfHostedCore) {
+      validationResult.setCardPresent(false);
+      return validationResult;
+    }
     try {
       Subscription subs = repo.getSubscriptionByOrgId(orgId);
       if (subs.getManagedBy() == SubscriptionManagedBy.CHARGEBEE) {
@@ -511,6 +551,7 @@ public class SubscriptionService {
 
   @Transactional
   public void checkEventAndTopupCredit(Event event) {
+    requireBillingService();
     try {
       Event.Content content = event.content();
       EventType eventType = event.eventType();
@@ -662,6 +703,9 @@ public class SubscriptionService {
   }
 
   private PaymentConfig.CreditValue determineFableCredits(Subscription subscription) {
+    if (subscription.getManagedBy() == SubscriptionManagedBy.SELF_HOSTED) {
+      return new PaymentConfig.CreditValue(0, false);
+    }
     if (subscription.getManagedBy() != SubscriptionManagedBy.CHARGEBEE) {
       return PaymentConfig.PLAN_DEFAULT_AI_CREDIT.get(subscription.getPaymentPlanId());
     }
@@ -675,6 +719,7 @@ public class SubscriptionService {
 
   @Transactional
   public Pair<Subscription, List<EntityConfigKV>> getSubscriptionWithCreditInfo(Long orgId) {
+    if (selfHostedCore) ensureSelfHostedSubscription(orgId);
     List<SubscriptionWithCredit> subscriptionWithCredits = repo.getSubscriptionAndCredit(orgId, ConfigEntityType.Org, EntityConfigConfigType.AI_CREDIT);
 
     Subscription subscription = subscriptionWithCredits.stream()
@@ -753,3 +798,4 @@ public class SubscriptionService {
     return RespSubscription.from(sub, entityConfigKVS);
   }
 }
+
