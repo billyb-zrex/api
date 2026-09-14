@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 public class FirehoseConfig {
     private String streamPrefix;
     private String region;
+    private boolean enabled;
 
     @Bean
     public AmazonKinesisFirehoseClient FirehoseClient() {
